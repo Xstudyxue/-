@@ -1,7 +1,9 @@
 #!.bin.bash
+#批量创建、删除用户，并判断是否存在，存在则不创建
 i=1
 while [ $i -le 10 ]
 do
+	#不创建test5用户
 	#if [ $i -ne 5 ]
 	#then
 		#userdel -r test$i
