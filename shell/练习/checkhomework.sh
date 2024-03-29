@@ -1,5 +1,5 @@
 #!/bin/bash
-# homework
+# 统计未交作业的名单，名单需自己创建内容
 echo "未交作业名单："
 while read link
 do
