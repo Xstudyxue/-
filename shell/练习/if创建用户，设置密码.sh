@@ -7,12 +7,6 @@
 #	echo "您的密码太长！"
 #fi
 
-#read -p "请输入要创建的用户名：" name
-#if id $name &> /dev/null ;
-#then
-#else
-#fi
-
 #id $name &> /dev/null
 #if [ $? -ne 0 ];then
 #	useradd $name
