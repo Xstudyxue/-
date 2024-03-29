@@ -1,4 +1,5 @@
 #!/bin/bash
+#根据当前系统时间，向用户打招呼
 #current_time=$(date +"%Y-%m-%d %H:%M:%S")
 #echo "当前系统时间为：$current_time"
 hour=`date +%H`
