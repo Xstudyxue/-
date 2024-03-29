@@ -1,4 +1,5 @@
 #/bin/bash
+#循环输出1到100的偶数
 #sum=0
 #for i in {1..100}
 #do
@@ -10,11 +11,13 @@
 #done
 #echo $sum
 
+#循环输出passwd文件的第一列
 #for i in `cat /etc/passwd`
 #do
 #	echo $i | awk -F":" '{print $1}' 
 #done
 
+#批量增加、删除用户，设置用户密码。
 #i=01
 #for i in {01..10}
 #do
@@ -26,6 +29,7 @@
 #	fi
 #done
 
+#判断目录是否存在，并在目录内批量创建文件
 #[ -d /haowan ] || mkdir /haowan
 #i=1
 #for i in {1..10}
@@ -37,6 +41,7 @@
 #	fi
 #done
 
+#批量替换文件的指定内容
 #i=1
 #for i in `ls /haowan`
 #do
@@ -44,6 +49,7 @@
 #done
 #echo
 
+#打印九九乘法表
 #x=1
 #for x in {1 .. 9}
 #do
@@ -62,6 +68,7 @@
 #echo
 #done
 
+#打印九九乘法表(c语言版)
 for ((j=1; j <= 9; j++) )
 do
 	for ((i=1; i <= j; i++) )
