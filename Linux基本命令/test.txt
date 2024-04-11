@@ -6,7 +6,7 @@ ifconfig ens33
 vim /etc/sysconfig/network-scripts/ifcfg-ens33
 # 重启网络服务
 systemctl restart network
-# dns
+# 配置本地域名解析dns
 vim /etc/hosts
 # 修改主机名
 vim /etc/hostname
