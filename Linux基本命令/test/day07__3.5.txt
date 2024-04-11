@@ -1,0 +1,34 @@
+1. 将下列命令 "ls -l /tmp"的正确输出到/tmp/c.txt，错误输出到终端
+# ls -l /tmp 1> /tmp/c.txt
+2. 将下列命令"ls -l /tmp"的正确输出到终端，不显示错误输出
+# ls -l /tmp 2> /dev/null
+3. 产生一个大小为50M的文件/tmp/ddd
+# dd if=/dev/zero of=/tmp/ddd bs=1M count=50
+# ls -lh /tmp/ddd
+4. 用重定向的方式实现上一步要求
+# dd > /dev/zero < /tmp/ddd bs=1M count=50         
+5. 检测Linux主机能否和 www.jd.com 通信，并将输出进行收集到 /tmp/ping.txt，设置只ping 5次 (ping --help 查看帮助)
+# ping -c5 www.jd.com &> /tmp/ping.txt          
+6. 根据下列命令过程分析，文件/tmp/e.txt有几行
+# cat >/tmp/e.txt <<EOF
+> 111
+> 22
+> 333
+> 444
+>   EOF
+>   EOF
+> EOF
+  6行      
+       
+7. 一条命令创建出qf01   qf02  qf03  ... qf10 这样的10个用户
+# seq -w 10 | xargs -I @ useradd qf@
+# echo qf{01..10} | xargs -n1 useradd
+8. 将上面创建用户的uid设置为 9001 9002 9003 ... 9010
+# echo {01..10} | xargs -n1 | xargs -I {} usermod -u 90{} qf{}
+# seq -w 10 | xargs -I @ usermod -u 90@ qf@
+9. 一条命令将上面的10个用户的 修改好的 uid 打印出来 (只要uid)
+# echo qf{01..10} | xargs -n1 id -u 
+# seq -w 10 | xargs -I @ id -u qf@
+10. 将上面的10个用户进行彻底删除
+#echo qf{01..10} | xargs -n1 userdel -r 
+# seq -w 10 | xargs -I @ userdel -r qf@

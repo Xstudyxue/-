@@ -1,0 +1,39 @@
+1. 给虚拟机添加3块5G的磁盘     
+/dev/sdb /dev/sdc /dev/sdd
+2. 根据要求完成需求
+    2.1 需要创建一个目录 /databak 用来存储备份数据，该目录需要的存储空间大小为 12G ，请设计你方案，机器可能会进行重启，如何保证不中断？
+# mkdir /databak
+# pvcreate /dev/sdfb..d}
+# vgcreate vg0 /dev/sdfb..d)
+# Ivcreate -n lv0 -L 12G vg0
+# mkfs.xfs /dev/vg0/lvO
+# echo "/dev/DB/databak /databak xfs defaults 0 0">>/etc/rc.d/rc.local
+# chmod a+x /etc/rc.d/rc.loca
+# mount -a
+    2.2 该目录所创建的新文件会继承/databak目录的属组db  
+# groupadd db
+# chown :db /databak
+# chmod g+s /databak
+    2.3 任何用户都可以在目录内创建新文件
+# chmod  777 /databak -R
+    2.4 该目录下的文件只能由文件的属主删除
+# chmod 1777 /databak 
+or
+# chmod o+t /databak
+    2.5 假设该目录下的文件/databak/backup.log，只能追加内容，任何人不能删除该文件
+# chattr +a /databak/backup.log
+    
+3. 请问怎么样才能将每一次开机时间进行每次收集？
+修改vim /etc/rc.d/rc.local
+添加date >>/date.txt
+给rc.local添加x权限
+# chmod +x /etc/rc.d/rc.local
+4. 请描述你认为什么情况下需要lvm进行磁盘管理?
+需要正确地评估各分区大小
+1、当单个磁盘或者分区的容量不满足需求的时候
+2、当某个目录他可能后期需要进行扩容
+5. 将机器的时区改为伦敦时区
+ln -sf /usr/share/zoneinfo/Europe/London /etc/localtime
+6. 用自己的话组织描述什么是软链接什么是硬链接？
+软连接：类似快捷方式，目录内容会同步，可以跨文件系统，删除源文件后链接文件无效
+硬链接：不能跨文件系统，任意删除一个文件都不会损坏，不能对目录创建

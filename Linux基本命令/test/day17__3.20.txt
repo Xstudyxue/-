@@ -1,0 +1,104 @@
+1、编写一个shell脚本，系统管理工具箱，案例如下
+系统管理工具箱
+# bash tools.sh
+Command action
+	h	显示命令帮助
+	f	显示磁盘分区
+	d	显示磁盘挂载
+	m	查看内存使用
+	p	查看系统IP
+	q	退出程序
+
+Command (h for help): m
+                   total       used       free      shared    buffers     cached
+Mem:          7628        840       6788          0         29        378
+Swap:         2047          0         2047
+#!/bin/bash
+#bash tools.sh
+Command() {
+echo "Command action"
+echo "    h    显示命令帮助"
+echo "    f    显示磁盘分区"
+echo "    d    显示磁盘挂载"
+echo "    m    查看内存使用"
+echo "    p    查看系统IP"
+echo "    q    退出程序"
+}
+Command
+while 1>0
+do
+read -p "Command(h for help):" act
+case $act in
+"h")
+        Command
+;;
+"f")
+        lsblk
+;;
+"d")
+        df -Th
+;;
+"m")
+2、现有作业上传目录/upload及学员名单/name.txt(自己随便编一下，tom jerry zhangsan ...),要求每人要以自己的名字上传作业.
+写一个脚本,能够检查有谁没有上传作业. 其中tom同学因休学,不需要提示. 提示信息如下:  //用while或者for都可以
+# homework
+未交作业名单: xx xx
+#!/bin/bash
+# homework
+echo "未交作业名单："
+while read link
+do
+        ls -l /upload | grep $link &> /dev/null
+        if [ $? -ne 0 ]
+        then
+                echo -n `cat /upload/name.txt | grep $link` "  "
+                if [ $link = "tom" ]
+                then
+                continue
+                fi
+        fi
+
+done < /upload/name.txt
+echo
+3、 猜数字小游戏？
+程序随机生成一个100以内的整数？
+（1、）要求游戏人员猜,最多只能猜6次？（6次机会）
+（2、）如果所猜的数字小于答案,程序要提示小了,反之提示大了？
+（3、）并且提示还剩下多少次机会？
+（4、）6次机会用完，提示正确答案？
+（5、）判断输入的数字是否是1-100之内
+（6、）判断输入的数字是否为纯数字
+#!/bin/bash
+min=1
+max=100
+random_nu=$(( min + RANDOM % max ))
+for ((i=1;i<=6;i++))
+do
+        echo $random_nu
+        read -p "请输入你要猜的数：" nu
+  if [[ $nu =~ ^[0-9]+$ ]]
+  then
+        if [ $nu -ge 1 -a $nu -le 100 ]
+        then
+                if [ $nu -lt $random_nu ]
+                then
+                        echo "数字小了"
+                        echo "你还有$[6-i]次机会"
+                elif [ $nu -eq $random_nu ]
+                then
+                        echo "恭喜你答对了！"
+                        exit
+                else
+                        echo "数字大了"
+                        echo "你还有$[6-i]次机会"
+                fi
+        else
+        echo "输入超出范围，请重新输入"
+	echo "你还有$[6-i]次机会"               
+        fi
+  else
+        echo "输入的不是纯数字，请重新输入"
+        echo "你还有$[6-i]次机会"
+  fi
+done
+echo "答案为：$random_nu"

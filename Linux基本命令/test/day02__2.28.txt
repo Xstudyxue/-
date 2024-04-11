@@ -1,0 +1,49 @@
+1.复制/etc/passwd文件为/tmp/pass  
+# cp /etc/passwd /tmp/pass
+//以下操作都在/tmp/pass 文件进行
+2.复制第6行到倒数第二行下面
+6gg G P
+3.复制第6行中的/bin/sync字符串,粘贴到最后一行的行尾   [提示 y$]
+ 6gg ctrl+v选中/bin/sync y G $ p
+4.替换第12行中的字符串"/var/ftp"为"/data/ftp"
+:12 s/var/data/
+5.替换30行中字符串"qemu user"为"qemu user important
+:30 s/qemu user/qemu user important/
+6.在第9行的行尾插入字符串: mailserver
+9gg A mailserver
+9G$  i mailserver
+或
+:9 s/$/mailserver/
+7.在第11行的行首插入"字符串hero"
+11g I hero
+:11 s/^/hero/
+8.把文件所有的 sbin 都替换为 SBIN
+:% s/sbin/SBIN/g
+9.在第16,17,18行每一行前插入#号 [两种方法]
+:16,18 s/./#/
+16gg ctrl+v 18gg I 输入# esc两下
+:16,18 s/^/#/
+10.删除第20行 [两种方法]
+20gg dd
+可视行：20gg V x
+： 20 d
+11. 用可视行模式删除第22行和第23行
+22gg V 23gg dd
+12.删除第24,25,26行每一行前的第一个字符
+24gg ctrl+v 向下选中3行 x
+:24,26 s/.//
+13.在第27,28行每一行前插入字符#
+27gg ctrl+v 向下选2行 I # esc esc
+:27,28 s/^/#/g
+14.vim 有哪几种模式?
+命令模式
+编辑模式
+尾行模式
+可视模式
+15.vim 可视模式有几种?
+v  可视模式   选择不规则块
+V 可视行模式   选择行块
+ctrl+v  可视块模式     选择列块
+逻辑面试题
+现一个5L 的桶和一个3L 桶如何装出 4L 水来（水无限提供）不许baidu！！！
+5L的桶装满，往3L桶倒满，5L桶里剩2L，3L桶里的水倒掉，5L的桶里的2L水再倒进3L桶里，再把5L桶装满倒进3L桶，3L桶满之后，5L桶里就剩4L水

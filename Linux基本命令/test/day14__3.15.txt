@@ -1,0 +1,67 @@
+一、软件包管理-rpm
+//建议安装一台"最小化的"操作系统，做以下题
+第一题
+1、想办法获取net-tools软件包，并进行安装（可能会有依赖）
+# mount /dev/sr0 /mnt
+# rpm -qa | grep net-tools
+# rpm -ivh net-tools-2.0-0.24.20131004git.el7.x86_64.rpm
+2、使用两种方法查询验证是否安装了net-tools 软件包
+# rpm -q net-tools
+# rpm -ivh net-tools-2.0-0.24.20131004git.el7.x86_64.rpm
+3、查询安装net-tools 软件包，在系统安装了哪些命令
+# rpm -ql net-tools | grep bin
+4、使用rpm的方式安装 vsftpd 
+# rpm -ivh vsftpd-3.0.5-150600.8.3.x86_64.rpm --force --nodeps
+5、查询/var/ftp 目录是由哪个软件包安装出来的
+# rpm -qf /var/ftp
+6、卸载vsftpd软件包，但不卸载其他依赖软件包
+# rpm -e vsftpd-3.0.5-150600.8.3.x86_64.rpm --nodeps
+
+第二题 ：使用“一条命令“实现以下需求[写出命令即可]:
+ 1).查看cat命令是由哪个软件安装的
+ # rpm -qf `which cat`
+ 2).查看安装cat命令的软件还安装了哪些命令
+ # rpm -ql coreutils-8.22-23.el7.x86_64 | grep bin
+ 3).列出所有已安装软件包中包含有关键词"bash"的软件名
+ # yum list | grep bash
+ 4).统计所有已安装软件包的数量
+ # yum list | wc -l
+二、软件包管理-yum
+1、备份虚拟机现有的yum源
+ # mkdir /root/repo
+ # cp /etc/yum.repo/*.repo /root/repo
+2、手动配置清华大学镜像站 base基础源
+ # vim /etc/yum.repo/base.repo
+ [base]
+ name=qinghua base
+ baseurl=https://mirrors.tuna.tsinghua.edu.cn/centos/7/os/x86_64/
+ enabled=1
+ gpgcheck=0
+ 
+3、手动配置清华大学镜像站 epel基础源
+ # vim /etc/yum.repo/base.repo
+ [base]
+ name=qinghua base
+ baseurl=https://mirrors.tuna.tsinghua.edu.cn/epel/7/x86_64/
+ enabled=1
+ gpgcheck=0
+4、配置zabbix 3.4版本的yum源仓库---建议使用清华大学镜像站
+# vim /etc/yum.repo/zabbix.repo 
+[zabbix]
+name=zabbix 3.4
+baseurl=https://mirrors.tuna.tsinghua.edu.cn/zabbix/zabbix/3.4/rhel/7/x86_64
+enabled=1
+gpgcheck=0
+5、打印出zabbix3.4 yum源仓库有多少可用的rpm包？
+# yum repolist 
+# yum list | grep zabbix
+6、在本机只下载不安装zabbix-agent 包，并且将包放到/data目录 [扩展 man yum]
+# yum install --downloadonly  --downloaddir=/data zabbix-agent
+7、要求在机器上配置mariadb10.10 版本的数据库，请问怎么去配置对应的源
+# vim /etc/yum.repo/mariadb.repo
+[mariadb]
+name=mariadb 10.10
+baseurl=https://mirrors.tuna.tsinghua.edu.cn/mariadb/yum/10.11/centos/7/x86_64/
+enabled=1
+gpgcheck=0
+思考题：现有一台全新的机器无法上外网，请问如何才能安装mysql5.7的服务？请写出思路或者步骤

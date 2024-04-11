@@ -1,0 +1,33 @@
+1. 查看CPU占用最高的前10个进程信息
+# ps aux --sort -%cpu | head -11
+2. 安装httpd  "yum -y install httpd",启动服务httpd "systemctl start httpd"
+并查看其进程
+# ps aux | grep httpd
+3.请问 kill 8109 和 kill -9 8109 有什么区别
+kill 8109会杀死与他的子进程 默认-15
+kill -9 8109会强制杀死8109这个pid的进程，不会杀死子进程
+-15 正常终止
+-9 强制终止
+4. 如何停止httpd的所有进程 (多写几种方法)
+# killall httpd
+# ps aux |grep httpd
+# kill httd的pid
+
+5. 如何强制让用户 jerry 退出终端登录
+# kill pid
+# pkill -9 -u jerry
+6. 请问 ps aux 其中a、u、x分别是什么意思？
+# 显示所有用户的进程
+# 显示用户
+# 显示所有终端的进程
+7. 只查看sshd服务的 用户、进程ID、终端、命令
+# ps axo user,pid,tty,command | grep sshd
+8. 创建目录，并按以下要求设置： /data 目录属于 IT 组 , 目录可以被 IT 的组成员读取、写入和访问，
+其他任何用户不具备这些权限（root 用户除外） 在/data 目录中创建的文件的所属组自动变成 IT 组
+# mkdir /data
+# groupadd IT
+# chown :IT /data
+# chmod 770 /data
+# chmod g+s /data
+9. 执行 rm -rf a.txt ; 发现该文件无法删除，请问可能是什么原因？
+可能是有隐藏权限，可以通过 lsattr a.txt 进行查询

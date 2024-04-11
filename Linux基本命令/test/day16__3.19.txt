@@ -1,0 +1,50 @@
+1、编写一个shell脚本，执行 grouplist 命令，输入你想查询的组名，显示该组有多少成员？
+# grouplist IT
+IT组有：xx xx xx
+# vim /usr//bin/grouplist
+#!/bin/bash
+read -p "请输入你想查询的组名：" group_name
+group_user=$(getent group "$group_name" | awk -F: '{print $4}' | tr ',' ' ')
+echo "$group_name组有:$group_user"
+2、写一个脚本,运行后要求用户输入出生年份,输出用户的年龄:
+	1).如果用户输入为空,则提示输入不能为空且退出
+	2).如果用户输入为非正常出生年份(1900~2024范围)，则提示输入超出范围且退出
+# vim homework.sh
+#!/bin/bash
+ym=`date +%Y`
+read -p "请输入您的出生年份：" year
+if [ -z $year ]
+then
+        echo "输入不能为空"
+        exit
+else
+        if [ $year -ge 1900 -a $year -le 2024 ]
+        then
+                echo "您的年龄为：" $nl                         
+        else
+                echo "输入超出范围"
+                exit
+        fi
+fi
+3、写一个脚本,执行后可看到根分区使用情况:
+	1).如果剩余空间在50%以上(包含),则提示: 根分区使用正常,剩余空间为XXG
+	2).如果剩余空间低于30%(包含),则提示: 根分区空间不多,剩余空间为XXG,请及时清理
+	3).如果剩余空间低于15%(包含),则提示: 根分区空间告急,剩余空间为XXG,请立即清理
+# vim homework1.sh
+#!/bin/bash
+a=`df -Th | grep -w "/"| awk '{print $6}' | tr -d "%"`
+af=`df -Th | grep -w "/" | awk '{print$5}'`
+aa=`echo "100"`
+aaa=$(($aa-$a))
+if [ $aaa -ge 50 ]
+then
+        echo "根分区使用正常,剩余空间为"$af
+elif [ $aaa -ge 70 ]
+then
+        echo "根分区空间不多,剩余空间为$af,请及时清理"
+elif [ $aaa -ge 85 ]
+then
+        echo "根分区告急,剩余空间为$af,请及时清理"
+else
+        echo "???" 
+fi

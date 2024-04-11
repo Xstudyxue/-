@@ -1,0 +1,35 @@
+1.使用两种方法不打印/etc/rc.local文件的空行
+# grep -v '^$' /etc/rc.local
+# cat /etc/rc.local | tr -s '\n'
+# sed '/^$/ d' /etc/rc.local
+2.统计/etc目录下所有的软链接的个数(不包含子目录下的软链接) [两种方法]
+# find /etc-maxdepth 1  -type l | wc -l
+# ls -l /etc | grep -c  "^l"
+3.统计/etc目录下所有的软链接的个数
+# find /etc -type l |wc -l
+4.统计出所有用户每种shell的个数,只打印出前三名
+# cut -d":" -f7 /etc/passwd | sort |uniq -c |sort -rn | head -3
+5. 打印出/etc目录下所有的"非"软连接文件
+# find /etc ! -type l
+# ls -Rl /etc | grep -v "^l" 
+6. 删除系统中所有的a.txt文件,不区分大小写（man find）
+# find / -iname "a.txt" -exec rm -rf {} \;
+7. 打印出系统中所有的空白文件,不要打印目录
+# find / -empty ! -type d 
+# find / -empty -type f
+8. 将 /etc/rc.local的空行删除[多写几种方法]
+# grep -v '^$' /etc/rc.local | tee /etc/rc.local
+# cat /etc/rc.local | tr -s '\n' | tee /etc/rc.local
+# sed -i '/^$/ d' /etc/rc.local
+9. 使用sed，将/etc/passwd 文件内容备份至 /opt/pass
+# sed 'w /opt/pass' /etc/passwd
+10. 使用sed，修改 /opt/pass  文件，只留下文件的前10行
+# sed  ' 1,10 !d' /opt/pass | cat -n
+# sed -i '11,$ d' /opt/pass
+11. 使用sed，修改 /opt/pass  文件，将文件的所有小写替换为大写( 之前vim里面有讲过，尝试套用)
+# sed -i 's/[a-z]/\u&/g' /opt/pass
+12. 在 /opt/pass 文件的第一行上面追加内容  --你好--
+# sed '1 i --你好--' /opt/pass
+13. 用sed分别实现head -1和tail -1的功能
+# sed -n '1p' /etc/passwd
+# sed -n '$p' /etc/passwd

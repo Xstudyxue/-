@@ -1,0 +1,51 @@
+（最好是搞个新的环境)
+1.添加三块磁盘，大小分别为10G
+添加的三个磁盘的名字分别是？假设如果在添加一个磁盘的名字是？
+sdb sdc sdd         sde
+将第一块磁盘使用fdisk分为一个主分区,一个扩展分区,一个逻辑分区,将逻辑分区挂载使用（分区大小以及挂载点自己自由选择）
+fdisk /dev/sdb
+n ; p ;+1G ;
+n; e ; +1G;
+n; l  ;  p ; w
+# lsblk
+# mkfs.xfs /dev/sdb5 
+# mkdir /opt/sdb5 
+# mount /dev/sdb5 /opt/sdb5
+将第二块磁盘使用parted分为5个分区，暂不进行挂载使用
+# parted -s /dev/sdc mktable gpt
+# parted -s /dev/sdc mkpart p 0G 1G
+# parted -s /dev/sdc mkpart p 1G 2G
+# parted -s /dev/sdc mkpart p 2G 3G
+# parted -s /dev/sdc mkpart e 3G 4G
+# parted -s /dev/sdc mkpart l 4000M 4500M
+2.查资料,写出磁盘接口的区别？
+
+SATA（Serial Advanced Technology Attachment）接口是目前最常用的硬盘接口类型。SATA接口有多种版本，最初的SATA接口传输速率为1.5Gbps，而SATA 2.0的传输速率为3.0Gbps，SATA 3.0的传输速率则提高到了6.0Gbps。这种接口类型可以用于连接硬盘、光驱、DVD/CD读写器等设备，因此广泛用于台式机和笔记本电脑中。
+SATA接口的优势在于其传输速率较快，而且支持热插拔。此外，SATA接口还具有较小的接口尺寸，这使得硬盘的安装变得更加简便。
+IDE（Integrated Drive Electronics）接口是一种较早的硬盘接口类型，它通常用于连接IDE接口的硬盘、光驱、DVD/CD读写器等设备。IDE接口在台式机中广泛使用，但现在已经被SATA接口所取代。
+IDE接口的优势在于其兼容性强，它可以支持多个设备的连接。但是，IDE接口的传输速率较慢，通常为133Mbps，这使得其难以与更快的硬盘接口竞争.
+CSI（Small Computer System Interface）接口是一种较为专业的硬盘接口类型，通常用于连接服务器或其他高端计算机系统。SCSI接口的传输速率可以达到320Mbps，而且可以同时连接多个硬盘或其他外围设备，因此非常适用于需要大量数据处理和存储的应用场景。
+SCSI接口的缺点在于其复杂性较高，需要专业知识进行配置和安装。此外，SCSI接口的设备通常价格较高，这使得其在普通用户中使用较少。
+
+3.查资料，写出xfs和ext4文件系统有什么区别
+
+1.文件系统大小限制：EXT4最大支持16TB的文件系统和1EB的文件大小。而XFS最大支持8EB的文件系统和8EB的文件大小。
+2.文件系统碎片：EXT4文件系统在文件删除时可能会出现碎片，需要定期进行碎片整理。而XFS采用一种称为延迟分配（Delayed Allocation）的技术，可以减少文件碎片。
+3.文件系统扩展：EXT4可以在线扩展文件系统大小，而XFS需要卸载文件系统并执行特殊的命令来扩展。
+4.数据一致性：EXT4使用Journaling来确保文件系统在崩溃后可以恢复到先前的状态。XFS也有Journaling功能，但它不是必需的，因为XFS在设计时就考虑了数据一致性。
+5.并发性能：XFS在多CPU环境下的并发性能比EXT4更好，因为XFS采用了一些优化措施，例如支持多个并发操作。
+    
+***下面的题写出命令即可***
+1.将/dev/sdb1分区设置为xfs文件系统并且挂载到/mnt/sdb1目录进行使用
+# mkfs.xfs /dev/sdb1 
+# mkdir /mnt/sdb1
+# mount /dev/sdb1 /mnt/sdb1
+2. 将/etc/passwd 文件的5~8行带行号输出，并追加到 /opt/info文件
+# head -8 /etc/passwd| tail -4 | cat -n >> /opt/info
+3. 将第1题的第二块磁盘划分的5个分区用一条命令进行批量格式化为xfs文件系统，并在用一条命令挂载到 /mnt/sdc1 /mnt/sdc2 ... /mnt/sdc5    
+[格式化一条，挂载一条]
+# mkdir /mnt/sdc{1..5}
+# seq 5 | xargs -I {} mkfs.xfs /dev/sdc{}
+# echo /dev/sdc{1..5} | xargs -n1 mkfs.xfs 
+# seq 5 | xargs -I {} mount /dev/sdc{} /mnt/sdc{}
+# echo {1..5} | xargs -n1  |  xargs -I {} mount /dev/sdc{} /mnt/sdc{} 

@@ -1,0 +1,23 @@
+-----计划任务-----
+1. 每天晚上的23点整打包压缩 /etc/passwd /etc/shadow /etc/group /etc/gshadow 为 file.tar.gz，压缩包放在/opt 下，并且不能覆盖之前的
+00 23 * * * /usr/bin/tar -caf /opt/`date +\%m_\%d`_file.tar.gz /etc/{passwd,shadow,group,gshadow}
+2. 每周一的8点和18点列出根分区磁盘使用状况，并且写入到/tmp/disk.txt 文件里，不允许覆盖之前的内容
+"要求格式要好看"
+比如内容如下：
+# cat /tmp/disk.txt
+2024年 3月 18日 星期一 8:00:00 CST
+/dev/mapper/centos-root xfs        17G  5.2G   12G   31% /
+
+2024年 3月 25日 星期一 18:00:00 CST
+/dev/mapper/centos-root xfs        17G  5.2G   12G   31% /
+
+00 8,18 * * 1  /usr/bin/echo `date >> `date +\%m_\%d`_disk.txt && /usr/bin/df -Th | /usr/bin/grep -w "/" >> `date +\%m_\%d`_disk.txt`
+3.制定计划任务,每天的8:30,16:30将内存的使用情况保存到/tmp/meminfo文件中，不允许覆盖之前的内容
+30 8,16 * * * /usr/bin/free -b  >>  /tmp/`date +\%m_\%d`_meminfo
+
+4.制定计划任务,每周3凌晨3:20清空/test目录
+20 3 * * 3 /usr/bin/rm -rf /test/*
+
+思考：执行计划任务时，怎么样才能将邮件屏蔽？
+
+command &> /dev/null

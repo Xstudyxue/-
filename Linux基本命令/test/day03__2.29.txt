@@ -1,0 +1,33 @@
+用户和组管理
+1、要求创建用户user06，该用户的UID为6688，并且该用户不允许登入use
+# useradd user06 -u 6688 -s /sbin/nologin
+2、要求创建组OP，并且该组的GID为6677
+# groupadd OP -g 6677
+3、要求创建用户user07，该用户的基本组是OP
+# useradd user07 -g OP
+4、要求创建用户user08，该用户不允许有家目录
+# useradd user08 -M
+5、如果删除OP组，请问是否能删除？
+不能，因为OP是user07的基本组
+6、请查看用户user07的UID【只输出uid】
+# id -u user07
+7、创建用户user09并指定基本组为admin
+# groupadd admin
+# useradd user09 -g admin
+8、修改用户user09密码为sz2401
+# passwd user09 sz2401
+# echo "sz2401" | passwd --stdin user09
+9、修改用户user09为不能登录系统
+# usermod -s /sbin/nologin user09
+11、修改用户user07的密码为sz666
+# passwd user07 sz666
+# echo "sz666" | passwd --stdin user07
+12、测试从user09用户能否可以登录到user07用户
+不能
+13、用非交互式方式修改user07的密码为sz777
+# echo sz777 | passwd --stdin user07
+14、思考一下，如果要修改OP组的gid为 8899，请问怎么修改？
+# groupmod -g 8899 OP
+15、请描述一下你认为基本组和附加组的关系？
+每个用户只有且必须有一个基本组
+用户的附加组可以有很多个

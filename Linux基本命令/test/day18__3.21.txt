@@ -1,0 +1,37 @@
+1. 在/haowan目录下创建10个以"10个随机小写字母字符.固定字符串"为名字的文件.如sjklhejghd.txt
+# ls /haowan
+sjklhejghd.txt qwedfgxcvf.txt   ...
+#!/bin/bash
+aaa () {
+i=1
+while [ $i -le 10 ]
+do
+a=({a..z})
+r_nu=$[RANDOM%10]
+echo -n ${a[ $r_nu]}
+unset $a[$r_nu]
+let i++
+done
+echo
+}
+mkdir /haowan
+i=1
+for i in {1..10}
+do
+        aaa | xargs -I {} touch /haowan/{}.
+txt
+done
+
+2. 编写一个脚本，执行结果跟执行uuid 命令输出效果一样？
+ # bash uuid.sh
+ 75c3eab4-d9e0-11ed-9729-000c2992aab9 
+#!/bin/bash
+num=({0..9} {a..z})
+a1 () {
+for x in {1..4}
+do
+ru_a=$[ RANDOM % 36 ]
+echo -n ${num[$ru_a]}
+done
+}
+echo `a1``a1`-`a1`-`a1`-`a1`-`a1``a1``a1`

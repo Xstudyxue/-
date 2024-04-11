@@ -1,0 +1,33 @@
+运维工程师小吴执行 df -Th 命令，发现内容如下
+# df -Th
+文件系统                		类型      容量  已用  可用 已用% 挂载点
+/dev/mapper/centos-root 	xfs        17G  16G   1G    96%    /
+/dev/mapper/centos-home 	xfs        10G  1G     9G    10%   /home
+ 
+# vgs
+VG     #PV #LV #SN Attr   VSize   VFree 
+centos   2   2   0 wz--n-  28.99g     0  
+当发现根分区使用已超过96%，目前卷组没有剩余空间，也没有新的磁盘,但是发现 /home 目录多余空间，请问怎么去给根分区扩容？
+注意：tom 用户 和 jerry 用户 的家目录在  /home 下，扩容后一定要保证tom和jerry能正常使用正常创建文件！！！
+
+//温馨提示：可以提前添加一个磁盘完成上面的环境，然后在做题！！！！
+cp /home/* /root/home/
+umount /dev/centos/home
+mkfs.ext4 /dev/centos/home
+resize2fs /dev/centos/home 2G
+Ivreduce -L 2G /dev/centos/home
+Ivextend -l +100%FREE /dev/centos/root
+xfs_growfs /dev/centos/root
+mount /dev/centos/home /home
+cp /root/home/* /home/
+chown -R tom:tom /home/tom
+chown -R jerry:jerry /home/jerry
+
+cp /home/* /root/home/ -r
+umount /home
+lvremove /dev/centos/home 
+vgdispaly
+lvextend -l +2559 /dev/centos/root
+xfs_growfs /dev/centos/root
+df -Th
+cp 
