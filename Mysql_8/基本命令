@@ -1,5 +1,89 @@
+# 安装MySQL8.0 
+# 演示为centos 7
+rpm包:https://repo.mysql.com//mysql80-community-release-el7-11.noarch.rpm
+# 配置yum源 上传或下载
+yum -y install mysql80-community-release-el7-11.noarch.rpm
+# 更新yum仓库
+yum repolist
+# 查找MySQL包
+yum list | grep mysql
+# 安装mysql_community_server
+yum -y install mysql_community_server
+#启动
+systemctl start mysqld 
+# 若启动失败 
+rm -rf /var/lib/mysql
+# 查看端口是否被占用 
+netstat -tnlp | grep 3306
+# 如果再失败，去看看是不是Mariadb包未卸载
+rpm -qa | grep mariadb
+# MySQL安装启动完成会有默认密码，通过日志查看并修改密码
+grep password /var/log/mysqld.log
+# 登录
+mysql -uroot -p"默认密码"
+or
+# 登录并修改密码 注意新密码要符合密码策略，否则修改失败，要用默认密码登录去修改密码策略
+mysqladmin -uroot -p"默认密码" password "旧密码"
+# 查看当前使用用户
+mysql> select user();
++----------------+
+| user()         |
++----------------+
+| root@localhost |
++----------------+
+# 查看数据库
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
 # 创建数据库
-create database 数据库名字;
-# 查看所有数据库
-show databases;
-# 
+mysql> create database 数据库名字;
+# 使用/切换数据库
+mysql> use 数据库名字;
+# 创建一个简单表 只有id,name两列
+mysql> create table tab1 (id int,name char(50));
+Query OK, 0 rows affected (0.01 sec)
+# 插入数据 有几列插几列，有额外设置则不填
+mysql> insert into tab1 values (1,"zhangsan");
+Query OK, 1 row affected (0.03 sec)
+# 查看数据库内的表
+mysql> show tables;
++----------------+
+| Tables_in_test |
++----------------+
+| tab1           |
++----------------+
+# 查看指定表的结构
+mysql> desc 表名;
+mysql> desc tab1;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| id    | int      | YES  |     | NULL    |       |
+| name  | char(50) | YES  |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+# 查看表内所有内容
+mysql> select * from 表名;
+mysql> select * from tab1;
++------+----------+
+| id   | name     |
++------+----------+
+|    1 | zhangsan |
++------+----------+
+1 row in set (0.00 sec)
+# 查看指定列内容
+mysql> select (指定列1,2,.....) from tab1;
+mysql> select name from tab1;
++----------+
+| name     |
++----------+
+| zhangsan |
++----------+
+1 row in set (0.00 sec)
+
