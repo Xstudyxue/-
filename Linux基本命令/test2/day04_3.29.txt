@@ -1,0 +1,51 @@
+【最好是搞个新环境，有些用户之前可能已经创建过】
+1.创建用户zhangsan,lisi,laoliu
+# useradd zhangsan 
+# useradd lisi
+# useradd laoliu
+2.将lisi加入zhangsan组
+# usermod -aG zhangsan lisi
+# gpasswd -a lisi zhangsan  
+3.给zhangsan用户设置密码为123,lisi用户设置密码为456
+# echo "123" | passwd --stdin zhangsan
+# echo "456" | passwd --stdin lisi
+# passwd zhangsan
+123
+# passwd lisi
+456
+4.使用root用户创建一个目录/zhangsan,并将属主修改为zhangsan,属组不改,将权限改成750
+# mkdir /zhangsan
+# chown zhangsan /zhangsan
+# chmod 750 /zhangsan
+5.切换到zhangsan用户,在/zhangsan目录下创建联级目录a/b/c,并将/etc/passwd文件复制到c目录下
+# su - zhangsan
+# mkdir -p /zhangsan/a/b/c
+# cp /etc/passwd /zhangsan/a/b/c
+6.切换到zhangsan用户，在/zhangsan目录下创建一个文件zhangsan.txt,并将权限改为666
+# su - zhangsan 
+# touch /zhangsan/zhangsan.txt
+# chmod 666 /zhangsan/zhangsan.txt
+7.将a目录及a目录中所有的文件权限都改成777
+# chmod 777 -R /zhangsan/a
+     1).zhangsan  laoliu 能不能在/zhangsan目录下创建文件?  
+	zhangsan可以，因为他具有/zhangsan 属主权限,rwx
+        laoliu 不可以 ， 因为他是/zhangsan 其他人，没有权限 
+     2).zhangsan  laoliu 能不能访问或修改zhangsan.txt文件的内容?能不能重命名zhangsan.txt文件?  
+	zhangsan  可以访问修改重命名这个文件，属主具有最高权限，并且 zhangsan.txt 是666的权限
+        laoliu不能访问和修改 不可以 ，因为他是/zhangsan 其他人，没有权限 ，也不能重命名
+     3).zhangsan  laoliu 能不能访问c目录下的passwd文件?   
+	zhangsan 属主具有rw权限 可以访问，老六不能访问 其他用户
+     4).zhangsan  laoliu 能不能删除或重命名c目录下的passwd文件?   
+	zhangsan  可以
+        laoliu 不可以
+8.zhangsan用户能否在lisi的家目录下创建文件,为什么? 如果将zhangsan加入到root组以后呢?
+不能创建  ，因为zhangsan是lisi 家目录的其他用户  不具备权限  ;   
+加入到root组后不可以，因为root组就是一个普通的组，并且 lisi家目录 /home/lisi 属组是lisi
+9.配置zhangsan用户可以在系统执行任何命令，但是不可以删根
+# vim /etc/sudoers
+zhangsan ALL=(ALL) ALL, !  /usr/bin/rm -rf  /*
+
+
+
+
+

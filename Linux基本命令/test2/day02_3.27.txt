@@ -1,0 +1,41 @@
+寄语：愿你在追求梦想的路上永远加油，不放弃，勇往直前！
+第一部分 文件管理
+1.创建目录/abc
+# mkdir /abc
+2.复制/etc/passwd到/abc下并改名为pass
+# cp /etc/passwd /abc/pass
+3.移动/abc/pass 到 /opt 下
+# mv /abc/pass /opt
+4.在/opt下创建test目录
+# mkdir /opt/test
+5.在上题上的test目录中创建1,2,3 三个目录
+# mkdir /test/{1..3}
+# mkdir /opt/test/{1,2,3}
+6.在上题中的   1   目录中分别创建a.txt b.txt c.txt d.txt 四个文件
+# touch /opt/test/1/{a..d}.txt
+7.复制上题中的目录1中的a.txt b.txt 文件复制到 /opt 下
+# cp /opt/test/1/{a..b}.txt /opt
+8. 将 6 题中 1 目录里面的 c.txt 移动到  /opt 下 并且重命名为 cc.txt
+# mv /opt/test/1/c.txt /opt/cc.txt
+第二部分 vim编辑器
+1.复制/etc/passwd文件为/tmp/pass
+# vim /etc/passwd
+:w /tmp/pass
+2.只留下文件的 10 ~ 20 行
+9dd 11gg dG 
+21gg dG	gg	9dd
+3.给每一行都加上行号
+:set nu
+4.复制剩余文件的第6行到倒数第二行下面
+6yy 
+G P
+5.替换文件中 Network 为 network
+:% s/Network/network/g
+5.删除第8行
+8gg dd
+6.把文件所有的 sbin 都替换为 SBIN
+:% s/sbin/SBIN/g
+7.在第3行的行尾插入字符串: ftpserver
+:3 s/$/ftpserver/
+8.vim 有哪几种模式?
+命令 编辑 可视 末行

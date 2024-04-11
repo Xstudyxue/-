@@ -1,0 +1,31 @@
+1.找出硬盘中所有大于20M且以 .img结尾的文件 (如果没有就生成一个去验证)
+# find / -size +20M -name "*.img" -type f
+2.找出/etc目录中所有的以.png结尾的文件,并拷贝到/tmp/png目录中(请提前做好快照)
+# find /etc -name "*.img" -exec cp {} /tmp/png \
+3.打印出所有用户的用户名,UID,GID,登录shell
+# awk -F":" '{print $1,$3,$4,$NF}' /etc/passwd
+4.打印出 /boot 目录的磁盘使用百分比,纯数字.如:80%, 打印效果为:80
+# df -Th | grep -w '\/boot' | awk '{print $6}' | tr -d "%"
+5.打印出ens33网卡的IP,只显示IP (ifconfig ens33)
+# ifconfig ens33 | grep netmask | awk '{print $2}'
+6.带行号打印出/etc/passwd文件的第20行到第25行,并按照GID从大到小排序
+# cat -n /etc/passwd | awk 'NR>=20&&NR<=25 {print $0}' | sort -t ":" -k 4 -rn
+7.打印出/etc/passwd文件中所有包含bash的行
+# grep -w "bash" /etc/passwd     
+8.统计出/etc/passwd文件中所有不含nologin的行的数量
+# grep -cv  "nologin" /etc/passwd
+9.统计出/etc/passwd文件第二行的字符数
+# sed -rn '2p' /etc/passwd | wc -c
+# awk -F":" 'NR==2 {print $0}' /etc/passwd | wc -c
+10.统计出除root之外的所有可登录用户的个数
+# grep -v "^root" /etc/passwd | grep -w "/bin/bash"
+提高题：
+将系统大于UID 1000(不包含）的用户彻底删除
+提示： 可以先取出指定的行
+# awk -F":" '$3>1000 {print $1}' /etc/passwd | xargs -I {} userdel -r {}
+
+笔记上的随堂练习
+1、将/etc/passwd 的UID进行输出，然后再进行从大到小进行排序
+# awk -F":" '{print $3}' /etc/passwd | sort -rn
+2、将/etc/passwd 的前三个用户名打印出来
+# awk -F":" 'NR<=3 {print $1}' /etc/passwd

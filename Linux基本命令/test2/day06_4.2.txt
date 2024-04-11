@@ -1,0 +1,49 @@
+寄语：记住，你不是在和别人竞争，你只是在做最好的自己。
+
+1. 
+新增一块磁盘,大小为10G,设置磁盘标签类型为gpt;
+   创建分区名称为vsftp,大小为3G,创建为xfs文件系统，并挂载到/var/vsftp; 
+   创建另一个分区名称为dbdata,大小为5G,创建为ext4文件系统，并挂载到/dbdata;并设置开机自动挂载
+# parted -s /dev/sdb mktable gpt
+# parted -s /dev/sdb mkpart vsftpd 0 3G
+# mkfs.xfs /dev/vsftpd
+# mkdir /var/vsftpd
+# mount /dev/vsftpd /var/vsftp
+
+# parted -s /dev/sdb mkpart dbdata 3G 8G
+# mkfs.xfs /dev/dbdata
+# mkdir /dbdata
+# mount /dev/dbdata  /dbdata
+# vim /etc/fstab
+/dev/dbdata /dbdata	xfs	defaults	0   0
+# echo 'mount /dev/dbdata /dbdata/' >> /etc/rc.local
+# chmod +x /etc/rc.d/rc.local
+2. 将第一题中挂载点为 /dbdata 对应设备，在线修改挂载属性为 ro
+# mount -o remount,ro /dev/dbdata
+3. 将第一题中挂载点为 /var/vsftp 对应设备，在线修改挂载属性为 rw 和 nosuid
+# mount -o remount,rw,nosuid  /var/vsftp
+4. 将系统时区设置为 欧洲/伦敦 ，[ 提示： /etc/localtime ]
+# cp /usr/share/zoneinfo/Europe/London /etc/localtime
+# ln -sf /usr/share/zoneinfo/Europe/London /etc/localtine
+5. 将 /dev/sr0 设备使用UUID的方式进行永久挂载，写出具体步骤
+# blkid /dev/sr0
+# vim /etc/fastab
+UUID=2018-11-25-23-54-16-00 /sr0 xfs defaults 0 2
+mount -a
+6. 请写出以下命令的作用
+fdisk	分区
+parted	分区
+mkfs.xfs	格式化/创建文件系统
+lsblk	磁盘分区情况
+blkid	看设备uuid
+mount	挂载
+
+7. 用自己的话描述一下软链接与硬链接的异同点
+软链接类似于 Windows 中的快捷方式删除原始文件不会影响软链接的可用性，但是如果软链接指向的目标文件被删除了，软链接就会失效。
+硬链接是指向文件数据块的直接指针，因此，原始文件和其硬链接之间共享相同的 inode 号码和数据块
+8. 查资料，理解xfs 和 ext4 文件系统的区别
+ext4：在长时间使用后可能会出现碎片，影响性能，但ext4提供了在线碎片整理工具e4defrag来解决这个问题。
+XFS：XFS在设计上更适合处理大文件和大容量文件系统，并且在处理碎片方面表现更好，因此不太容易出现碎片问题。
+9. 如果想每次开机的时候都想要清空 /opt 目录的内容，请问该怎么操作？
+# echo 'rm -rf /opt/' >> /etc/rc.local
+# chmod +x /etc/rc.d/rc.local

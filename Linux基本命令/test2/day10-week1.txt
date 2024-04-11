@@ -1,0 +1,105 @@
+《就业班第一周 周考》
+
+1.创建组admin 创建用户jack和tom属于该组（该组为他们的第二个组） 创建用户tony，不属于admin， 他们的密码都是:qianfeng
+# groupadd admin
+# useradd -G admin jack
+# useradd -G admin tom
+# useradd tony
+# echo "qianfeng" | passwd --stdin "jack"
+# echo "qianfeng" | passwd --stdin "tom"
+# echo "qianfeng" | passwd --stdin "tonny"
+2.拷贝/etc/fstab到/var/tmp/fstab， 属主和属组为root； 任何人都不能执行该文件； 
+# cp /etc/fstab /var/tmp/fstab
+# chown root:root /var/tmp/fstab
+# chmod 666 /var/tmp/fstab
+3.将 /etc/passwd  复制到 /tmp/1.txt 中
+# cp /etc/passwd /tmp/1.txt
+4.将/etc/passwd复制到/opt目录下，并执行以下操作 
+# cp /etc/passwd /opt/
+	4.1 将所有的root全部替换成ROOT
+	# cat /opt/passwd | sed 's/root/ROOT/g'
+	# vim /opt/passwd
+	:% s/root/ROOT/g
+	4.2 将每行的第一个n替换成N
+	# cat /opt/passwd | sed 's/^n/N/'
+	# vim /opt/passwd
+	:% s/n/N/
+	4.3 将1-4行删除
+	# cat /opt/passwd | sed '1,4d'
+	命令模式： gg	4dd
+	末行模式:  :1,4 d
+	可视块：gg  V   4gg    d
+5.创建目录/module.属主和属组分别为jack admin, 在/module下创建20个文件,文件名前缀为?le, (?le1,?le2,?le3       ?le20) 
+# mkdir /module 
+# chown jack:admin /module
+# touch /module/?le{1..20}
+# seq 20 | xargs -I {} touch /module/?le{} 
+	5.1 删除文件名中含有2的文件
+	# rm -rf /module/*2*
+6.在vim编辑器中，请解释下面命令的含义：yy ，dd， G， i， a，  u，
+yy	#复制光标所在行
+dd	#删除光标所在行
+G	#将光标跳到末行
+i	#进入编辑模式，并在当前字符前面输入
+a	#进入编辑模式，并在当前字符后面输入
+u	#撤销上一次操作
+7.查找/etc/passwd中, ftp的关键词语
+# vim /etc/passwd  -> /ftp 高亮关键字
+# grep ftp /etc/passwd
+8.希望alice能够对/home/it有读、写、执行权限
+# chown alice /home/it
+# chmod u=rwx /home/it
+# setfacl -m u:alice:rwx /home/
+9.说说你的操作系统版本
+centos 7.6 1810
+centos 8.2
+centos 9
+kail,redhat,unbantu
+10.vim编辑器怎么删除第一列的
+gg ctrl + v G d
+:1d\n
+:1 /.// 
+11.写出下列命令的快捷键，移动到命令行首、从光标删除到文件最后。
+# ctrl a
+# ctrl k
+	11.写出下列命令模式的快捷键，
+	11.1 移动到行首
+	0	
+	11.2 从光标删除到文件最后
+	D
+12.如何查看一个文件的详细信息？如何查看文件内容？说出多个命令，有什么区别？
+# ls -l
+# cat 	#直接全部看
+# less	#全部看，支持翻页
+# tail	#从尾看，默认尾十行
+# head	#从头看，默认头十行
+# more	#支持翻页
+13.使用一条命令查看一共当前系统一共有多少个用户    提示  | wc -l 
+# cat /etc/passwd | wc -l
+# grep -v /etc/passwd 
+14.修改 /tmp 下1的文件权限为700  使用数字
+# chmod 700 /tmp/1
+15.修改 /tmp下  2的目录 权限为765  使用字母
+# chmod g=rw /tmp/2
+16.修改属主和属组的命令是什么？
+# chown
+17.怎么查看隐藏文件？
+# ls -a
+18. 怎么查看历史执行命令？
+# history
+19. drwx-rw---这是文件？还是目录？权限是多少？
+-  普通文件
+d 目录
+l   链接文件
+b 块设备
+c 字符设备
+# 目录 权限760
+21. 一条命令给 /tmp/1.txt 设置为 000 权限
+# chmod 000 /tmp/1.txt
+# chmod a=  /tmp/1.txt
+22. 如果一个普通用户想在 /root 目录创建文件，可以有什么方法？
+# chmod o+x /root
+# chmod o=rwx /root
+# 将用户加入root组
+23 我公司为什么要聘请你？
+因为你们在招人

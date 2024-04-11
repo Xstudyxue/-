@@ -1,0 +1,95 @@
+寄语：在你的奋斗路上，愿你始终保持一颗勇往直前的心。加油！
+
+一、简答题 [写出答案即可]
+1.将/dev/sde磁盘标签类型设置为gpt
+# partes -s /dev/sde mktable gpt
+2.创建一个1G的分区sde1，并以只读方式并且不能含有suid的文件格式，挂载到/mnt/sde1
+# parted -s /dev/sde mkpart a 0 1G
+# mkfs.xfs /dev/sde1
+# mount -o ro,nosuid /dev/sde1 /mnt/sde1
+3.将上题在不取消挂载的情况下修改为读写的挂载属性
+# mount -o remount,rw /mnt/sde1
+4.查看所有设备的基本信息比如UUID 文件系统类型
+# blkid
+5.将 sde1 分区永久挂载到 /mnt/sde1 [两种方法]
+# vim /etc/fstab
+/dev/sde1 /mnt/sde1 gpt default 0 0
+echo 'mount /dev/sde1 /mnt/sde1/' >> /etc/rc.local
+chmod o+x /etc/rc.d/rc.local
+6.采用UUID的方式把镜像文件sr0写在fstab文件进行永久挂载
+# vim /etc/fstab
+UID=2018-11-25-23-54-16-00 /mnt/sde1 iso9660 default 0 0
+7.描述MBR和GPT磁盘标签的区别？
+MBR最多支持2T，而GPT理论上是无限制的。
+MBR最多支持四个主分区，GPT没有限制。
+win7 32位系统及之前只能用MBR分区，从Win7 64位系统开始，后面的系统都支持GPT分区。
+其它：GPT是由UEFI启动的，系统需要UEFI引导启动
+8.描述一下inode和block的作用？
+inode记录文件的属性
+block实际记录文件的内容的，一个文件可能占用多个block
+9.如果使用root删除一个文件，发现无法删除，可能是哪些情况？
+# lsattr
+①  隐藏权限 +i 或 +a
+②  文件在可读的文件系统
+二、操作题
+1. 给虚拟机添加2块10G的磁盘     
+略
+2. 根据要求完成需求
+    现有2块磁盘，分别是sdb sdc ，每个磁盘个10G大小
+	按企业要求完成下列操作
+	创建一个至少有两个PV组成的大小为20G的名为testvg的卷组VG；要求PE大小为16MB, 而后在卷组中创建大小为15G的逻辑卷testlv；挂载至/databak目录。
+    pvcreate /dev/sdb
+    pvcreate /dev/sdc
+    vgcreate testvg /dev/sdb /dev/sdc
+    lvcreate -n testlv -L 15G vg0
+    mkfs.xfs /dev/testvg/testlv
+    mkdir /databak
+    mount /dev/testvg/testlv /databak
+    2.2 该目录所创建的新文件会继承/databak目录的属组mysql  
+    groupadd mysql
+    chown mysql /databak
+    chnod g+s /databak
+    2.3 设置mysql用户以及mysql组成员可以在该目录创建删除文件，其他用户不可以
+    chmod 770 /databak
+    2.4 该目录下的文件只能由文件的属主删除，root也不可以
+    chmod o+t /databak
+    2.5 假设该目录下的文件/databak/backup.log，只能追加内容，任何人不能删除该文件
+    chattr +a /databak/backup.log
+3. 现发现 /databak 空间不够用，要求扩容至20G，请问该如何处理？
+#  vgdisplay testvg
+#  lvextend -l +318 /dev/testvg/testlv		
+#  xfs_growfs /dev/testvg/testlv
+
+4. 某一天执行df -Th 命令，发现内容如下
+# df -Th
+文件系统                		类型      容量  已用  可用 已用% 挂载点
+/dev/mapper/centos-root 	xfs        17G  16G   1G    96%    /
+/dev/mapper/centos-home 	xfs        10G  1G     9G    10%   /home
+ 
+# vgs
+VG     #PV #LV #SN Attr   VSize   VFree 
+centos   2   2   0 wz--n-    26.99g     0  
+当发现根分区使用已超过96%，目前卷组没有剩余空间，也没有新的磁盘,  但是发现 /home 目录多余空间，请问怎么去给根分区扩容？
+注意：tom 用户 和 jerry 用户 的家目录在  /home 下，扩容后一定要保证tom和jerry能正常使用正常创建文件！！！
+
+1. 备份 tom 和 jerry的家目录
+# mv /home/tom   /root
+# mv /home/jerry	/root
+
+2. 取消 /home 挂载，删除home逻辑卷
+# umount /home
+# lvremove /dev/centos/home		//卷组centos 有了空闲空间
+
+3. 给root逻辑卷进行扩容,文件系统扩容
+# lvextend -L +8G /dev/centos/root
+# xfs_growfs /dev/centos/root
+
+4. 重新创建home逻辑卷，并挂载到 /home
+# lvcreate -n home -l 100%FREE centos
+# mkfs.xfs /dev/centos/home
+# mount /dev/centos/home /home
+
+5. 复原tom 和 jerry
+# mv /root/tom /home
+# mv /root/jerry /home
+

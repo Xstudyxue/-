@@ -1,0 +1,47 @@
+寄语:  只有比别人更早，更勤奋的学习，才能尝到成功的滋味！
+
+1. 查看CPU占用最高的前10个进程信息
+# ps aux --sort -%cpu | head -10
+2. 能查看进程的命令有哪些?
+# ps
+# top
+# htop
+3. 能实时查看系统运行状态的命令是?
+# top
+# watch -n 3 "w"
+4. 现有程序test.sh ,如何让它在后台运行?
+# ./test.sh &
+5. 现有程序test.sh, 如何让它在后台运行后,关闭终端而不会停止进程?
+# nohup  ./test.sh  &
+6.现有程序test.sh,已在后台运行,如何将其进程查找出来并杀掉进程？
+# jobs ...
+# kill %...
+7. kill  和kill -9 的区别是?
+一个非强制，一个强制
+8. 如果停止httpd服务 (多写几种方法)
+# ps -aux | grep httpd
+# kill httpd
+# systemctl stop httpd
+# killall httpd
+# pkill httpd
+9. 如何强制让用户 jerry 退出终端登录
+# pkill -9 -u jerry
+10. 让程序 sleep 20 以优先级 10 启动
+# nice -n 10 sleep 20
+11. 调整pid为 2100的进程的相对优先级为0
+# renice -20 2100
+12. 只查看进程 sshd 服务的所有 pid、优先级
+# ps -axo user,pid,pri | grep sshd
+13. 生成一个sleep 360的进程，先将其放到后台停止运行，在将其设置后台运行，写出操作步骤
+# sleep 360 
+# ctrl z 
+# jobs
+# bg %1
+14. 用自己的话描述一下 raid 0  1  5 10  ?
+raid 0 读写快没容错
+raid 1 读写慢有容错
+raid 5 有读写有容错
+raid0：最少两块硬盘，把连续的数据分散储存到多个磁盘上，提供了最高的存储性能，但没有提空冗余，不具有容错，磁盘利用率100%。
+raid1：最少两块盘，大小相同，将数据去全部复制到另一块磁盘，利用率1/n*100%
+raid5：最少3块盘，有校验盘，最多允许坏一块盘，通过校验盘和其他好盘，可以算出坏的数据，磁盘利用率 （n-1）/n*100%
+raid10：最少4块盘，先做raid1 在做raid 0，允许每组只能坏一块盘，磁盘利用率 50%
