@@ -24,3 +24,5 @@ wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
 yum repolist
 # 查看隐藏权限
 lsattr
+# 转换大小写
+:% s/[a-z]/\u&/g
