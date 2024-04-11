@@ -41,5 +41,3 @@ cd pwd
 17. 使用 相对路径 的方式将 d.txt 文件 拷贝到 /opt 下
 # cd /opt/test/1
 # cp ./d.txt ../../
-作业提交位置 ftp://10.36.105.250/upload
-提交名字如下: wuyuanqiang_2.27.txt
