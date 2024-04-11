@@ -1,0 +1,5 @@
+# 创建数据库
+create database 数据库名字;
+# 查看所有数据库
+show databases;
+# 
