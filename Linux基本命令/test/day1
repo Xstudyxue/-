@@ -1,1 +1,42 @@
+1. windows目录结构和linux目录结构有什么区别?
+Windows目录结构 windows磁盘中用反斜杠(又称为右斜杠)\ 表示路径的分隔  windows 多根的方式。C盘 XXX盘
+Linux将所有文件和设备都组织在一个单一的根目录下						Linux 单根 /
+2. 什么是绝对路径? 什么是相对路径?
+绝对路径是/开头完整的路径
+相对路径是相对于当前路径
+3. 改变目录(切换目录)的命令是?  查看当前目录所在位置的命令是?
+cd pwd
+4. 切换目录中的 一个点表示什么? 两个点表示什么?
+当前目录 上一级目录
+5. 查看 /opt 目录本身的详细信息 命令是什么?
+# ls -ld /opt
+6. 当提示符为: [root@server ~]# 
+   当前用户是:__root___, 当前用户所处的位置是___/root______。
+   主机名是:__server___。
 
+   
+7.删除 /opt 目录下的所有内容.
+# rm -rf /opt/*
+8.创建目录/abc
+# mkdir /abc
+9.复制/etc/passwd到/abc下并改名为pass
+# cp /etc/passwd /abc/pass
+10.移动/abc/pass 到 /opt 下
+# mv /abc/pass /opt
+11.在/opt下创建test目录
+# mkdir /opt/test
+12.在上题上的test目录中创建1,2,3 三个目录
+# mkdir /opt/test/{1..3}
+13.在上题中的   1   目录中分别创建 a.txt b.txt c.txt d.txt 四个文件
+# touch /opt/test/1/{a..d}.txt 
+14.复制上题中的目录1中的a.txt b.txt 文件复制到 /opt 下
+# cp /opt/test/1/{a..b}txt /opt
+15. 将 13 题中 1 目录里面的 c.txt 移动到  /opt 下 并且重命名为 cc.txt
+# mv /opt/test/1/c.txt /opt/cc.txt
+16. 切换到 root 用户的家目录 [多写几种方法]
+# cd 
+# cd /root
+# cd ~
+17. 使用 相对路径 的方式将 d.txt 文件 拷贝到 /opt 下
+# cd /opt/test/1
+# cp ./d.txt ../../
