@@ -1,1 +1,5 @@
-
+xtrabackup 
+--defaults-file=/etc/my.cnf               ##数据库配置文件
+--backup --compress                       ##备份压缩
+--target-dir=/data/backup/compressed/     ##放在哪里
+-uroot -pJiuMeng@123 -H localhost -P 3306 ##登录用户名密码以及数据库地址端口
