@@ -45,6 +45,8 @@ mysql> show databases;
 mysql> create database 数据库名字;
 # 使用/切换数据库
 mysql> use 数据库名字;
+# 查询当前所在数据库
+select database();
 # 创建一个简单表 只有id,name两列
 mysql> create table tab1 (id int,name char(50));
 Query OK, 0 rows affected (0.01 sec)
