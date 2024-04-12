@@ -26,3 +26,5 @@ yum repolist
 lsattr
 # 转换大小写
 :% s/[a-z]/\u&/g
+# 时间同步，用的阿里云服务器
+ntpdate -u ntp1.aliyun.com
