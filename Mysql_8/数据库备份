@@ -1,12 +1,13 @@
-# 备份工具
+# 备份工具 yum仓困
+# percona-xtrabackup24(mysql57)
+# percona-xtrabackup80(mysql80)
+yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm
 yum install percona-xtrabackup-80
-#
+#完整备份
 xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -p'' -H localhost -P 3306
 # completed OK!完成
 ls /data/backup/base
 # 有内容则表示备份成功
-xtrabackup --defaults-file=/etc/my.cnf    ##数据库配置文件
---backup --compress                       ##备份压缩
---target-dir=/data/backup/compressed/     ##放在哪里
--uroot -p'' -H localhost -P 3306          ##登录用户名密码以及数据库地址端口
-
+#差异备份
+xtrabackup --defaults-file=/etc/my.cnf --backup --compress --target-dir=/data/backup/compressed/ -uroot -p'' -H localhost -P 3306          
+##数据库配置文件 ##备份压缩 ##放在哪里 ##登录用户名密码以及数据库地址端口
