@@ -2,6 +2,8 @@
 # percona-xtrabackup24(mysql57)
 # percona-xtrabackup80(mysql80)
 yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+yum install percona-release-latest.noarch.rpm
+yum repolist
 yum install percona-xtrabackup-80
 #完整备份
 xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -p'' -H localhost -P 3306
