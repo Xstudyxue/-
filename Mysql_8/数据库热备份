@@ -32,18 +32,15 @@ xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ 
 ls /data/backup/base 
 # 需要先把备份做一个准备
 xtrabackup --prepare --target-dir=/data/backup/base
-# 全备还原
-xtrabackup --defaults-file=/etc/my.cnf --copy-back --target-dir=/data/backup/base
-# 测试结果
 # 模拟删库环境，尝试恢复
 systemctl stop mysqld
 rm -rf /var/lib/mysql/*   
 ##注意不要把mysql这个目录删除了，删除了记得手动还原 mkdir /var/lib/mysql;chown mysql.mysql /var/lib/mysql
+# 全备还原
+xtrabackup --defaults-file=/etc/my.cnf --copy-back --target-dir=/data/backup/base
+chown mysql.mysql /var/lib/mysql
 systemctl start mysqld
 ##启动失败 查看日志排除错误 cat /var/log/mysql.log
-##遇到错误mysqld: File './binlog.index' not found (OS errno 13 - Permission denied) 2024-04-13T01:40:48.816909Z 0 [ERROR] [MY-010119]
-# 原来是原数据的权限未加上导致进不去目录，识别不出文件
-chown -R mysql.mysql /var/lib/mysql
 mysql -uroot -p'yourpasswd'
 mysql> show databases;
 mysql> select * from test.test1;
