@@ -1,15 +1,84 @@
 # 备份工具 yum仓困
 # percona-xtrabackup24(mysql57)
 # percona-xtrabackup80(mysql80)
+##此处演示为mysql80 centos7
 yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm
 yum install percona-release-latest.noarch.rpm
 yum repolist
 yum install percona-xtrabackup-80
-#完整备份
+# 安装中遇到的问题
+file /etc/my.cnf from install of Percona-Server-shared-56-5.6.51-rel91.0.1.el7.x86_64 conflicts with file from package mysql-community-server-8.0.36-1.el7.x86_64
+# 解决办法
+yum install mysql-community-libs-compat
+yum install percona-xtrabackup-80
+
+--defaults-file=/etc/my.cnf       ##数据库的配置文件，里面包含备份所需要的接口
+--backup                          ##备份参数,此处表示备份
+--target-dir=/data/backup/base/   ##备份目标路径   
+--no-server-version-check         ##免服务器认证/检查
+# 完整备份/全量备份/全备
+mkdir /data/backup ##创建路径，否则备份失败
 xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -p'' -H localhost -P 3306
-# completed OK!完成
-ls /data/backup/base
-# 有内容则表示备份成功
-#差异备份
+##如果遇到数据库版本问题 尝试在备份时加 --no-server-version-check
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -p'' -H localhost -P 3306 --no-server-version-check
+[Xtrabackup] completed OK!
+##成功提示
+ls /data/backup/base 
+##检查是否备份成功
+
+
+# 测试还原备份，可以适当插入数据，保证测试结果
+mysql> creata database test;
+mysql> create table test.test1 ( id int,name char(50),sex enum('m','w'));
+mysql> insert into table test.test1 values (1,'jack','m');
+# 先停止数据库再删除数据以纯净启动
+systemctl stop mysqld
+rm -rf /var/lib/mysql/*   
+##注意不要把mysql这个目录删除了，删除了记得手动还原 mkdir /var/lib/mysql;chown mysql.mysql /var/lib/mysql
+# 需要先把备份做一个准备
+xtrabackup --prepare --target-dir=/data/backup/base
+# 全备还原
+xtrabackup --defaults-file=/etc/my.cnf --copy-back --target-dir=/data/backup/base
+##报错[Xtrabackup] Original data directory /var/lib/mysql is not empty!
+# 解决办法
+systemctl stop mysqld
+rm -rf /var/lib/mysql
+# 测试结果
+systemctl start mysqld
+##启动失败 查看日志排除错误 cat /var/log/mysql.log
+##遇到错误mysqld: File './binlog.index' not found (OS errno 13 - Permission denied) 2024-04-13T01:40:48.816909Z 0 [ERROR] [MY-010119]
+# 原来是原数据的权限未加上导致进不去目录，识别不出文件
+chown -R mysql.mysql /var/lib/mysql
+mysql -uroot -p'yourpasswd'
+mysql> show databases;
+mysql> select * from test.test1;
+##与原数据一样则表示还原成功
+
+# 增量备份/增备
+##再插入一条数据以表示数据不一致，作为增量1
+mysql> insert into test.test1 values (2,'tom','m');
+# 增量备份1
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc1 --incremental-basedir=/data/backup/base -uroot -p'JiuMeng@123' -H localhost -P 3306
+ls /data/backup/inc1
+##检查是否备份成功
+##再插入一条数据以表示数据不一致，作为增量2
+mysql> insert into test.test1 values (3,'jerry','w');
+# 增量备份2
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc2 --incremental-basedir=/data/backup/inc1 -uroot -p'JiuMeng@123' -H localhost -P 3306
+ls /data/backup/inc2
+##检查是否备份成功
+# 准备备份
+xtrabackup --defaults-file=/etc/my.cnf --prepare --apply-log-only --target-dir=/data/backup/base
+xtrabackup --defaults-file=/etc/my.cnf --prepare --apply-log-only --target-dir=/data/backup/base --incremental-basedir=/data/backup/inc1
+##注意最后一次准备不需要加 --apply-log-only 
+xtrabackup --defaults-file=/etc/my.cnf --prepare --target-dir=/data/backup/base --incremental-basedir=/data/backup/inc2
+# 测试还原
+systemctl stop mysqld
+rm -rf /var/lib/mysql
+
+
+
+
+# 差异备份
 xtrabackup --defaults-file=/etc/my.cnf --backup --compress --target-dir=/data/backup/compressed/ -uroot -p'' -H localhost -P 3306          
-##数据库配置文件 ##备份压缩 ##放在哪里 ##登录用户名密码以及数据库地址端口
+## 数据库配置文件 ##备份压缩 ##放在哪里 ##登录用户名密码以及数据库地址端口
