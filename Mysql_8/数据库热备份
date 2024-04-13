@@ -17,34 +17,28 @@ yum install percona-xtrabackup-80
 --target-dir=/data/backup/base/   ##备份目标路径   
 --no-server-version-check         ##忽略版本号
 # 完整备份/全量备份/全备
-mkdir /data/backup ##创建路径，否则备份失败
-xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -p'' -H localhost -P 3306
-##如果遇到数据库版本问题 尝试在备份时加 --no-server-version-check
-xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -p'' -H localhost -P 3306 --no-server-version-check
-[Xtrabackup] completed OK!
-##成功提示
-ls /data/backup/base 
-##检查是否备份成功
-
-
-# 测试还原备份，可以适当插入数据，保证测试结果
+##插入数据，保证数据库内有内容
 mysql> creata database test;
 mysql> create table test.test1 ( id int,name char(50),sex enum('m','w'));
 mysql> insert into table test.test1 values (1,'jack','m');
-# 先停止数据库再删除数据以纯净启动
-# 测试还原
-systemctl stop mysqld
-rm -rf /var/lib/mysql/*   
-##注意不要把mysql这个目录删除了，删除了记得手动还原 mkdir /var/lib/mysql;chown mysql.mysql /var/lib/mysql
+##创建备份目录
+mkdir /data/backup 
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -p'' -H localhost -P 3306
+##如果遇到数据库版本问题 尝试在备份时加 --no-server-version-check
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -p'' -H localhost -P 3306 --no-server-version-check
+##成功提示
+[Xtrabackup] completed OK!
+##检查是否备份成功
+ls /data/backup/base 
 # 需要先把备份做一个准备
 xtrabackup --prepare --target-dir=/data/backup/base
 # 全备还原
 xtrabackup --defaults-file=/etc/my.cnf --copy-back --target-dir=/data/backup/base
-##报错[Xtrabackup] Original data directory /var/lib/mysql is not empty!
-# 解决办法
-systemctl stop mysqld
-rm -rf /var/lib/mysql
 # 测试结果
+# 模拟删库环境，尝试恢复
+systemctl stop mysqld
+rm -rf /var/lib/mysql/*   
+##注意不要把mysql这个目录删除了，删除了记得手动还原 mkdir /var/lib/mysql;chown mysql.mysql /var/lib/mysql
 systemctl start mysqld
 ##启动失败 查看日志排除错误 cat /var/log/mysql.log
 ##遇到错误mysqld: File './binlog.index' not found (OS errno 13 - Permission denied) 2024-04-13T01:40:48.816909Z 0 [ERROR] [MY-010119]
@@ -101,8 +95,6 @@ xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc3/ 
 # 准备
 xtrabackup --defaults-file=/etc/my.cnf --prepare --apply-log-only --target-dir=/data/backup/base/
 xtrabackup --defaults-file=/etc/my.cnf --prepare --target-dir=/data/backup/base/ --incremental-dir=/data/backup/inc3/
-
-
 ##模拟环境
 systemctl stop mysqld
 rm -rf /var/lib/mysql/*
