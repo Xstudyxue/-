@@ -15,7 +15,7 @@ yum install percona-xtrabackup-80
 --defaults-file=/etc/my.cnf       ##数据库的配置文件，里面包含备份所需要的接口
 --backup                          ##备份参数,此处表示备份
 --target-dir=/data/backup/base/   ##备份目标路径   
---no-server-version-check         ##免服务器认证/检查
+--no-server-version-check         ##忽略版本号
 # 完整备份/全量备份/全备
 mkdir /data/backup ##创建路径，否则备份失败
 xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -p'' -H localhost -P 3306
@@ -55,26 +55,36 @@ mysql> select * from test.test1;
 ##与原数据一样则表示还原成功
 
 # 增量备份/增备
+# 全备
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -pJiuMeng@123 -H localhost -P 3306
 ##再插入一条数据以表示数据不一致，作为增量1
 mysql> insert into test.test1 values (2,'tom','m');
 # 增量备份1
-xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc1 --incremental-basedir=/data/backup/base -uroot -p'JiuMeng@123' -H localhost -P 3306
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc1/ --incremental-basedir=/data/backup/base/ -uroot -pJiuMeng@123 -H localhost -P 3306
 ls /data/backup/inc1
 ##检查是否备份成功
 ##再插入一条数据以表示数据不一致，作为增量2
 mysql> insert into test.test1 values (3,'jerry','w');
 # 增量备份2
-xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc2 --incremental-basedir=/data/backup/inc1 -uroot -p'JiuMeng@123' -H localhost -P 3306
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc2/ --incremental-basedir=/data/backup/inc1/ -uroot -pJiuMeng@123 -H localhost -P 3306
 ls /data/backup/inc2
 ##检查是否备份成功
 # 准备备份
-xtrabackup --defaults-file=/etc/my.cnf --prepare --apply-log-only --target-dir=/data/backup/base
-xtrabackup --defaults-file=/etc/my.cnf --prepare --apply-log-only --target-dir=/data/backup/base --incremental-basedir=/data/backup/inc1
+##应用完整备份
+xtrabackup --defaults-file=/etc/my.cnf --prepare --apply-log-only --target-dir=/da
+ta/backup/base/
+##应用增量备份1
+xtrabackup --defaults-file=/etc/my.cnf --prepare --apply-log-only --target-dir=/data/backup/base/ --incremental-dir=/data/backup/inc1/
 ##注意最后一次准备不需要加 --apply-log-only 
-xtrabackup --defaults-file=/etc/my.cnf --prepare --target-dir=/data/backup/base --incremental-basedir=/data/backup/inc2
+##应用增量备份2
+xtrabackup --defaults-file=/etc/my.cnf --prepare --target-dir=/data/backup/base/ --incremental-dir=/data/backup/inc2/
 # 测试还原
 systemctl stop mysqld
-rm -rf /var/lib/mysql
+rm -rf /var/lib/mysql/*
+xtrabackup --defaults-file=/etc/my.cnf --copy-back --target-dir=/data/backup/base/
+chown -R mysql.mysql /var/lib/mysql
+systemctl start mysqld
+
 
 
 
