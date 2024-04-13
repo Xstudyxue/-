@@ -98,7 +98,6 @@ xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc1/ 
 xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc2/ --incremental-basedir=/data/backup/base -uroot -pJiuMeng@123 -H localhost -P 3306
 ##插入数据，作为差异3
 xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc3/ --incremental-basedir=/data/backup/base -uroot -pJiuMeng@123 -H localhost -P 3306
-
 # 准备
 xtrabackup --defaults-file=/etc/my.cnf --prepare --apply-log-only --target-dir=/data/backup/base/
 xtrabackup --defaults-file=/etc/my.cnf --prepare --target-dir=/data/backup/base/ --incremental-dir=/data/backup/inc3/
