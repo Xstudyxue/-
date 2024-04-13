@@ -32,6 +32,7 @@ mysql> creata database test;
 mysql> create table test.test1 ( id int,name char(50),sex enum('m','w'));
 mysql> insert into table test.test1 values (1,'jack','m');
 # 先停止数据库再删除数据以纯净启动
+# 测试还原
 systemctl stop mysqld
 rm -rf /var/lib/mysql/*   
 ##注意不要把mysql这个目录删除了，删除了记得手动还原 mkdir /var/lib/mysql;chown mysql.mysql /var/lib/mysql
@@ -78,17 +79,41 @@ xtrabackup --defaults-file=/etc/my.cnf --prepare --apply-log-only --target-dir=/
 ##注意最后一次准备不需要加 --apply-log-only 
 ##应用增量备份2
 xtrabackup --defaults-file=/etc/my.cnf --prepare --target-dir=/data/backup/base/ --incremental-dir=/data/backup/inc2/
-# 测试还原
+##模拟环境
 systemctl stop mysqld
 rm -rf /var/lib/mysql/*
+# 测试还原
 xtrabackup --defaults-file=/etc/my.cnf --copy-back --target-dir=/data/backup/base/
 chown -R mysql.mysql /var/lib/mysql
 systemctl start mysqld
 
 
-
-
-
 # 差异备份
+##完备
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -pJiuMeng@123 -H localhost -P 3306
+ls /data/backup/base/
+#插入数据，作为差异1
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc1/ --incremental-basedir=/data/backup/base -uroot -pJiuMeng@123 -H localhost -P 3306
+#插入数据，作为差异2
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc2/ --incremental-basedir=/data/backup/base -uroot -pJiuMeng@123 -H localhost -P 3306
+##插入数据，作为差异3
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/inc3/ --incremental-basedir=/data/backup/base -uroot -pJiuMeng@123 -H localhost -P 3306
+
+# 准备
+xtrabackup --defaults-file=/etc/my.cnf --prepare --apply-log-only --target-dir=/data/backup/base/
+xtrabackup --defaults-file=/etc/my.cnf --prepare --target-dir=/data/backup/base/ --incremental-dir=/data/backup/inc3/
+
+
+##模拟环境
+systemctl stop mysqld
+rm -rf /var/lib/mysql/*
+# 还原
+xtrabackup --defaults-file=/etc/my.cnf --copy-back --target-dir=/data/backup/base/
+chown -R mysql.mysql /var/lib/mysql
+systemctl sstart mysqld
+
+
+
+
 xtrabackup --defaults-file=/etc/my.cnf --backup --compress --target-dir=/data/backup/compressed/ -uroot -p'' -H localhost -P 3306          
 ## 数据库配置文件 ##备份压缩 ##放在哪里 ##登录用户名密码以及数据库地址端口
