@@ -1,1 +1,4 @@
-
+mysql -uroot -pJiuMeng@123
+create user to user1@'%' identified by 'JiuMeng@123';
+grant all privileges on *.* to user@'%';
+mysql -uuser -pJiuMeng@1233 -H localhost -P 3306
