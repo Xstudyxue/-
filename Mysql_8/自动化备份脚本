@@ -38,3 +38,23 @@ then
 fi
 
 }
+reload () {
+read -p "请确认是否开始恢复存档" baseact2
+        case $baseact2 in
+        Y|y|yes)
+        xtrabackup --defaults-file=/etc/my.cnf --copy-back --target-dir=/data/backup/base
+        ;;
+        *)
+        echo "已取消恢复存档"
+        ;;
+        esac
+}
+read -p "请选择你要执行的程序" main_act1
+case $main_act1 in
+1)
+base
+;;
+2)
+reload
+;;
+esac
