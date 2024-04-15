@@ -1,1 +1,25 @@
+#!/bin/bash
+# 安装备份工具
+gongju () {
+rpm -qa | grep percona-xtrabackup-80
+if [ $? -eq 0 ]
+then
+    continue
+else
+    yum -y install percona-xtrabackup-80
+    if [ $? -ne 0 ]
+    then
+        yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm &> /dev/null
+        yum install percona-release-latest.noarch.rpm &> /dev/null
+        yum repolist &> /dev/null
+        yum -y install percona-xtrabackup-80
+        echo "备份工具安装成功"
+    fi
+fi
+}
 
+base () {
+mkdir /data/backup
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -p'' -H localhost -P 3306
+xtrabackup --prepare --target-dir=/data/backup/base
+}
