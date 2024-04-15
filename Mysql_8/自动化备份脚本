@@ -19,7 +19,22 @@ fi
 }
 
 base () {
-mkdir /data/backup
-xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=/data/backup/base/ -uroot -p'' -H localhost -P 3306
-xtrabackup --prepare --target-dir=/data/backup/base
+read -p "请输入要备份的路径：" basedir
+mkdir $basedir
+read -p "请输入用户名：" baseuser
+read -sp "请输入密码：" password
+xtrabackup --defaults-file=/etc/my.cnf --backup --target-dir=$basedir -u"$baseuser" -p'$password' -H localhost -P 3306
+if [ $? -eq 0 ]
+then
+    echo "备份成功"
+    read -p "请确认是否准备备份" baseact1
+    case in 
+    Y|y|yes)
+    xtrabackup --prepare --target-dir=$basedir
+    *)
+    echo "已取消准备"
+    ;;
+    esac
+fi
+
 }
