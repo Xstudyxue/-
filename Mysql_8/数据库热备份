@@ -38,7 +38,7 @@ rm -rf /var/lib/mysql/*
 ##注意不要把mysql这个目录删除了，删除了记得手动还原 mkdir /var/lib/mysql;chown mysql.mysql /var/lib/mysql
 # 全备还原
 xtrabackup --defaults-file=/etc/my.cnf --copy-back --target-dir=/data/backup/base
-chown mysql.mysql /var/lib/mysql
+chown -R mysql.mysql /var/lib/mysql
 systemctl start mysqld
 ##启动失败 查看日志排除错误 cat /var/log/mysql.log
 mysql -uroot -p'yourpasswd'
