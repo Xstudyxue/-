@@ -28,3 +28,20 @@ lsattr
 :% s/[a-z]/\u&/g
 # 时间同步，用的阿里云服务器
 ntpdate -u ntp1.aliyun.com
+ntadate ntp1.aliyun.com
+1.time.apple.com.cn（中国区苹果时间服务器）
+2.ntp.org.cn（中国国家授时中心时间服务器）
+3. ntp1.aliyun.com (阿里云NTP时间服务器)
+4.ntp.tencent.com(腾讯云NTP时间服务器)
+5.ntp2.tencent.com(腾讯云NTP时间服务器)
+6.ntp1bce.baidu.com (百度云NTP时间服务器)
+7.ntp4.bce.baidu.com(百度云NTP时间服务器)
+8.ntp1.google.com (Google NTP时间服务器)
+9.ntp2.google.com(Google NTP时间服务器)
+10.ntp3.google.com(Google NTP时间服务器)
+11.ntp4.google.com(Google NTP时间服务器)
+#生成随机字符
+openssl rand -base64 40 | tr  -d '/+=' | cut -c 2-12
+#时间戳 年月日小时分钟秒
+$(date +%Y%m%d%H%M%S)
+
