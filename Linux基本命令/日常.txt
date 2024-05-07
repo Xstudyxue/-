@@ -46,4 +46,15 @@ openssl rand -base64 40 | tr  -d '/+=' | cut -c 2-12
 $(date +%Y%m%d%H%M%S)
 #别名
 alias
-
+#是去除目录后剩下的名字，取文件名
+basename
+[root@linux-server ~]temp=/home/temp/1.test
+[root@linux-server ~]base='basename Stemp
+[root@linux-server ~]echo Sbase
+1.test
+dirname
+是取目录名
+[root@linux-server ~]temp=/home/temp/1.test
+[root@linux-server ~]dir=dirname Stemp
+[root@linux-server ~]echo $dir
+/home/temp
