@@ -1,0 +1,70 @@
+使用一次性计划任务,完成以下任务,执行时间:以现在时间往后5分钟
+1.在/data/下创建目录wudang,shaolin,emei.
+2.创建组wudang,shaolin,emei
+3.添加用户,设置口令(用户口令为用户名称),家目录:
+要求:
+zhangwuji,基本组为wudang.家目录为/data/wudang/zhangwuji
+zhangsanfeng,基本组为wudang.家目录为/data/wudang/zhangsanfeng
+zhangcuishan,基本组为wudang.家目录为/data/wudang/zhangcuishan
+kongwen,基本组为shaolin.家目录为/data/shaolin/kongwen
+kongxiang,基本组为shaolin.家目录为/data/shaolin/kongxiang
+kongjian,基本组为shaolin.家目录为/data/shaolin/kongjian
+libai,基本组为emei.家目录为/data/emei/libai
+dufu,基本组为emei.家目录为/data/emei/dufu
+wangwei,基本组为emei.家目录为/data/emei/wangwei
+4.输出日志到文件/data/userinfo中,输出日志格式内容如下:
+年月日时分秒  用户名称  "useradd ok"
+vim test8.sh
+#!/bin/bash
+cat > /data/uname.txt<<eof
+zhangwuji
+zhangsanfeng
+zhangcuishan
+kongwen
+kongxiang
+kongjian
+libai
+dufu
+wangwei
+eof
+cat > /data/gname.txt<<eof
+wudang
+shaolin
+emei
+eof
+group_add () {
+for group_name in `cat /data/gname.txt`;
+do
+mkdir /data/$group_name &> /dev/null
+groupadd $group_name &> /dev/null
+done
+}
+
+user_add () {
+for user_name in `cat /data/uname.txt`
+do
+	echo $user_name
+	case $user_name in
+	"zhangwuji"|"zhangsanfeng"|"zhangcuishan")
+	useradd -g wudang -d /data/wudang/$user_name $user_name
+	echo "$user_name" | passwd --stdin "$user_name" &> /dev/null
+	echo $(date +%Y-%m-%d-%H-%M-%S) $user_name "useradd ok" >> /data/userinfo
+	;;
+	"kongwen"|"kongxiang"|"kongjian")
+	useradd -g shaolin -d /data/shaolin/$user_name $user_name
+	echo "$user_name" | passwd --stdin "$user_name" &> /dev/null
+	echo $(date +%Y-%m-%d-%H-%M-%S) $user_name "useradd ok" >> /data/userinfo
+	;;
+	"libai"|"dufu"|"wangwei")
+	useradd -g emei -d /data/emei/$user_name $user_name
+	echo "$user_name" | passwd --stdin "$user_name" &> /dev/null
+	echo $(date +%Y-%m-%d-%H-%M-%S) $user_name "useradd ok" >> /data/userinfo
+	;;
+	esac
+done
+}
+group_add
+user_add &> /dev/null
+chmod a+x /root/test10.sh
+
+at now +5min < test8.sh

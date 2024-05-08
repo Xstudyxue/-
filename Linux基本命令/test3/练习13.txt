@@ -1,0 +1,32 @@
+0.安装软件包bind-utils
+
+1.生成名称列表文件domain.list.名单列表如下
+www.baidu.com
+www.163.com
+www.qq.com
+github.com
+gitee.com
+www.nginx.org
+www.zhizhu.com
+www.wireshark.org
+www.jianshu.com
+www.toutiao.com
+qyapi.weixin.qq.com
+2.使用nslookup查询上述列表文件中的域名对应的解析记录,只保留解析的地址记录到/data/nslookup.log中,示范内容如下
+domain_name:www.baidu.com
+Address: 183.2.172.185
+Address: 183.2.172.42
+Address: 240e:ff:e020:38:0:ff:b06d:569b
+Address: 240e:ff:e020:37:0:ff:b08c:124f
+3.将上述解析记录进行消息推送，消息内容如下
+示范效果如下
+服务器时间：年-月-日_日:分:秒.纳秒
+服务器IP：1.2.3.4
+DNS地址：8.8.8.8
+解析记录详情
+----------------------------------------
+domain_name:www.baidu.com
+Address: 183.2.172.185
+Address: 183.2.172.42
+Address: 240e:ff:e020:38:0:ff:b06d:569b
+Address: 240e:ff:e020:37:0:ff:b08c:124f

@@ -1,0 +1,52 @@
+使用一次性计划任务,完成以下任务,执行时间:以现在时间往后5分钟
+1.在/data/下创建目录wudang,shaolin,emei.
+2.创建组wudang,shaolin,emei
+3.添加用户,设置口令(用户口令为用户名称),家目录:
+要求:
+zhangwuji,基本组为wudang.家目录为/data/wudang/zhangwuji
+zhangsanfeng,基本组为wudang.家目录为/data/wudang/zhangsanfeng
+zhangcuishan,基本组为wudang.家目录为/data/wudang/zhangcuishan
+
+kongwen,基本组为shaolin.家目录为/data/shaolin/kongwen
+kongxiang,基本组为shaolin.家目录为/data/shaolin/kongxiang
+kongjian,基本组为shaolin.家目录为/data/shaolin/kongjian
+
+libai,基本组为emei.家目录为/data/emei/libai
+dufu,基本组为emei.家目录为/data/emei/dufu
+wangwei,基本组为emei.家目录为/data/emei/wangwei
+
+4.输出日志到文件/data/userinfo中,输出日志格式内容如下:
+年月日时分秒  用户名称  "useradd ok"
+
+
+mkdir /data/shell/
+cat /data/shell/usera.sh
+
+#!/bin/bash
+mkdir -p /data/{wudang,shaolin,emei}
+groupadd wudang
+groupadd shaolin
+groupadd emei
+for USERNAME in {zhangwuji,zhangcuishan,zhangsanfeng};
+do
+useradd -g wudang -d /data/wudang/${USERNAME}  ${USERNAME}
+echo ${USERNAME} | passwd --stdin ${USERNAME} 
+CURTIME=$(date +%Y%m%d%H%M%S)
+echo "${CURTIME} ${USERNAME} useradd ok">> /data/userinfo
+done
+for USERNAME in {kongwen,kongxiang,kongjian};
+do
+useradd -g shaolin -d /data/shaolin/${USERNAME}  ${USERNAME}
+echo ${USERNAME} | passwd --stdin ${USERNAME} 
+echo "${CURTIME} ${USERNAME} useradd ok">> /data/userinfo
+done
+for USERNAME in {libai,dufu,wangwei};
+do
+useradd -g emei -d /data/emei/${USERNAME}  ${USERNAME}
+echo ${USERNAME} | passwd --stdin ${USERNAME}
+echo "${CURTIME} ${USERNAME} useradd ok">> /data/userinfo
+done
+
+at now +5min
+
+/bin/bash  /data/shell/usera.sh

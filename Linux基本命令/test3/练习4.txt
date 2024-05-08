@@ -1,0 +1,21 @@
+检测以下用户是否存在,不存在则并创建用户
+1.检测sunwukong用户是否存在,不存在则创建该用户并指定口令,具体要求如下：
+	指定家目录为/opt/孙悟空,
+	用户名称sunwukong,
+    口令与用户名相同)
+# id sunwukong || (useradd -d /opt/孙悟空 sunwukong && echo "sunwukong" | passwd --stdin 'sunwukong')
+2.检测zhubajie用户是否存在,不存在则创建该用户并指定口令,具体要求如下：
+	指定家目录为/opt/猪八戒,
+	用户名称zhubajie,
+    口令与用户名相同)
+# id zhubajie || (useradd -d /opt/猪八戒 zhubajie && echo "zhubajie" | passwd --stdin 'zhubajie')
+3.检测shawujing用户是否存在,不存在则创建该用户并指定口令,具体要求如下：
+	指定家目录为/opt/沙悟静,
+	用户名称shawujing,
+    口令与用户名相同)
+# id shawujing || (useradd -d /opt/沙悟静 shawujing && echo "shawujing" | passwd --stdin 'shawujing')
+4.检测tangseng用户是否存在,不存在则创建该用户并指定口令,具体要求如下：
+	指定家目录为/opt/唐僧,
+	用户名称tangseng
+    口令与用户名相同)
+# id tangseng || (useradd -d /opt/唐僧 tangseng && echo "tangseng" | passwd --stdin 'tangseng')

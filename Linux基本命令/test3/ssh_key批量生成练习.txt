@@ -1,0 +1,9 @@
+1.创建公私钥目录/data/pki_key
+2.根据local_user_si.list名单文件,每一行对应一个名称,根据名称在/data/pki_key/下分别创建名称目录。
+3.批量生成公私钥对,放置目录为/data/pki_key/名称目录/下。
+mkdir -p /data/pki_key
+for i in `cat /data/local_user_si.list`
+do
+mkdir -p /data/pki_key/$i
+ssh-keygen   -t  rsa  -P  ""  -f  /data/pki_key/$i
+done

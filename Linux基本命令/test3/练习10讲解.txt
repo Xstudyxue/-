@@ -1,0 +1,23 @@
+配置计划任务,完成以下任务
+每隔2小时完成备份,计划任务在执行完以后无接收邮件提示
+要求如下:
+1.创建带时间标记的目录,格式为:/data/backup/年月日时分秒,/data/tar/gz/,/data/backup/logs
+2.查找/var/log目录下,大小在4k,将查找到的文件复制到步骤1创建的(/data/backup/年月日时分秒)目录下
+3.对步骤1的年月日时分秒目录进行打包,打包文件路径为/data/tar/gz/下，文件名为时间标记_log.tar.gz.例如20230609161401_log.tar.gz
+4.配置上述命令的错误输出,输出到文件/data/backup/logs/error.log中,保留原始错误输出格式.
+
+
+cat /data/shell/a10.sh
+
+#!/bin/bash
+CURTIME=$(date +%Y%m%d%H%M%S)
+mkdir -p /data/backup/${CURTIME}  /data/tar/gz /data/backup/logs
+find /var/log/ -type f -size +4k  -exec  cp    -f {} /data/backup/${CURTIME} \;
+cd  /data/backup
+tar czvf /data/tar/gz/$(date +%Y%m%d%H%M%S)_log.tar.gz    ${CURTIME} 2>/data/backup/logs/error.log
+
+chmod a+x /data/shell/a10.sh
+
+cat >/var/spool/cron/root<<eof
+00 */2 * * * /bin/bash /data/shell/a10.sh &>/dev/null
+eof

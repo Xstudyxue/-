@@ -1,0 +1,10 @@
+1.创建目录/data/.
+# mkdir /data
+2.在/data/下分别创建26个目录名称为a至z，并在a目录下创建目录名为aa至az的26个目录.
+# mkdir /data/{a-z} 
+# mkdir /data/a/a{a-z}
+3.在/data/下创建12个目录,名称为01月至12月,并分别在各月份目录下创建30个子目录，名称从01至30.
+# mkdir -p /data/{01..12}月/{01..30}
+4.备份/etc/sysconfig/network-scripts/ifcfg-ens33文件至/data/backup/目录下,名称为原文件名后带.bak后缀.
+# mkdir -p /data/backup/
+# cp /etc/sysconfig/network-scripts/ifcfg-ens33 /data/backup/ifcfg-ens33.bak

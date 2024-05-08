@@ -1,0 +1,55 @@
+1.在/data/下创建目录wudang,shaolin,emei.
+# mkdir -p /data/{wudang,shaolin,emei}
+2.创建组wudang,shaolin,emei
+# echo "wudang shaolin emei" | xargs -n1 groupadd
+3.添加用户,设置口令(用户口令为用户名称),家目录:
+要求:
+zhangwuji,基本组为wudang.家目录为/data/wudang/张无忌
+zhangsanfeng,基本组为wudang.家目录为/data/wudang/张三丰
+zhangcuishan,基本组为wudang.家目录为/data/wudang/张翠山
+kongwen,基本组为shaolin.家目录为/data/shaolin/空闻
+kongxiang,基本组为shaolin.家目录为/data/shaolin/空相
+kongjian,基本组为shaolin.家目录为/data/shaolin/空见
+libai,基本组为emei.家目录为/data/emei/李白
+dufu,基本组为emei.家目录为/data/emei/杜甫
+wangwei,基本组为emei.家目录为/data/emei/王维
+cat > name.txt <<eof
+zhangwuji 张无忌
+zhangsanfeng 张三丰
+zhangcuishan 张翠山
+kongwen 空闻
+kongxiang 空相
+kongjian 空见
+libai 李白
+dufu 杜甫
+wangwei 王维
+eof
+# vim user.sh
+#!/bin/bash
+#!/bin/bash
+while read link
+do
+        name=`echo $link | awk '{print $1}'`
+        yname=`echo $link | awk '{print $2}'`
+        mkdir -p /data/$name/$yname &> /dev/null
+        useradd $name -d /data/$name/$yname &> /dev/null
+        #userdel -r $name &> /dev/null
+done < name.txt
+4.查看各用户的ID信息，并保存文件/data/userinfo中。
+#!/bin/bash
+while read link
+do
+        name=`echo $link | awk '{print $1}'`
+        yname=`echo $link | awk '{print $2}'`
+        mkdir -p /data/$name/$yname &> /dev/null
+        #useradd $name -d /data/$name/$yname &> /dev/null
+        #userdel -r $name &> /dev/null
+	id $name >> /data/userinfo
+done < name.txt
+
+5.删除上述步骤建立的用户及家目录。
+while read link
+do
+        name=`echo $link | awk '{print $1}'`
+        userdel -r $name &> /dev/null
+done < name.txt

@@ -1,0 +1,16 @@
+使用linux命令完成如下效果:
+1.创建目录/opt/file/年月日，如/opt/file/20230613.
+# mkdir -p /opt/file/$(date +%Y%m%d)
+2.在步骤1所创建的目录下,批量创建文件,要求如下:
+名称规则:前缀为大写A至Z_随机字符(字母数字符号,长度20,不含以下符号"/+=")
+# touch /opt/file/$(date +%Y%m%d)/{A..Z}_$(openssl rand -base64 40 | tr  -d '/+=' | cut -c 2-21)
+名称规则:前缀为小写a至z_随机字符(字母数字符号,长度20,不含以下符号"/+=")
+# touch /opt/file/$(date +%Y%m%d)/{a..z}_$(openssl rand -base64 40 | tr  -d '/+=' | cut -c 2-21)
+3.将生成的文件名称信息保存至/opt/fileinfo.log中
+# ls /opt/file/$(date +%Y%m%d)/ >> /opt/fileinfo.log
+4.查找/opt/file/目录下,将上述步骤生成的文件删除
+# find /opt/file -type f -name "[a-z|A-Z]_*" -exec rm -rf {} \;
+5.查找/var/log/目录下,大小在4k以上的文件复制到以下目录内/opt/file/年月日
+# find /var/log -size +4k -type f -exec cp {} /opt/file/$(date +%Y%m%d) \;
+6.并将/opt/file/年月日目录打包为tar.gz格式,名称为:年月日时分秒_log.tar.gz
+# tar -czf $(date +%Y%m%d%H%M%S)_log.tar.gz /opt/file/$(date +%Y%m%d)

@@ -1,0 +1,47 @@
+脚本练习：
+1.备份网卡配置文件
+要求：
+1)备份的目录在/data/backconf
+2)备份的文件名称格式为:网卡文件名.bak.年月日时分秒
+例如:ifcfg-ens33.bak.20220913183028
+3)将备份的记录输出备份目录下的日志文件中，日志文件名为
+网卡文件名.log.年月日时分秒,例如ifcfg-ens33.log.20220913183028
+日志内容输出要求有备份的时间，备份的文件路径
+#!/bin/bash
+CUTIME=`date +%Y%m%d%H%M%S`
+CP_file='/etc/sysconfig/network-scripts/ifcfg-ens33'
+mkdir /data/backconf
+cp -r $CP_file  /data/backconf/ifcfg-ens33.bak.$CUTIME
+cat >/data/backconf/ifcfg-ens33.log.$CUTIME<<eof
+备份路径:$CP_file
+备份时间:$CUTIME
+eof
+
+2.收集记录文件记录
+要求：
+1.)创建日志目录在/data/log
+2.)将/var/log/目录下的文件,大小在1M以上的,将文件的信息输出到/data/log下，文件名称
+loginfo_年月日时分秒.log,例如loginfo_20220913183028.log
+#!/bin/bash
+CUTIME=`date +%Y%m%d%H%M%S`
+mkdir -p /data/log
+find /var/log/ -size +1M -exec echo {} > /data/log/loginfo_${CUTIME}.log \;
+
+
+3.脚本自动创建目录
+要求:
+1.)在/tmp目录下生成12个月的目录，这12目录下有31个子目录
+#!/bin/bash
+mkdir -p /tmp/{1..12}/{1..31}
+
+4.记录网卡信息到系统
+要求：
+通过脚本将本机的IP地址信息，记录到系统中，用户一登录到即可以通过查询变量的方式直接获取到该信息。
+#!/bin/bash
+export GET_IP=`ip a | grep "$ens33" | awk '{print $2}' | awk -F"/" '{print $1}'`
+
+5.批量安装软件
+要求：
+1)通过脚本安装如下软件,telnet,vim,epel-release,curl,net-tools
+2)静默安装
+yum -y install telnet vim epel-release curl net-tools &> /dev/null

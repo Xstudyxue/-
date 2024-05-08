@@ -1,0 +1,36 @@
+配置计划任务,完成以下任务
+每隔2小时完成备份,计划任务在执行完以后无接收邮件提示
+要求如下:
+1.创建带时间标记的目录,格式为:/data/backup/年月日时分秒,/data/tar/gz/,/data/backup/logs
+2.查找/var/log目录下,大小在4k,将查找到的文件复制到步骤1创建的(/data/backup/年月日时分秒)目录下
+3.对步骤1的年月日时分秒目录进行打包,打包文件路径为/data/tar/gz/下，文件名为时间标记_log.tar.gz.例如20230609161401_log.tar.gz
+4.配置上述命令的错误输出,输出到文件/data/backup/logs/error.log中,保留原始错误输出格式.
+5.配置本机与另一个主机的ssh信任,并将本机的/data目录远程备份至ssh受信方,保持目录结构与本机相同。
+
+
+cat /data/shell/backup_ssh.sh
+
+#!/bin/bash
+CURTIME=$(date +%Y%m%d%H%M%S)
+mkdir -p /data/backup/${CURTIME}  /data/tar/gz /data/backup/logs
+find /var/log/ -type f -size +4k  -exec  cp    -f {} /data/backup/${CURTIME} \;
+cd  /data/backup
+tar czvf /data/tar/gz/$(date +%Y%m%d%H%M%S)_log.tar.gz    ${CURTIME} 2>/data/backup/logs/error.log
+chmod a+x /data/shell/backup_ssh.sh
+
+cat >>/var/spool/cron/root<<eof
+00 */2 * * * /bin/bash /data/shell/backup_ssh &>/dev/null
+eof
+
+主控方生成公私钥
+ssh-keygen   -t rsa -P ''  -f   ~/.ssh/id_rsa  -q
+
+复制主控方的公钥文件内容id_rsa.pub
+
+在受控方/root/.ssh/authorized_keys文件中写入复制公钥内容
+
+测试主控方与受控方的ssh信任连接(首次连接忽略指纹验证)
+ssh  -o  "stricthostkeychecking=no"  root@192.168.241.24
+
+rsync取消首次连接时提示指纹验证
+rsync -avz  -e "ssh -o stricthostkeychecking=no"  /data  root@192.168.241.24:/

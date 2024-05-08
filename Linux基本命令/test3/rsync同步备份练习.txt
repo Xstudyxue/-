@@ -1,0 +1,78 @@
+1.在主机1上完成以下操作
+A.添加用户
+检测sunwukong用户是否存在,不存在则创建该用户并指定口令,具体要求如下：
+指定家目录为/opt/孙悟空,
+用户名称sunwukong,
+口令与用户名相同)
+# id sunwukong || (useradd -d /opt/孙悟空 sunwukong && echo "sunwukong" | passwd --stdin 'sunwukong')
+
+检测zhubajie用户是否存在,不存在则创建该用户并指定口令,具体要求如下：
+指定家目录为/opt/猪八戒,
+用户名称zhubajie,
+口令与用户名相同)
+# id zhubajie || (useradd -d /opt/猪八戒 zhubajie && echo "zhubajie" | passwd --stdin 'zhubajie')
+
+检测shawujing用户是否存在,不存在则创建该用户并指定口令,具体要求如下：
+指定家目录为/opt/沙悟静,
+用户名称shawujing,
+口令与用户名相同)
+# id shawujing || (useradd -d /opt/沙悟静 shawujing && echo "shawujing" | passwd --stdin 'shawujing')
+
+检测tangseng用户是否存在,不存在则创建该用户并指定口令,具体要求如下：
+指定家目录为/opt/唐僧,
+用户名称tangseng
+口令与用户名相同)
+# id tangseng || (useradd -d /opt/唐僧 tangseng && echo "tangseng" | passwd --stdin 'tangseng')
+
+B.分别为root与上述用户创建公私钥
+
+
+2.在主机2上配置ssh信任，将主机1上为各用户生成的公私钥实现异地同步备份至主机2上。
+在主机2的存放目录,相对路径结构要求
+主机1地址/用户名/公私钥文件,例如:192.168.241.10/sunwukong/id_rsa,192.168.241.10/isunwukong/id_rsa.pub
+vim xiyou.sh
+#!/bin/bash
+id sunwukong || (useradd -d /opt/孙悟空 sunwukong && echo "sunwukong" | passwd --stdin 'sunwukong')
+id zhubajie || (useradd -d /opt/猪八戒 zhubajie && echo "zhubajie" | passwd --stdin 'zhubajie')
+id shawujing || (useradd -d /opt/沙悟静 shawujing && echo "shawujing" | passwd --stdin 'shawujing')
+id tangseng || (useradd -d /opt/唐僧 tangseng && echo "tangseng" | passwd --stdin 'tangseng')
+cat >/opt/xiyou.txt<<eof
+sunwukong
+zhubajie
+shawujing
+tangseng
+eof
+client_ip=10.36.108.80
+for i in `cat /opt/xiyou.txt`
+do
+	ssh-keygen   -t  rsa  -P  ""  -f  /root/.ssh/id_rsa
+	mv /root/.ssh/id_rsa* /opt/$i
+done
+yum -y install sshpass
+##
+rsync -avz --progress /opt/孙悟空/id_rsa rsync_user@10.36.108.90::rsyncdata/$client_ip/sunwukong/ --password-file=/rsyncd.passwd
+rsync -avz --progress /opt/孙悟空/id_rsa.pub rsync_user@10.36.108.90::rsyncdata/$client_ip/isunwukong/ --password-file=/rsyncd.passwd
+rsync -avz --progress /opt/猪八戒/id_rsa rsync_user@10.36.108.90::rsyncdata/$client_ip/zhubajie/ --password-file=/rsyncd.passwd
+rsync -avz --progress /opt/猪八戒/id_rsa.pub rsync_user@10.36.108.90::rsyncdata/$client_ip/izhubajie/ --password-file=/rsyncd.passwd
+rsync -avz --progress /opt/沙悟静/id_rsa rsync_user@10.36.108.90::rsyncdata/$client_ip/shawujing/ --password-file=/rsyncd.passwd
+rsync -avz --progress /opt/沙悟静/id_rsa.pub rsync_user@10.36.108.90::rsyncdata/$client_ip/ishawujing/ --password-file=/rsyncd.passwd
+rsync -avz --progress /opt/唐僧/id_rsa rsync_user@10.36.108.90::rsyncdata/$client_ip/tangseng/ --password-file=/rsyncd.passwd
+rsync -avz --progress /opt/唐僧/id_rsa.pub rsync_user@10.36.108.90::rsyncdata/$client_ip/itangseng/ --password-file=/rsyncd.passwd
+###
+sshpass  -p '123456'  rsync  -avz /opt/孙悟空/id_rsa   root@10.36.108.90:/$client_ip/sunwukong/
+sshpass  -p '123456'  rsync  -avz /opt/孙悟空/id_rsa.pub   root@10.36.108.90.11:/$client_ip/isunwukong/
+sshpass  -p '123456'  rsync  -avz /opt/猪八戒/id_rsa   root@10.36.108.90:/$client_ip/zhubajie/
+sshpass  -p '123456'  rsync  -avz /opt/猪八戒/id_rsa.pub   root@10.36.108.90:/$client_ip/izhubajie/
+sshpass  -p '123456'  rsync  -avz /opt/沙悟静/id_rsa   root@10.36.108.90:/$client_ip/shawujing/
+sshpass  -p '123456'  rsync  -avz /opt/沙悟静/id_rsa.pub   root@10.36.108.90:/$client_ip/ishawujing/
+sshpass  -p '123456'  rsync  -avz /opt/唐僧/id_rsa   root@10.36.108.90:/$client_ip/tangseng/
+sshpass  -p '123456'  rsync  -avz /opt/唐僧/id_rsa.pub   root@10.36.108.90:/$client_ip/itangseng/
+####
+sshpass  -p '123456'  scp /opt/孙悟空/id_rsa   root@10.36.108.90:/$client_ip/sunwukong/id_rsa
+sshpass  -p '123456'  scp /opt/孙悟空/id_rsa.pub   root@10.36.108.90.11:/$client_ip/isunwukong/id_rsa.pub
+sshpass  -p '123456'  scp /opt/猪八戒/id_rsa   root@10.36.108.90:/$client_ip/zhubajie/id_rsa
+sshpass  -p '123456'  scp /opt/猪八戒/id_rsa.pub   root@10.36.108.90:/$client_ip/izhubajie/id_rsa.pub
+sshpass  -p '123456'  scp /opt/沙悟静/id_rsa   root@10.36.108.90:/$client_ip/shawujing/id_rsa
+sshpass  -p '123456'  scp /opt/沙悟静/id_rsa.pub   root@10.36.108.90:/$client_ip/ishawujing/id_rsa.pub
+sshpass  -p '123456'  scp /opt/唐僧/id_rsa   root@10.36.108.90:/$client_ip/tangseng/id_rsa
+sshpass  -p '123456'  scp /opt/唐僧/id_rsa.pub   root@10.36.108.90:/$client_ip/itangseng/id_rsa.pub

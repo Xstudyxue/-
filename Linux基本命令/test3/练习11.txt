@@ -1,0 +1,67 @@
+配置计划任务,完成以下任务
+配置ntpdate时间同步,每隔5分钟完成,计划任务在执行完以后无接收邮件提示
+1.同步服务器地址为下列地址之一
+ntp1.aliyun.com
+ntp2.aliyun.com
+ntpdate ntp1.aliyun.com
+ntpdate ntp2.aliyun.com
+
+cat >>/var/spool/cron/root<<eof
+*/5 * * * * /usr/sbin/ntpdate ntp1.aliyun.com &>/dev/null
+eof
+
+
+配置计划任务模拟日志增加
+要求:每隔5分钟完成使用for循环写入文件
+1.创建目录/data/logsfile/log/
+2.在步骤1目录下生成随机文件,要求如下
+名称规则:前缀为大写A至Z_随机字符(字母数字符号,不含/+=,长度20).log
+3.使用for循环将/var/log/secure文件内容分别写入到上述步骤2的文件中。
+vim log_t.sh
+#!/bin/bash
+mkdir -p /data/logsfile/log/
+for i in {A..Z}
+do
+	touch /data/logsfile/log/$i"_"$(openssl rand -base64 40 | tr  -d '/+=' | cut -c 2-21)
+done
+chmod a+x log_t.sh
+
+vim log_f.sh
+#!/bin/bash
+for i in {A..Z}
+do
+	cat /var/log/secure >> /data/logsfile/log/$i"_"*
+done
+chmod a+x log_f.sh
+cat >>/var/spool/cron/root<<eof
+*/5 * * * * /usr/bin/bash /root/shell/log_f.sh &>/dev/null
+eof
+
+
+配置计划任务记录日志文件空间大小
+要求:每隔1分钟完成
+1.输出时间标记到/data/logsfile/size.log中,内容格式为:
+当前时间为:年月日时分秒
+2.将/data/logsfile/log/目录下生成的随机文件的大小,文件名(使用ls -sh)记录到文件/data/logsfile/size.log中.
+最终在/data/logsfile/size.log文件中,产生类似于下记录效果
+当前时间为:20230811170156 
+总用量 4.0K
+4.0K A_pPY5RrMHPqEBzRv8locG.log
+4.0K B_3mRALzMaigmUG9J4Gwhw.log
+4.0K C_Zc3YSetLOTP8152Pt7WX.log
+4.0K D_WfOZ9QcdKXGR+XTp+o+D.log
+4.0K E_+jOYadenxOj6sgdWOVYy.log
+vim log_size.sh
+#!/bin/bash
+cutime=`date +%Y%m%d%H%M%S`
+echo "当前时间为:$cutime" >> /data/logsfile/size.log
+ls -sh /data/logsfile/log/ >> /data/logsfile/size.log
+cat >>/var/spool/cron/root<<eof
+*/1 * * * * /usr/bin/bash /root/shell/log_size.sh &>/dev/null
+eof
+
+配置文件清理计划任务
+要求:工作日晚上20:30,清理/data/logsfile/log/目录下,在2M以上的文件.
+cat >>/var/spool/cron/root<<eof
+30 20 * * 1,5 /usr/bin/find /data/logsfile/log/ -type f -size +2M -exec rm -rf {} \; &>/dev/null
+eof

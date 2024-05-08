@@ -1,0 +1,145 @@
+批量生成网卡配置文件
+要求如下：
+有以下4个网段，参数信息：
+1网段172.16.1.0/24，网关地址为172.16.1.254
+2网段172.16.2.0/24，网关地址为172.16.2.254
+3网段172.16.3.0/24，网关地址为172.16.3.254
+4网段172.16.4.0/24，网关地址为172.16.4.254
+1.在/data/ifcfg/网段地址(172.16.1.0~172.16.4.0)/下以IP地址为目录名创建多级目录,主机地址范围从1至253
+例如:
+/data/ifcfg/172.16.1.0/下产生目录从172.16.1.1至172.16.1.253
+......
+/data/ifcfg/172.16.4.0/下产生目录从172.16.4.1至172.16.4.253
+for i in {1..4}
+do
+	mkdir -p /data/ifcfg/172.16.$i.0/172.16.$i.{1..253}
+done
+
+
+2.批量生成网卡配置文件,分别在/data/ifcfg/网段地址/各IP地址目录下产生网卡文件ifcfg-ens33
+该文件内容要求如下
+IPV6INIT="yes"
+DHCP_HOSTNAME="localhost."
+BOOTPROTO="none"
+DEVICE="ens33"
+NAME="ens33"
+ONBOOT="yes"
+IPADDR="各IP地址目录"
+PREFIX="掩码长度"
+GATEWAY="所属网段网关地址"
+DNS1="223.5.5.5"
+DNS2="223.6.6.6"
+
+#!/bin/bash
+for i in `ls /data/ifcfg/172.16.{1..4}.0/`
+do
+ip_gw=`echo $i | awk -F"." '{print $3}'`
+case $ip_gw in
+"1")
+ip_gw=172.16.1.254
+ip_r=172.16.1.0
+;;
+"2")
+ip_gw=172.16.2.254
+ip_r=172.16.2.0
+;;
+"3")
+ip_gw=172.16.3.254
+ip_r=172.16.3.0
+;;
+"4")
+ip_gw=172.16.4.254
+ip_r=172.16.4.0
+;;
+esac
+cat >/data/ifcfg/$ip_r/$i/ifcfg-ens33<<eof
+IPV6INIT="yes"
+DHCP_HOSTNAME="localhost."
+BOOTPROTO="none"
+DEVICE="ens33"
+NAME="ens33"
+ONBOOT="yes"
+IPADDR="$i"
+PREFIX="24"
+GATEWAY="$ip_gw"
+DNS1="223.5.5.5"
+DNS2="223.6.6.6"
+eof
+done
+
+
+
+3.批量生成主机名配置文件,分别在/data/ifcfg/网段地址/各IP地址目录下产生主机名称文件hostname
+该文件内容要求如下
+8随机字符(不含有以下符号/+=)_纳秒
+for i in {1..253}
+do
+number=`openssl rand -base64 40 | tr  -d '/+=' | cut -c 1-8`
+time=`(date +%N)`
+echo $number"_"$time > /data/ifcfg/172.16.1.0/172.16.1.$i/hostname
+done
+for j in {1..253}
+do
+number=`openssl rand -base64 40 | tr  -d '/+=' | cut -c 1-8`
+time=`(date +%N)`
+echo $number"_"$time > /data/ifcfg/172.16.2.0/172.16.2.$j/hostname
+done
+for k in {1..253}
+do
+number=`openssl rand -base64 40 | tr  -d '/+=' | cut -c 1-8`
+time=`(date +%N)`
+echo $number"_"$time > /data/ifcfg/172.16.3.0/172.16.3.$k/hostname
+done
+for l in {1..253}
+do
+number=`openssl rand -base64 40 | tr  -d '/+=' | cut -c 1-8`
+time=`(date +%N)`
+echo $number"_"$time > /data/ifcfg/172.16.4.0/172.16.4.$l/hostname
+done
+
+
+4.分别在/data/ifcfg/网段地址/各IP地址目录下产生文件issue
+文件内容如下
+\S
+Kernel \r on an \m
+IP:与目录同名
+Hostname:步骤3中的内容值
+for i in {1..253}
+do
+cat >/data/ifcfg/172.16.1.0/172.16.1.$i/issue<<eof
+\S
+Kernel \r on an \m
+IP:172.16.1.$i
+Hostname:`cat /data/ifcfg/172.16.1.0/172.16.1.$i/hostname`
+eof
+done
+
+for i in {1..253}
+do
+cat >/data/ifcfg/172.16.2.0/172.16.2.$i/issue<<eof
+\S
+Kernel \r on an \m
+IP:172.16.2.$i
+Hostname:`cat /data/ifcfg/172.16.2.0/172.16.2.$i/hostname`
+eof
+done
+
+for i in {1..253}
+do
+cat >/data/ifcfg/172.16.3.0/172.16.3.$i/issue<<eof
+\S
+Kernel \r on an \m
+IP:172.16.3.$i
+Hostname:`cat /data/ifcfg/172.16.3.0/172.16.3.$i/hostname`
+eof
+done
+
+for i in {1..253}
+do
+cat >/data/ifcfg/172.16.4.0/172.16.4.$i/issue<<eof
+\S
+Kernel \r on an \m
+IP:172.16.4.$i
+Hostname:`cat /data/ifcfg/172.16.4.0/172.16.4.$i/hostname`
+eof
+done

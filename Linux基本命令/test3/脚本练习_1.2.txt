@@ -1,0 +1,13 @@
+脚本练习：
+1.批量生成公私钥
+要求：
+1).创建目录/data/pki_key,/data/pki_log
+2).使用位置变量定义要创建的公私钥对数目.
+3).根据位置变量提供的数目,分别在/data/pki_key/下分别创建子级目录,例如位置变量为10,在/data/pki_key/下创建10个目录,名称从1到10。
+4).根据位置变量提供的数目,批量生成公私钥对,放置目录为/data/pki_key/子级目录/下。
+例如位置变量为10,生成的公私钥分别位于/data/pki_key/1/,/data/pki_key/2/..../data/pki_key/10/下
+5).根据位置变量提供的数目,将生成的公钥对文件详情,包含权限,完整路径信息输出到/data/pki_log/pki_info.log中,输出内容如下所示(以2组数目为例)
+-rw------- /data/pki_key/1/id_rsa
+-rw-r--r-- /data/pki_key/1/id_rsa.pub
+-rw------- /data/pki_key/2/id_rsa
+-rw-r--r-- /data/pki_key/2/id_rsa.pub

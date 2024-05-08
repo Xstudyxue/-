@@ -1,0 +1,10 @@
+#添加硬盘 创建物理卷
+pvcreate /dev/sdb
+#
+vgs
+#
+vgextend centos /dev/sdb
+#
+lvextend -L +20G /dev/centos/root
+xfs_growfs /dev/centos/root
+df -Th

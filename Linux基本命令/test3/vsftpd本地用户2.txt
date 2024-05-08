@@ -1,0 +1,49 @@
+根据提供的如下参数,完成以下操作:
+1.本地用户名清单文件:local_user_si.list,该文件有36行
+文件格式如下,第一列用户名
+3.添加组shuihu
+4.创建目录/data/shuihu,作为用户家目录的父目录
+5.根据local_user_si.list文件中的用户名,生成用户,具体要求如下:
+local_user_si.list文件中的每一行为用户名
+为每个用户生成随机12位强口令,并启用口令
+将用户名与口令记录在文件/data/userinfo/用户名.log中,文件内容格式如下:
+用户名:口令
+每个用户的家目录位于/data/shuihu下,家目录名为用户名,权限为755
+指定基本组为shuihu
+5.配置vsftpd实现本地用户认证,要求如下
+禁用匿名登录
+禁锢用户在主目录下
+vim vsftpd1.sh
+#!/bin/bash
+ftp_user () {
+groupadd shuihu
+mkdir -p /data/shuihu
+for USERNAME in `cat local_user_si.list`
+do
+        number=`openssl rand -base64 40 | tr  -d '/+=' | cut -c 2-12`
+        useradd -g shuihu -d /data/shuihu/$USERNAME $USERNAME
+        echo $number | passwd --stdin "$USERNAME"
+        echo $USERNAME:$number >> /data/userinfo
+        chmod 755 /data/shuihu/$USERNAME
+        chown $USERNAME:shuihu  /data/shuihu/$USERNAME
+        chown :shuihu /data/shuihu
+done
+ftp_server () {
+systemctl stop firewalld
+systemctl disable firewalld
+setenforce 0
+sed -ri '/^SELINUX=/c SELINUX=disabled' /etc/selinux/config
+yum -y install vsftpd
+systemctl enable vsftpd
+touch /etc/vsftpd/chroot_list
+sed -ri '/^anonymous_enable=/c anonymous_enable=no' /etc/vsftpd/vsftpd.conf
+sed -ri '/^#chroot_local_user=/c chroot_local_user=YES' /etc/vsftpd/vsftpd.conf
+sed -ri '/^#chroot_list_enable=/c chroot_list_enable=YES' /etc/vsftpd/vsftpd.conf
+sed -ri '/^#chroot_list_file=/c chroot_list_file=/etc/vsftpd/chroot_list' /etc/vsftpd/vsftpd.conf
+sed -i '$a allow_writeable_chroot=YES' /etc/vsftpd/vsftpd.conf
+sed -i '$a local_root=/data/shuihu' /etc/vsftpd/vsftpd.conf
+sed -i '$a local_max_rate=0' /etc/vsftpd/vsftpd.conf
+#systemctl restart vsftpd
+}
+ftp_user
+ftp_server

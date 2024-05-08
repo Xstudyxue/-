@@ -1,0 +1,57 @@
+1.部署rsync同步服务器
+要求如下:
+允许所有主机
+同步模块名为:
+rsync_file_${CLIENT_HOST_IP}
+同步用户名:
+rsync_user,口令为随机12字符
+路径地址为
+/data/client_${CLIENT_HOST_IP}
+${CLIENT_HOST_IP}:为客户端IP地址,省略IP地址的.输入
+模块名称示范
+[rsync_file_19216824124]
+uid = root
+gid = root
+use chroot = no
+read only = no
+#hosts allow=10.36.108.0/255.255.255.0
+#hosts deny=*
+max connections = 5
+pid file = /var/run/rsyncd.pid
+ecrets file = /etc/rsyncd/rsyncd.passwd
+log file = /var/log/rsync.log
+transfer logging = yes
+log format = %t %a %m %f %b
+syslog facility = local3
+timeout = 300
+[backup]
+path = /data/backup/
+list=yes
+ignore errors=yes
+auth users = backup
+[rsync_file_$client_host_ip]
+path = /data/$client_host_ip
+list=yes
+ignore errors=yes
+auth users = rsync_user
+# exclude = cache/
+
+cat /etc/rsyncd/rsyncd.passwd
+rsync_user:dbMZ3lcwP3p
+
+2.在客户端同步数据目录至rsync同步服务器的同步模块下
+数据目录地址
+/data/file/
+文件名称:前缀为大写A_随机字符(字母数字符号,长度20,不含以下符号"/+="),以.log结尾
+文件数100个
+内容为本机地址
+#!/bin/bash
+mkdir -p /data/file/
+for i in {1..100}
+do
+number=`openssl rand -base64 40 | tr  -d '/+=' | cut -c 2-20`
+touch /data/file/A_${number}.log
+echo "10.36.108.80" > /data/file/A_${number}.log
+done
+echo "dbMZ3lcwP3p" > /rsyncd.passwd
+chmod 600  /rsyncd.passwd

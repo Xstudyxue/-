@@ -1,0 +1,32 @@
+使用for循环和linux命令完成如下效果:
+批量产生10个json参数文件,作为向dingding发送消息的消息体,要求如下:
+1.文件名称为U_NAME.json
+2.目录位置:/opt/dingding/
+3.文件内容如下格式:
+{
+"msgtype": "text",
+"text": {
+"content": "
+username:${U_NAME}
+password:${U_PASSWD}
+"}}
+其中
+U_NAME:gdweb_5位随机字符
+U_PASSWD:10随机字符
+
+#!/bin/bash
+mkdir -p /opt/dingding/
+for i in {1..10};
+do
+U_NAME="gdweb_$(openssl rand -base64 40 | tr -d '+=/' | cut -c 1-5)"
+U_PASSWD=$(openssl rand -base64 40 | tr -d '+=/' | cut -c 1-10)
+cat >/opt/dingding/${U_NAME}.json<<eof
+{
+"msgtype": "text",
+"text": {
+"content": "
+username:${U_NAME}
+password:${U_PASSWD}
+"}}
+eof
+done

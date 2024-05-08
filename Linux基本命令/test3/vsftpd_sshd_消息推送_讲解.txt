@@ -1,0 +1,194 @@
+根据提供的如下参数,完成以下操作:
+1.本地用户名清单文件:local_user_si.list,该文件有36行
+文件格式如下,第一列用户名
+
+2.添加组shuihu
+
+3.创建目录/data/shuihu,作为用户家目录的父目录
+
+4.根据local_user_si.list文件中的用户名,生成用户,具体要求如下:
+local_user_si.list文件中的每一行为用户名
+为每个用户生成随机12位强口令,并启用口令
+将用户名与口令记录在文件/data/shuihu/userlist/用户名.log中,文件内容格式如下:
+用户名:口令
+每个用户的家目录位于/data/shuihu下,家目录名为用户名,指定基本组为shuihu
+为新添加的用户生成公私钥,
+将用户新生成的私钥文件由.ssh/下复制到该用户的家目录下,名称为:用户名_pri_key,并设置权限为644,属主为用户本人
+
+5.配置消息推送,消息类型为text格式，消息提醒正文内容如下
+标题:添加新用户消息提醒
+服务器时间:SERVER_TIME
+服务器地址:SERVER_IP
+服务器名称:SERVER_HOSTNAME
+发行版本:SERVER_RELEASE
+服务登录名:USERNAME
+登录口令:USERPASSWORD
+
+参数说明
+SERVER_TIME:时间格式,年-月-日_时-分-秒.纳秒
+SERVER_IP:服务器IP地址
+SERVER_HOSTNAME:服务器名称
+SERVER_RELEASE:发行版本
+USERNAME:用户名
+USERPASSWORD:随机口令
+
+6.配置vsftpd实现本地用户认证,要求如下
+禁用匿名登录
+禁锢用户在家目录下
+用户使用口令登录ftp,可以下载私钥
+
+7.配置sshd相关参数实现与密钥登录
+
+步骤
+root生成公私钥
+ssh-keygen  -t rsa -P "" -f  ~/.ssh/id_rsa
+cat /root/.ssh/id_rsa.pub >>/root/.ssh/authorized_keys
+复制私钥内容至客户端 
+cat  /root/.ssh/id_rsa
+
+1.完成密钥登录
+sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g'  /etc/ssh/sshd_config
+sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/g'   /etc/ssh/sshd_config
+
+
+yum install vsftpd   -y
+systemctl enable vsftpd
+cp /etc/vsftpd/vsftpd.conf{,.bak}
+
+vim  /etc/vsftpd/vsftpd.conf修改参数如下
+anonymous_enable=NO
+chroot_local_user=YES
+chroot_list_enable=YES
+chroot_list_file=/etc/vsftpd/chroot_list
+allow_writeable_chroot=YES
+
+touch  /etc/vsftpd/chroot_list
+systemctl start vsftpd
+
+测试用户test
+[root@localhost .ssh]# useradd  test
+[root@localhost .ssh]# echo '123456' | passwd --stdin test
+
+为测试用户生成公私钥
+su - test -c 'ssh-keygen  -t rsa -P "" -f  ~/.ssh/id_rsa'
+su - test -c "cat ~/.ssh/id_rsa.pub >>~/.ssh/authorized_keys"
+su - test -c "cp ~/.ssh/id_rsa  ~/test_pri_key; chmod 644 ~/test_pri_key"
+
+方式一
+##批量添加用户
+#!/bin/bash
+groupadd shuihu &>/dev/null
+mkdir  -p /data/shuihu/userlist  &>/dev/null
+for USERNAME in $(cat /shell/local_user_si.list);
+do
+USERPASSWORD=$(openssl  rand -base64 40 | cut -c 1-12)
+useradd -g shuihu  -d /data/shuihu/${USERNAME}  ${USERNAME}
+echo "${USERPASSWORD}" | passwd --stdin ${USERNAME} 
+echo "${USERNAME}:${USERPASSWORD}" >/data/shuihu/userlist/${USERNAME}.log
+su - ${USERNAME} -c 'ssh-keygen  -t rsa -P "" -f  ~/.ssh/id_rsa'
+su - ${USERNAME} -c "cat ~/.ssh/id_rsa.pub >>~/.ssh/authorized_keys"
+su - ${USERNAME} -c "cp ~/.ssh/id_rsa ~/${USERNAME}_pri_key; chmod 644 ~/${USERNAME}_pri_key"
+done
+
+
+##生成批量添加用户消息推送脚本
+/shell/pushinfo.sh
+
+#!/bin/bash
+WORKDIR='/shell'
+for i in $(ls /data/shuihu/userlist/);
+do
+##用户名称
+USERNAME=$(cat /data/shuihu/userlist/${i} | awk -F ":" '{print $1}')
+##口令
+USERPASSWORD=$(cat /data/shuihu/userlist/${i} | awk -F ":" '{print $2}')
+##服务器运行时间
+SERVER_TIME=$(date +%F_%T.%N)
+#服务器IP
+SERVER_IP='192.168.241.23'
+#主机名称
+SERVER_HOSTNAME=$(hostname)
+##服务器发行版本
+SERVER_RELEASE=$(cat /etc/redhat-release)
+##机器人地址
+ROBOT=''
+TYPE='Content-Type: application/json'
+MSG_TEXT_FILE='/tmp/msg.log'
+##消息正文内容文件内容
+cat >${MSG_TEXT_FILE}<<eof
+标题:添加新用户消息提醒
+服务器时间:${SERVER_TIME}
+服务器地址:${SERVER_IP}
+服务器名称:${SERVER_HOSTNAME}
+发行版本:${SERVER_RELEASE}
+服务登录名:${USERNAME}
+登录口令:${USERPASSWORD}
+eof
+##json消息体文件路径
+MSG_JSON_FILE='/tmp/info.json'
+##生成json消息体文件
+cat >${MSG_JSON_FILE}<<EOF
+{
+"msgtype": "text",
+"text": {
+"content": "$(cat ${MSG_TEXT_FILE})"}}
+EOF
+##消息推送,正确的丢弃,错误的输出到文件pushinfoerr.log中
+curl -s  ${ROBOT} -H "${TYPE}" -d "$(cat ${MSG_JSON_FILE})" >/dev/null  2>${WORKDIR}/pushinfoerr.log
+sleep 0.5
+done
+
+
+
+方式二
+##生成批量添加用户消息推送脚本
+/shell/pushinfo.sh
+#!/bin/bash
+groupadd shuihu &>/dev/null
+mkdir  -p /data/shuihu/userlist  &>/dev/null
+for USERNAME in $(cat /shell/local_user_si.list);
+do
+##口令
+USERPASSWORD=$(openssl  rand -base64 40 | cut -c 1-12)
+useradd -g shuihu  -d /data/shuihu/${USERNAME}  ${USERNAME}
+echo "${USERPASSWORD}" | passwd --stdin ${USERNAME} 
+echo "${USERNAME}:${USERPASSWORD}" >/data/shuihu/userlist/${USERNAME}.log
+su - ${USERNAME} -c 'ssh-keygen  -t rsa -P "" -f  ~/.ssh/id_rsa'
+su - ${USERNAME} -c "cat ~/.ssh/id_rsa.pub >>~/.ssh/authorized_keys"
+su - ${USERNAME} -c "cp ~/.ssh/id_rsa ~/${USERNAME}_pri_key; chmod 644 ~/${USERNAME}_pri_key"
+WORKDIR='/shell'
+##服务器运行时间
+SERVER_TIME=$(date +%F_%T.%N)
+#服务器IP
+SERVER_IP=''
+#主机名称
+SERVER_HOSTNAME=$(hostname)
+##服务器发行版本
+SERVER_RELEASE=$(cat /etc/redhat-release)
+##机器人地址
+ROBOT=''
+TYPE='Content-Type: application/json'
+MSG_TEXT_FILE='/tmp/msg.log'
+##消息正文内容文件内容
+cat >${MSG_TEXT_FILE}<<eof
+标题:添加新用户消息提醒
+服务器时间:${SERVER_TIME}
+服务器地址:${SERVER_IP}
+服务器名称:${SERVER_HOSTNAME}
+发行版本:${SERVER_RELEASE}
+服务登录名:${USERNAME}
+登录口令:${USERPASSWORD}
+eof
+##json消息体文件路径
+MSG_JSON_FILE='/tmp/info.json'
+##生成json消息体文件
+cat >${MSG_JSON_FILE}<<EOF
+{
+"msgtype": "text",
+"text": {
+"content": "$(cat ${MSG_TEXT_FILE})"}}
+EOF
+##消息推送,正确的丢弃,错误的输出到文件pushinfoerr.log中
+curl -s  ${ROBOT} -H "${TYPE}" -d "$(cat ${MSG_JSON_FILE})" >/dev/null  2>${WORKDIR}/pushinfoerr.log
+sleep 0.5
+done

@@ -1,0 +1,87 @@
+1.在主机1上完成以下操作
+A.添加用户
+检测sunwukong用户是否存在,不存在则创建该用户并指定口令,具体要求如下：
+指定家目录为/opt/孙悟空,
+用户名称sunwukong,
+口令与用户名相同)
+
+检测zhubajie用户是否存在,不存在则创建该用户并指定口令,具体要求如下：
+指定家目录为/opt/猪八戒,
+用户名称zhubajie,
+口令与用户名相同)
+
+检测shawujing用户是否存在,不存在则创建该用户并指定口令,具体要求如下：
+指定家目录为/opt/沙悟静,
+用户名称shawujing,
+口令与用户名相同)
+
+检测tangseng用户是否存在,不存在则创建该用户并指定口令,具体要求如下：
+指定家目录为/opt/唐僧,
+用户名称tangseng
+口令与用户名相同)
+
+id sunwukong &>/dev/null || (useradd  -d /opt/孙悟空  sunwukong  && echo "sunwukong" | passwd	 --stdin sunwukong &>/dev/null)
+id zhubajie &>/dev/null || (useradd  -d /opt/猪八戒  zhubajie  && echo "zhubajie" | passwd	 --stdin zhubajie &>/dev/null)
+id shawujing &>/dev/null || (useradd  -d /opt/沙悟静  shawujing  && echo "shawujing" | passwd	 --stdin shawujing &>/dev/null)
+id tangseng &>/dev/null || (useradd  -d /opt/唐僧  tangseng  && echo "tangseng" | passwd	--stdin tangseng &>/dev/null)
+
+B.分别为root与上述用户创建公私钥
+root用户生成公私钥
+ssh-keygen   -t  rsa  -P  ""  -f  /root/.ssh/id_rsa
+
+for  USERNAME in {sunwukong,zhubajie,shawujing,tangseng};
+do
+su - ${USERNAME} -c "ssh-keygen  -t rsa -P '' -f   ~/.ssh/id_rsa  -q"
+done
+
+
+
+2.在主机2上配置ssh信任，将主机1上为各用户生成的公私钥实现异地同步备份至主机2上。
+在主机2的存放目录,相对路径结构要求
+主机1地址/用户名/公私钥文件,例如:192.168.241.10/sunwukong/id_rsa,192.168.241.10/isunwukong/id_rsa.pub
+
+配置信任
+主控方生成公私钥
+ssh-keygen   -t rsa -P ''  -f   ~/.ssh/id_rsa  -q
+
+复制主控方的公钥文件内容id_rsa.pub
+
+在受控方/root/.ssh/authorized_keys文件中写入复制公钥内容
+
+测试主控方与受控方的ssh信任连接(首次连接忽略指纹验证)
+ssh  -o  "stricthostkeychecking=no"  root@192.168.241.24
+
+方式一
+mkdir 192.168.241.23/{root,sunwukong,zhubajie,shawujing,tangseng}   -p
+cp /root/.ssh/id_rsa*   192.168.241.23/root/
+cp /opt/孙悟空/.ssh/id_rsa*   192.168.241.23/sunwukong/
+cp /opt/猪八戒/.ssh/id_rsa*   192.168.241.23/zhubajie/
+cp /opt/沙悟静/.ssh/id_rsa*   192.168.241.23/shawujing/
+cp /opt/唐僧/.ssh/id_rsa*   192.168.241.23/tangseng/
+rsync -avz    192.168.241.23   root@192.168.241.24:/data
+
+方式二
+受控方上创建目录
+mkdir /192.168.241.23/{root,sunwukong,zhubajie,shawujing,tangseng}  -p
+rsync -avz /root/.ssh/id_rsa*      root@192.168.241.24:/192.168.241.23/root/
+rsync -avz /opt/孙悟空/.ssh/id_rsa*   root@192.168.241.24:/192.168.241.23/sunwukong/
+rsync -avz /opt/猪八戒/.ssh/id_rsa*   root@192.168.241.24:/192.168.241.23/zhubajie/
+rsync -avz /opt/沙悟静/.ssh/id_rsa*   root@192.168.241.24:/192.168.241.23/shawujing/
+rsync -avz /opt/唐僧/.ssh/id_rsa*   root@192.168.241.24:/192.168.241.23/tangseng/
+
+方式三
+受控方上创建目录
+ssh root@192.168.241.24 "mkdir /192.168.241.23/  -p"
+rsync -avz /root/.ssh/id_rsa*  root@192.168.241.24:/192.168.241.23/root/
+
+rsync同步
+for USERNAME in {sunwukong,zhubajie,shawujing,tangseng};
+do
+find /opt/  -name "id_rsa*"  -user ${USERNAME} -exec  rsync  -avz   {}  root@192.168.241.24:/192.168.241.23/${USERNAME}/ \;
+done
+
+scp远程复制
+for USERNAME in {sunwukong,zhubajie,shawujing,tangseng};
+do
+find /opt/  -name "id_rsa*"  -user ${USERNAME} -exec scp  {}  root@192.168.241.24:/192.168.241.23/${USERNAME}/ \;
+done

@@ -1,0 +1,154 @@
+根据提供的如下参数,完成以下操作:
+1.本地用户名清单文件:local_user_si.list,该文件有36行
+文件格式如下,第一列用户名
+
+2.添加组shuihu
+groupadd shuihu
+
+3.创建目录/data/shuihu,作为用户家目录的父目录
+mkdir -p /data/shuihu
+
+4.根据local_user_si.list文件中的用户名,生成用户,具体要求如下:
+local_user_si.list文件中的每一行为用户名
+为每个用户生成随机12位强口令,并启用口令
+将用户名与口令记录在文件/data/shuihu/userlist/用户名.log中,文件内容格式如下:
+用户名:口令
+每个用户的家目录位于/data/shuihu下,家目录名为用户名,指定基本组为shuihu
+为新添加的用户生成公私钥,
+将用户新生成的私钥文件由.ssh/下复制到该用户的家目录下,名称为:用户名_pri_key,并设置权限为644,属主为用户本人
+
+5.配置消息推送,消息类型为text格式，消息提醒正文内容如下
+标题:添加新用户消息提醒
+服务器时间:SERVER_TIME
+服务器地址:SERVER_IP
+服务器名称:SERVER_HOSTNAME
+发行版本:SERVER_RELEASE
+服务登录名:USERNAME
+登录口令:USERPASSWORD
+
+参数说明
+SERVER_TIME:时间格式,年-月-日_时-分-秒.纳秒
+SERVER_IP:服务器IP地址
+SERVER_HOSTNAME:服务器名称
+SERVER_RELEASE:发行版本
+USERNAME:用户名
+USERPASSWORD:随机口令
+
+6.配置vsftpd实现本地用户认证,要求如下
+禁用匿名登录
+禁锢用户在家目录下
+用户使用口令登录ftp,可以下载私钥
+
+7.配置sshd相关参数实现与密钥登录
+
+#!/bin/bash
+#环境
+setenforce 0
+systemctl stop firewalld
+systemctl enable firewalld
+sed -ri '/^SELINUX=/c SELINUX=disabled' /etc/selinux/config
+user () {
+#创建组
+groupadd shuihu
+#创建家目录
+mkdir -p /data/shuihu/userlist/
+for USERNAME in `cat local_user_si.list`
+do
+        #userdel -r $USERNAME
+        #生成随机强口令
+        number=`openssl rand -base64 40 | tr  -d '/+=' | cut -c 2-12`
+        #添加用户并指定家目录及属组
+        useradd -g shuihu -d /data/shuihu/$USERNAME $USERNAME
+        #设置密码
+        echo $number | passwd --stdin "$USERNAME"
+        #保存用户名密码
+        echo $USERNAME:$number >> /data/shuihu/userlist/"$USERNAME.log"
+        #创建公私钥目录
+        mkdir -p /data/shuihu/${USERNAME}/.ssh
+        chmod 700 /data/shuihu/${USERNAME}/.ssh
+        #生成一对公私钥
+        ssh-keygen   -t  rsa  -P  ""  -f  /data/shuihu/${USERNAME}/.ssh/id_rsa
+        #在上一级目录生成一个用户名私钥
+        cat /data/shuihu/${USERNAME}/.ssh/id_rsa > /data/shuihu/${USERNAME}/${USERNAME}_pri_key
+        chmod 644 /data/shuihu/${USERNAME}/${USERNAME}_pri_key
+        chown $USERNAME /data/shuihu/${USERNAME}/${USERNAME}_pri_key
+done
+}
+wxreboot () {
+WORKDIR='/reboot'
+mkdir /reboot
+SERVER_TIME=`date +%Y-%m-%d_%H-%M-%S.%N`
+SERVER_IP="10.36.108.25"
+SERVER_HOSTNAME="xue"
+SERVER_RELEASE="CentOS Linux release 7.6.1810 (Core)"
+##机器人地址
+ROBOT='https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=fe0e067c-451b-4e49-9c6a-9728a8e02db4'
+TYPE='Content-Type: application/json'
+##消息正文内容文件路径
+MSG_TEXT_FILE='/tmp/msg.log'
+##消息正文内容文件内容
+for i in `cat local_user_si.list`
+do
+USERNAME=`awk -F":" '{print $1}' /data/shuihu/userlist/$i.log`
+USERPASSWORD=`awk -F":" '{print $2}' /data/shuihu/userlist/$i.log`
+cat >${MSG_TEXT_FILE}<<eof
+添加新用户消息提醒
+服务器时间:$SERVER_TIME
+服务器地址:$SERVER_IP
+服务器名称:$SERVER_HOSTNAME
+发行版本:$SERVER_RELEASE
+服务登录名:$USERNAME
+登录口令:$USERPASSWORD
+eof
+done
+##json消息体文件路径
+MSG_JSON_FILE='/tmp/info.json'
+##生成json消息体文件
+cat >${MSG_JSON_FILE}<<EOF
+{
+"msgtype": "text",
+"text": {
+"content": "$(cat ${MSG_TEXT_FILE})"}}
+EOF
+##消息推送,正确的丢弃,错误的输出到文件pushinfoerr.log中
+curl -s  ${ROBOT} -H "${TYPE}" -d "$(cat ${MSG_JSON_FILE})" >/dev/null  2>${WORKDIR}/pushinfoerr.log
+}
+vsftp () { 
+yum -y install vsftpd
+systemctl enable vsftpd
+systemctl start vsftpd
+touch /etc/vsftpd/chroot_list
+sed -ri '/^anonymous_enable=/c anonymous_enable=no' /etc/vsftpd/vsftpd.conf
+sed -ri '/^#chroot_local_user=/c chroot_local_user=YES' /etc/vsftpd/vsftpd.conf
+sed -ri '/^#chroot_list_enable=/c chroot_list_enable=YES' /etc/vsftpd/vsftpd.conf
+sed -ri '/^#chroot_list_file=/c chroot_list_file=/etc/vsftpd/chroot_list' /etc/vsftpd/vsftpd.conf
+sed -i '$a allow_writeable_chroot=YES' /etc/vsftpd/vsftpd.conf
+sed -i '$a local_root=/data/shuihu/' /etc/vsftpd/vsftpd.conf
+sed -i '$a local_max_rate=0' /etc/vsftpd/vsftpd.conf
+sed -i '$a user_config_dir=/etc/vsftpd/vsftpd_user_conf' /etc/vsftpd/vsftpd.conf
+mkdir -p /etc/vsftpd/vsftpd_user_conf
+#cat local_user_si.list | xargs -I {} mkdir -p /etc/vsftpd/vsftpd_user_conf/{}
+for user_name in `cat /root/shell/local_user_si.list`
+do
+mkdir -p /etc/vsftpd/vsftpd_user_conf/$user_name
+cat >/etc/vsftpd/vsftpd_user_conf/$user_name<<eof
+local_root=/data/shuihu/$user_name
+local_max_rate=0
+write_enable=yes
+eof
+done
+}
+sshd () {
+sed -ri '/^#PubkeyAuthentication yes/c PubkeyAuthentication yes' /etc/ssh/sshd_config
+#sed -ri '/^PasswordAuthentication yes/c PasswordAuthentication no' /etc/ssh/sshd_config
+#RSAAuthentication yes
+#PermitRootLogin yes
+for i in `cat /root/local_user_si.list`
+do
+cat /data/shuihu/$i/.ssh/id_rsa.pub > /data/shuihu/$i/.ssh/authorized_keys
+chmod 644 /data/shuihu/$i/.ssh/authorized_keys
+chown $i /data/shuihu/$i/.ssh
+#> /data/shuihu/$i/.ssh/authorized_keys
+done
+systemctl restart sshd
+}

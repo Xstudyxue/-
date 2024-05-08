@@ -1,0 +1,93 @@
+<mxfile host="Electron" modified="2024-05-07T08:26:10.445Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.5 Chrome/114.0.5735.243 Electron/25.3.1 Safari/537.36" etag="Et_dqz54XkdMIZO0JFC6" version="21.6.5" type="device">
+  <diagram name="第 1 页" id="LBXqiro_qhod8aTlYqk6">
+    <mxGraphModel dx="1008" dy="1395" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="1IuqVf7deNHJgen6mhiN-39" value="Server" style="image;html=1;image=img/lib/clip_art/computers/Server_128x128.png" parent="1" vertex="1">
+          <mxGeometry x="128" y="-513" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="1IuqVf7deNHJgen6mhiN-40" value="10.36.108.x" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="137" y="-411" width="71" height="21" as="geometry" />
+        </mxCell>
+        <mxCell id="H_AHbD987K_u1PGbbIlY-13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" parent="1" source="1IuqVf7deNHJgen6mhiN-41" target="1IuqVf7deNHJgen6mhiN-39" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="421" y="-634" />
+              <mxPoint x="421" y="-490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1IuqVf7deNHJgen6mhiN-41" value="客户端&lt;br&gt;192.168.x.a1" style="image;html=1;image=img/lib/clip_art/computers/Server_128x128.png" parent="1" vertex="1">
+          <mxGeometry x="495" y="-678" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="H_AHbD987K_u1PGbbIlY-14" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" parent="1" source="H_AHbD987K_u1PGbbIlY-3" target="1IuqVf7deNHJgen6mhiN-39" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="H_AHbD987K_u1PGbbIlY-3" value="客户端&lt;br&gt;192.168.y.a1" style="image;html=1;image=img/lib/clip_art/computers/Server_128x128.png" parent="1" vertex="1">
+          <mxGeometry x="497" y="-513" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="H_AHbD987K_u1PGbbIlY-8" value="" style="image;html=1;image=img/lib/clip_art/general/Keys_128x128.png" parent="1" vertex="1">
+          <mxGeometry x="75" y="-566" width="37.5" height="27.5" as="geometry" />
+        </mxCell>
+        <mxCell id="H_AHbD987K_u1PGbbIlY-15" value="........" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="522" y="-366" width="42" height="20.5" as="geometry" />
+        </mxCell>
+        <mxCell id="H_AHbD987K_u1PGbbIlY-16" value="" style="image;html=1;image=img/lib/clip_art/people/Suit_Man_128x128.png" parent="1" vertex="1">
+          <mxGeometry x="585" y="-665.5" width="66" height="63" as="geometry" />
+        </mxCell>
+        <mxCell id="H_AHbD987K_u1PGbbIlY-21" value="其他客户端" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="665" y="-378" width="70" height="20.5" as="geometry" />
+        </mxCell>
+        <mxCell id="H_AHbD987K_u1PGbbIlY-22" value="" style="image;html=1;image=img/lib/clip_art/general/Full_Folder_128x128.png" parent="1" vertex="1">
+          <mxGeometry x="651" y="-656" width="51" height="51" as="geometry" />
+        </mxCell>
+        <mxCell id="H_AHbD987K_u1PGbbIlY-23" value="编写脚本,配置计划任务,每隔5分钟进行文件同步&lt;br&gt;要求如下：&lt;br&gt;1.将脚本目录同步至服务器server上，位于所属用户家目录下&lt;br&gt;2.配置消息推送&lt;br&gt;消息详情如下&lt;br&gt;&lt;div&gt;同步时间:${CURTIME}&lt;/div&gt;&lt;div&gt;本机地址:${LOCAL_HOST}&lt;/div&gt;&lt;div&gt;同步目录名:${SOURCE_DIR}&lt;/div&gt;&lt;div&gt;远程服务器:${SERVER_HOST}&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;同步用户名:${USER_NAME}&lt;/span&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;同步详细:&amp;nbsp;&lt;/span&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;----------------------&lt;/div&gt;&lt;div&gt;&lt;div&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;sent 843,380 bytes&amp;nbsp; received 552 bytes&amp;nbsp; 153,442.18 bytes/sec&lt;/span&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;total size is 588,137,590&amp;nbsp; speedup is 696.90&lt;/div&gt;&lt;/div&gt;&lt;div&gt;----------------------&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="711" y="-665.25" width="383" height="226" as="geometry" />
+        </mxCell>
+        <mxCell id="H_AHbD987K_u1PGbbIlY-25" value="" style="image;html=1;image=img/lib/clip_art/general/Full_Folder_128x128.png" parent="1" vertex="1">
+          <mxGeometry x="651" y="-509" width="51" height="51" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-1" value="" style="image;html=1;image=img/lib/clip_art/people/Suit_Man_128x128.png" vertex="1" parent="1">
+          <mxGeometry x="55" y="-635.5" width="71" height="67.5" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-2" value="" style="image;html=1;image=img/lib/clip_art/people/Suit_Woman_128x128.png" vertex="1" parent="1">
+          <mxGeometry x="147" y="-635.5" width="73" height="67" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-3" value="" style="image;html=1;image=img/lib/clip_art/people/Construction_Worker_Man_128x128.png" vertex="1" parent="1">
+          <mxGeometry x="240" y="-635.5" width="67" height="66" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-4" value="要求:&lt;br&gt;添加用户,用户名为本小组用户成员姓名全拼.&lt;br&gt;/data/home/作为家目录的父目录名称&lt;br&gt;为本小组成员用户生成公私钥&lt;br&gt;配置sshd使用密钥登录Server&lt;br&gt;编写备份脚本,时间范围从9:00至23:00,每隔2小时 :&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;备份目录/data/backup/用户名称/下；文件名为202405070900.tar.gz&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;备份原目录为用户家目录下的全部数据；&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;保留最近2天的备份文件；&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;在脚本实现消息推送(可选消息推送功能，选择完成)" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="55" y="-814" width="314" height="158" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-5" value="" style="image;html=1;image=img/lib/clip_art/general/Keys_128x128.png" vertex="1" parent="1">
+          <mxGeometry x="169.25" y="-568" width="37.5" height="27.5" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-6" value="" style="image;html=1;image=img/lib/clip_art/general/Keys_128x128.png" vertex="1" parent="1">
+          <mxGeometry x="260" y="-568.5" width="37.5" height="27.5" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-10" value="" style="image;html=1;image=img/lib/clip_art/people/Suit_Woman_128x128.png" vertex="1" parent="1">
+          <mxGeometry x="592" y="-509" width="73" height="67" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-11" value="" style="image;html=1;image=img/lib/clip_art/people/Construction_Worker_Man_128x128.png" vertex="1" parent="1">
+          <mxGeometry x="598" y="-407" width="67" height="66" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-14" value="" style="sketch=0;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;fillColor=#505050;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;outlineConnect=0;align=center;shape=mxgraph.office.sites.wiki_site;" vertex="1" parent="1">
+          <mxGeometry x="656" y="-732" width="44" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-15" value="不允许使用root帐号户进行同步或远程操作" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="702" y="-710" width="247" height="17" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-16" value="zhangwuji" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="591.5" y="-598" width="64.5" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-17" value="xiaochao" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="607" y="-338" width="64.5" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="vwZeHj0-tOP68-4ek57Z-22" value="zhangwuji" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="63.5" y="-538.5" width="64.5" height="25" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

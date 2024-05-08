@@ -1,0 +1,37 @@
+1.在/data/ifcfg/下以IP地址为目录名创建多级目录,地址范围从10至250,名称前缀192.168.x为本机网卡地址前缀.
+	mkdir -p /data/ifcfg/192.168.159.{10..250}
+
+2.批量生成网卡配置文件,分别在/data/ifcfg/192.168.x.10至192.168.x.250目录下产生文件ifcfg-eth0
+内容如下,其中IPDIRNAME为与目录同名称的IP地址
+IPV6INIT="yes"
+DHCP_HOSTNAME="localhost."
+BOOTPROTO="none"
+DEVICE="eth0"
+ONBOOT="yes"
+IPADDR="IPDIRNAME"
+PREFIX="24"
+GATEWAY="192.168.x.2"
+DNS1="223.5.5.5"
+DNS2="223.6.6.6"
+
+3.分别在/data/ifcfg/192.168.x.10至192.168.x.250目录下生成公私钥
+vim ip_a.sh
+#!/bin/bash
+for i in {10..250}
+do
+mkdir -p /data/ifcfg/192.168.159.$i
+cat >/data/ifcfg/192.168.159.$i/ifcfg-eth0<<eof
+IPV6INIT="yes"
+DHCP_HOSTNAME="localhost."
+BOOTPROTO="none"
+DEVICE="eth0"
+ONBOOT="yes"
+IPADDR="192.168.159.$i"
+PREFIX="24"
+GATEWAY="192.168.159.2"
+DNS1="223.5.5.5"
+DNS2="223.6.6.6"
+eof
+ssh-keygen -t rsa -P "" -f /root/.ssh/id_rsa
+mv /root/.ssh/id_rsa* /data/ifcfg/"192.168.159.$i"/
+done

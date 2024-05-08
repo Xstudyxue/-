@@ -1,0 +1,85 @@
+0.安装软件包bind-utils
+yum -y install bind-utils
+1.生成名称列表文件domain.list.名单列表如下
+www.baidu.com
+www.163.com
+www.qq.com
+github.com
+gitee.com
+www.nginx.org
+www.zhizhu.com
+www.wireshark.org
+www.jianshu.com
+www.toutiao.com
+qyapi.weixin.qq.com
+cat>domain.list<<eof
+www.baidu.com
+www.163.com
+www.qq.com
+github.com
+gitee.com
+www.nginx.org
+www.zhizhu.com
+www.wireshark.org
+www.jianshu.com
+www.toutiao.com
+qyapi.weixin.qq.com
+eof
+
+2.使用dig查询上述列表文件中的域名对应的解析记录,只保留解析的地址记录到/data/dig.log中,示范内容如下
+domain_name:www.baidu.com
+;; ANSWER SECTION:
+www.baidu.com.          78      IN      CNAME   www.a.shifen.com.
+www.a.shifen.com.       78      IN      A       183.2.172.185
+www.a.shifen.com.       78      IN      A       183.2.172.42
+;; SERVER: 223.5.5.5#53(223.5.5.5)
+#!/bin/bash
+domain_server=`8.8.8.8`
+for domain_name in `cat /root/domain_list`
+do
+>/data/dig.log
+echo domain_name:$domain_name >> /data/dig.log 
+dig $domain_name | grep -E "ANSWER SECTION|^www|^[a-z0-9].*.com.|SERVER" >> /data/dig.log
+##机器人地址
+ROBOT=''
+TYPE='Content-Type: application/json'
+MSG_TEXT_FILE='/tmp/msg.log'
+##消息正文内容文件内容
+cat >${MSG_TEXT_FILE}<<eof
+服务器时间：$(date +%Y-%m-%d_%d:%M:%S.%N)
+域名:${domain_name}
+DNS服务器:${domain_server}
+dig解析记录详情
+----------------------------------------
+cat /data/dig.log
+-----------------------------------------
+eof
+##json消息体文件路径
+MSG_JSON_FILE='/tmp/info.json'
+##生成json消息体文件
+cat >${MSG_JSON_FILE}<<EOF
+{
+"msgtype": "text",
+"text": {
+"content": "$(cat ${MSG_TEXT_FILE})"}}
+EOF
+##消息推送,正确的丢弃,错误的输出到文件pushinfoerr.log中
+curl -s  ${ROBOT} -H "${TYPE}" -d "$(cat ${MSG_JSON_FILE})" >/dev/null  2>/tmp/pushinfoerr.log
+sleep 0.5
+done
+
+3.将上述解析记录进行消息逐条推送，消息内容如下
+示范效果如下
+
+服务器时间：年-月-日_日:分:秒.纳秒
+域名:${DOMAIN_NAME}
+DNS服务器:${DOMAIN_SERVER}
+dig解析记录详情
+----------------------------------------
+domain_name:www.baidu.com
+;; ANSWER SECTION:
+www.baidu.com.          78      IN      CNAME   www.a.shifen.com.
+www.a.shifen.com.       78      IN      A       183.2.172.185
+www.a.shifen.com.       78      IN      A       183.2.172.42
+;; SERVER: 223.5.5.5#53(223.5.5.5)
+-----------------------------------------

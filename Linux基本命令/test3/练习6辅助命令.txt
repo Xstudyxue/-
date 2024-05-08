@@ -1,0 +1,12 @@
+练习6辅助命令
+产生年月日
+date +%Y%m%d
+
+创建年月日时间标记的目录
+mkdir -p  $(date +%Y%m%d)/$(date +%Y%m%d%H%M%S)
+
+随机生成长度40个字符的字符串,tr去除指定的符号,截取指定长度字符
+openssl rand -base64 40 | tr  -d '/+=' | cut -c 2-21
+
+随机生成长度20个字符名称,前缀为A至Z_,
+{A..Z}_$(openssl rand -base64 40 | tr  -d '/+=' | cut -c 2-21)
