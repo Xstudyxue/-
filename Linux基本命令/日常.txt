@@ -58,3 +58,13 @@ dirname
 [root@linux-server ~]dir=dirname Stemp
 [root@linux-server ~]echo $dir
 /home/temp
+##ip抢占
+#!/bin/sh
+while true;
+do
+ifconfig ens33 10.36.108.90/24 up
+route add default gw 10.36.108.1
+sleep 1
+done
+#arping-Ua-s192.168.5.5-leth0192.168.5.1&
+
