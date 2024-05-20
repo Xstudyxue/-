@@ -72,6 +72,30 @@
 - SQL Server 可以与 Windows 操作系统紧密集成，不论是应用程序开发速度还是系统事务处理运行速度，都能得到较大的 提升。SQL Server 的缺点是只能在 Windows 系统下运行。
 - 主要应用范围：部分企业电商（央视购物），使用windows服务器平台的企业。
 
+### 7、常用非关系型数据库管理系统
+#### 1、Memcached（Key-Value）
+- Memcached 是一个开源的、高性能的、具有分布式内存对象的缓存系统。通过它可以减轻数据库负载，加速动态的 Web 应用，最初版本由 LiveJoumal 的 Brad Fitzpatrick在2003年开发完成。目前全球有非常多的用户都在使用它来构建自己的大负载网站或提高自己的高访问网站的响应速度。注意：Memcache 是这个项目的名称，而Memcached 是服务器端的主程序文件名。
+- 缓存一般用来保存一些经常被存取的对象或数据（例如，浏览器会把经常访问的网页缓存起来一样），通过缓存来存取对象或数据要比在磁盘上存取快很多，前者是内存，后 者是磁盘。Memcached 是一种纯内存缓存系统，把经常存取的对象或数据缓存在 Memcached 的内存中，这些被缓存的数据被程序通过API的方式被存取，Memcached里面的数据就像一张巨大的 HASH 表，数据以 Key-Value 对的方式存在。Memcached 通过缓存经常被存取的对象或数据，从而减轻频繁读取数据库的压力，提高网站的响应速度.官方：http://Memcached.org/
+- 由于Memcached 为纯内存缓存软件，一旦重启所有数据都会丢失，因此，新浪网基于 Memcached 开发了一个开源项目 MemcacheDB。通过为 Memcached 增加 Berkeley DB 的持久化存储机制和异步主辅复制机制，使 Memcached 具备了事务恢复能力、持久化数据存储能力和分布式复制能力，但是最近几年逐渐被其他的持久化产品替代例如Redis。 
+
+2、Redis（Key-Value）
+- Redis 是一个Key-Value 型存储系统。但Redis支持的存储value 类型相对更多，包括 string（字符串）、list（链表）、set（集合）和 zset（有序集合）等。这些数据类型都支持 push/pop、add/remove 及取交集、并集和差集及更丰富的操作，而且这些操作都是原子性的。在此基础上，Redis 支持各种不同方式的排序。与 Memcached 一样，为了保证效率，Redis 的数据都是缓存在内存中。区别是 Redis 会周期性的把更新的数据写入磁盘或者把修改操作写入追加的记录文件，并且在此基础上实现了 Master-Slave（主从）同步。
+
+- Redis 是一个高性能的 Key-Value 数据库。Redis 的出现，很大程度补偿了 Memcached 这类 Key-Value 存储的不足，在部分场合可以对关系数据库有很好的补充作用。它提供了 Python，Ruby，Erlang，PHP 客户端，使用很方便。官方：http://www.Redis.io/documentation
+Redis 特点
+1. 支持内存缓存，这个功能相当于 Memcached。
+2. 支持持久化存储，这个功能相当于 MemcacheDB，Ttserver。
+3. 数据类型更丰富。比其他 Key-Value 库功能更强。
+4. 支持主从集群，分布式。
+应用：缓存从存取 Memcached 更改存取 Redis。
+
+3、MongoDB  （Document-Web）
+- MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是非关系数据库当中功能最丰富，最像关系数据库的。他支持的数据结构非常松散，类似 Json 的 Bjson 格式，因此可以存储比较复杂的数据类型。MongoDB 最大的特点是他支持查询语言非常强大，其语法有点类似于面向对象的查询语言，几乎可以实现类似关系数据库单表查询的绝大部分功能，而且还支持对数据建立索引。它的特点是高性能、易部署、易使用，存储数据非常方便。
+- MongoDB 服务端可运行在 Linux、Windows 或 OS X 平台，支持32位和64位应用，默认端口为 27017。推荐运行在64位平台。
+- McmgoDB 把数据存储在文件中（默认路径为：/data/db）。
+
+
+
 
 
 
