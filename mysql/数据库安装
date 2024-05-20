@@ -234,6 +234,103 @@ LimitNOFILE = 5000
 #systemctl enable mysqld.service
 数据库编译安装完成.
 
+2.二进制安装
+下载 
+ wget [https://cdn.mysql.com/archives/mysql-5.7/mysql-5.7.34-linux-glibc2.12-x86_64.tar.gz](https://cdn.mysql.com/archives/mysql-5.7/mysql-5.7.34-linux-glibc2.12-x86_64.tar.gz)
+添加用户
+groupadd -g 27 mysql && useradd -g 27 -u 27 -M -s /sbin/nologin mysql
+tar xzvf mysql-5.7.34-linux-glibc2.12-x86_64.tar.gz
+mv  mysql-5.7.34-linux-glibc2.12-x86_64 /usr/local/mysql
+chown -R mysql:mysql /usr/local/mysql
+touch /usr/local/mysql/mysql.log && chown mysql:mysql /usr/local/mysql/mysql.log
+
+编辑配置文件
+vim /etc/my.cnf
+[mysqld]
+basedir=/usr/local/mysql
+datadir=/usr/local/mysql/data
+socket=/usr/local/mysql/data/mysql.sock
+port=3306
+default-storage-engine = innodb
+innodb_large_prefix=on
+innodb_file_per_table = on
+max_connections = 10000
+collation-server = utf8_general_ci
+character_set_server=utf8
+user=mysql
+log-error=/usr/local/mysql/mysql.log
+[client]　　　　　　　　　　
+port = 3306
+socket = /usr/local/mysql/data/mysql.sock
+default-character-set = utf8
+
+添加环境变量
+cat >>/etc/profile<<EOF
+export PATH=\${PATH}:/usr/local/mysql/bin
+EOF
+source /etc/profile
+初始化数据库，产生随机初始口令，日志文件(/usr/local/mysql/mysql.log)的最后一行
+mysqld --initialize --basedir=/usr/local/mysql/ --datadir=/usr/local/mysql/data --user=mysql
+
+2021-09-01T04:19:46.584105Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2021-09-01T04:19:46.750790Z 0 [Warning] InnoDB: New log files created, LSN=45790
+2021-09-01T04:19:46.799449Z 0 [Warning] InnoDB: Creating foreign key constraint system tables.
+2021-09-01T04:19:46.894003Z 0 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: d75cc5a8-0adb-11ec-bdc7-000c29cfe524.
+2021-09-01T04:19:46.896680Z 0 [Warning] Gtid table is not ready to be used. Table 'mysql.gtid_executed' cannot be opened.
+2021-09-01T04:19:47.818156Z 0 [Warning] CA certificate ca.pem is self signed.
+2021-09-01T04:19:47.900030Z 1 [Note] A temporary password is generated for root@localhost: (lev-JPpl0hT
+
+添加启动脚本
+vim /usr/lib/systemd/system/mysql.service
+[Unit]
+Description=MySQL Server
+Documentation=man:mysqld(8)
+Documentation=http://dev.mysql.com/doc/refman/en/using-systemd.html
+After=network.target
+After=syslog.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+User=mysql
+Group=mysql
+ExecStart=/usr/local/mysql/bin/mysqld --defaults-file=/etc/my.cnf
+LimitNOFILE = 5000
+#Restart=on-failure
+#RestartPreventExitStatus=1
+#PrivateTmp=false
+
+更新自启动服务，查看工作端口
+systemctl daemon-reload
+systemctl enable mysql.service
+systemctl  start mysql
+netstat -ntpl | grep "3306"
+
+登录
+systemctl  restart mysql
+mysql -u root -p'password'
+
+登录以后修改口令
+set password='新口令';
+exit
+
+登录mysql以后修改口令方法(1),并取消口令过期
+update mysql.user set authentication_string=password('123.com') where user='root';
+update mysql.user set password_expired='N';
+flush privileges;
+
+登录mysql以后修改口令方法(2),并取消口令过期
+alter user user() identified by '123456';
+update mysql.user set password_expired='N';
+flush privileges;
+exit
+
+在外部修改口令
+/usr/local/mysql/bin/mysqladmin -u root -p  password 'newpassword'
+
+
+
 
 
 
