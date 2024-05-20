@@ -50,6 +50,37 @@
 - 图形数据库允许我们将数据以图的方式存储。图形结构的数据库同其他行列以及刚性结构的 SQL 数据库不同，它是使用灵活的图形模型，并且能够扩展到多个服务器上。
 - 典型产品：Neo4J、InfoGr id
 
+### 6、常用关系型数据库管理系统
+
+#### 1、Oracle 数据库
+- Oracle 前身叫 SDL，由 Larry Ellison 和另两个编程人员在1977创办，他们开发了自己的拳头产品，在市场上大量销售，1979年，Oracle 公司引入了第一个商用 SQL关系数据库管理系统。Oracle公司是最早开发关系数据库的厂商之一，其产品支持最广泛的操作系统平台。目前 Oracle 关系数据库产品的市场占有率数一数二。
+- Oracle 公司是目前全球最大的数据库软件公司，也是近年业务增长极为迅速的软件提供与服务商。
+- 主要应用范围：传统大企业，大公司，政府，金融，证券等等。
+- 版本升级：Oracle8i，Oracle9i，Oracle10g，Oracle11g，Oracle12c
+
+2、MySQL 数据库
+- MySQL 数据库是一个中小型关系型数据库管理系统，软件开发者为瑞典 MySQL AB 公司。在2008年1月16号被 Sun 公司收购，后 Sun 公司又被 Oracle 公司收购。目前MySQL 被广泛地应用在 Internet 上的大中小型网站中。由于其体积小、速度快、总体拥有成本低，尤其是开放源码这一特点，许多大中小型网站为了降低网站总体拥有成本而选择了 MySQL 作为网站数据库，甚至国内知名的淘宝网也选择弃用 Oracle 而更换为更开放的 MySQL。
+- MySQL 数据库主要应用范围：互联网领域，大中小型网站，游戏公司，电商平台等等。
+
+3、MariaDB 数据库
+- MariaDB 数据库管理系统是 MySQL 数据库的一个分支，主要由开源社区维护。开发这个 MariaDB 数据库分支的可能原因之一是：甲骨文公司收购了MySQL 后，有将 MySQL 闭源的潜在风险，因此 MySQL 开源社区采用分支的方式来避开这个风险。
+- 开发 MariaDB 数据库的目的是完全兼容 MySQL 数据库，包括 API 和命令行，使之能轻松的成为 MySQL 的代替品。在存储引擎方面，使用 XtraDB （英语：XtraDB）来代替MySQL 的 InnoDB MariaDB 由 MySQL 的创始人 Michael Widenius（英语：Michael Widenius）主导开发，他早前曾以 10 亿美元的价格，将自己创建的公司MySQL AB卖给了 SUN，此后，随着 SUN 被甲骨文收购，MySQL 的所有权也落入Oracle 的手中，MariaDB 数据库的名称来自 MySQL 的创始人Michael Widenius 的女儿 Maria 的名字。
+
+4、SQL Server 数据库
+- Microsoft SQL Server是微软公司开发的大型关系型数据库系统。1987年，微软和IBM合作开发完成 OS/2，IBM 在其销售的 OS/2 ExtendedEdition 系统中绑定了 OS/2 DatabaseManager，而微软产品线中尚缺少数据库产品。为此，微软将目光投向 Sybase，同 Sybase 签订了合作协议，使用 Sybase 的技术开发基于 OS/2 平台的关系型数据库。1989年，微软发布了 SQLServer1.0 版。
+- SQL Server 的功能比较全面，效率高，可以作为中型企业或单位的数据库平台。
+- SQL Server 可以与 Windows 操作系统紧密集成，不论是应用程序开发速度还是系统事务处理运行速度，都能得到较大的 提升。SQL Server 的缺点是只能在 Windows 系统下运行。
+- 主要应用范围：部分企业电商（央视购物），使用windows服务器平台的企业。
+
+
+
+
+
+
+
+
+
+
 
 
 
