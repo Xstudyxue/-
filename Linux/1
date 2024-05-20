@@ -1,1 +1,200 @@
+#### 1、GNU/Linux 的历史
+##### 1.1 自由软件之父 
+Richard M. Stallman 1984 GNU Copyleft OpenSource Free GPL
+**理查德·斯托曼**
+既然是历史，就让它成为历史吧。。。。。。但请记住他们：
+
+##### 1.2 Linux 之父 
+
+**林纳斯•本纳第克特•托瓦兹**（Linus Benedict Torvalds, 1969年~ ），著名的电脑程序员、黑客。Linux内核的发明人及该计划的合作者。托瓦兹利用个人时间及器材创造出了这套当今全球最流行的操作系统（作业系统）内核之一。现受聘于开放源代码开发实验室（OSDL：Open Source Development Labs, Inc），全力开发Linux内核。1991 www.kernel.org 
+
+#### 2、Linux发行版介绍
+##### 2.1 RHEL
+RHEL是Red Hat Enterprise Linux的缩写，是Red Hat公司的Linux系统。
+##### 2.2 CentOS
+CentOS（Community Enterprise Operating System，中文意思是：社区企业操作系统）是Linux发行版之一，它是来自于Red Hat Enterprise Linux依照开放源代码规定释出的源代码所编译而成。由于出自同样的源代码，因此有些要求高度稳定性的服务器以CentOS替代商业版的Red Hat Enterprise Linux使用。两者的不同，在于CentOS并不包含封闭源代码软件。
+
+##### 2.3 Ubuntu
+Ubuntu（友帮拓、优般图、乌班图）
+是一个以桌面应用为主的开源GNU/Linux操作系统，Ubuntu 是基于Debian GNU/Linux，支持x86、amd64（即x64）和ppc架构，由全球化的专业开发团队（Canonical Ltd）打造的
+
+##### 2.4 SUSE
+SUSE(发音 /ˈsuːsə/)是指SUSE Linux ，是德国 SuSE Linux AG公司发行维护的Linux发行版，是属于此公司的注册商标。第一个版本出现在1994年年初。2004年这家公司被Novell公司收购。
+
+##### 2.5 Debian
+广义的Debian是指一个致力于创建自由操作系统的合作组织及其作品，由于Debian项目众多内核分支中以Linux宏内核为主，而且 Debian开发者 所创建的操作系统中绝大部分基础工具来自于GNU工程 ，因此 “Debian” 常指Debian GNU/Linux。
+
+##### 2.6 Oracle Linux
+
+Oracle Linux是Linux发行版本之一，全称为Oracle Enterprise Linux，简称OEL，是Oracle公司在2006年初发布第一个版本，以对Oracle软件和硬件支持较好见长。
+
+Oracle以Red Hat Linux做为起始，移除了Red Hat的商标，然后加入了Linux的错误修正。Oracle Enterprise Linux现在是，并旨在保持为，与Red Hat Enterprise Linux完全兼容。
+
+#### 3、Linux认证RHCE/RHCA
+RHCA
+RHCA红帽认证架构师
+RHCE
+RHCE红帽认证工程师
+RHCT
+RHCT红帽认证技术员
+
+#### 4、Linux系统部署
+##### 4.1 获取常用发行版
+centos.org
+ubuntu.com
+
+##### 4.2.服务器介绍
+
+A.塔式服务器
+​	塔式服务器是我们生活中见得比较多的，主要是因为塔式服务器的外形结构和普通PC比较类似。塔式服务器尺寸没有统一标准，由于塔式服务器的机箱比较大，服务器的配置也可以很高，冗余扩展更可以很齐备，所以它的应用范围非常广。
+
+B.机架式服务器
+机架式服务器的外形看来不像计算机，而像交换机，有1U（1U=1.75英寸）、2U、4U等规格。机架式服务器安装在标准的19英寸机柜里面。这种结构的多为功能型服务器，应该说目前使用率最高的一种服务器就是机架式服务器。
+
+C.刀片式服务器
+​	刀片服务器是指在标准高度的机架式机箱内可插装多个卡式的服务器单元，是一种实现HAHD(高可用高密度)的低成本服务器平台，为特殊应用行业和高密度计算环境专门设计。刀片服务器就像“刀片”一样，每一块“刀片”实际上就是一块系统主板。
+
+##### 4.3 非云环境安装方式
+
+​    非云环境Linux 图形安装详解
+1.安装并打开VMWARE
+2.在VMware中新建虚拟机
+3.典型/自定义，选择自定义安装
+4.虚拟机兼容性，默认下一步
+5.安装来源，选择稍后安装操作系统
+7.操作系统类型，选择linux centos7 64
+8.自定义虚拟机名称，和文件夹位置。D:\KF\VM\Centos7-1-64
+9.虚拟机CPU，默认下一步
+10.内存选择，1024MB
+11.网络连接，选择桥接
+12.IO类型，默认下一步
+13.虚拟磁盘类型，默认下一步
+14.创建新磁盘，默认下一步
+15.磁盘大小，默认下一步，20G
+16.磁盘文件名，默认下一步
+17.完成
+18.在新的虚拟机，选择DVD,，选择使用ISO 镜像，选择CENTOS7 安装镜像
+19.开启此虚拟机
+20.install centos 7 安装操作系统
+21.中文，简体中文
+22.软件选择:带GUI的服务器&兼容开
+23.安装位置认选择完成（自动分区）
+24.点击开始安装
+25.设置root密码
+26.同意许可，完成配置
+27.时区，用户名，密码
+30.部署系统实验完成。
+
+4.4 云环境系统部署基本介绍
+qingcloud.com
+aliyun.com
+qcloud.com
+
+5、Linux系统基本操作
+1、登入详解
+[root@localhost ~]#
+提示符的含义
+root		当然登入的用户
+localhost	主机名
+~			root用户的家目录
+#			标识符，# 代表管理员root   $ 普通用户
+
+2、命令的写法
+命令 【空格】 选项/参数  【空格】	文件/目录
+例子：
+ls		列出当前目录下有哪些文件
+	选项：
+		-l		以长格式列出文件或者目录的详细信息
+# ls -l  /tmp			//以长格式列出/tmp 目录下所有文件的内容
+
+命令的帮助
+命令 --help	//作用，显示命令的用法，显示每个选项的作用
+man 手册		//作用，显示命令的用法，显示每个选项的作用，更详细
+百度 www.baidu.com
+
+3、目录结构
+windows： 多根方式，以C盘 D盘
+linux： 单根方式，最顶级的目录是 /  [根]
+怎么去切换目录？
+cd		切换目录
+pwd		打印出当前所在目录的绝对路径 -- 简称： “你在哪”
+两种切换方式：
+1、以绝对路径的方式 - 从根开始切换
+2、以相对路径的方式 - 从当前目录(自己)开始切换
+
+特殊目录
+.  点 -- 当前目录
+.. 两个点 -- 上一级目录
+
+随堂练习
+		/
+etc		usr		tmp
+ |		 |
+rc.d	local
+		/ \
+	  bin sbin
+
+1). 请用绝对路径的方式切换到 rc.d 目录
+cd /etc/rc.d
+2). 请用相对路径的方式切换到 local 目录
+cd ./usr/local
+
+cd usr
+cd local
+3). 请用相对路径的方式切换到 bin
+cd usr
+cd local
+cd bin
+4). 请用相对路径的方式切换到 sbin
+cd usr
+cd local
+cd sbin
+5). 请用你觉得最合适的方式切换到 tmp 目录
+cd /
+cd tmp
+
+
+4、快捷键操作
+Tab键	补全命令或者补全文件或者目录名称
+ctrl+c   终止命令
+ctrl+l	 清屏	也可以使用clear命令
+上下方向键	把之前敲的命令调出来，历史命令 history
+ctrl+a	 把命令行上的光标调到最前面
+ctrl + + 把终端字体变大
+ctrl -   把终端字体变小
+
+5、文件的管理--增删改查
+增--
+touch		创建文件
+# touch a.txt		//在当前目录下创建一下a.txt的文件
+# touch /tmp/a.txt	//在/tmp 下面创建一个a.txt的文件
+
+删--
+rm	//remove
+	选项：
+		-r	删除目录
+		-f	强制删除
+
+改--
+mv		改名和移动[剪切]
+		写法： mv 源文件 目标文件
+	
+cp		复制
+		写法:	 cp 源文件	目标文件
+		
+查：
+cat		查看文件内容
+		选项
+		-n		会打印行号
+
+
+
+
+
+
+
+
+
+
+
 
