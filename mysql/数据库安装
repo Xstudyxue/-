@@ -1,0 +1,247 @@
+1、yum 安装
+优点：操作简单易用。不用单独下载，服务器可以联网且yum源没有问题即可(可以选择国内的163/阿里源)
+
+2、编译安装
+- 5.1.X 及之前的版本是通过下载tar包以后解压后进入软件包解压路径。然后./configure、make、make install
+- 5.4.X 到 5.7.X 通过下载tar包以后解压后进入软件包解压路径。然后 cmake、make、make install(cmake需要提前安装)
+优点：可以定制功能特性。
+
+3、二进制安装
+官方下载二进制包，解压初始化即可直接使用不用安装。
+
+4、rpm 安装
+- 需要提前下载 rpm 软件包上传到服务器系统本地。
+- 使用 rpm 或者 yum 命令直接安装
+
+MySQL 版本号
+以 MySQL 5.7.27 这个版本的版本号为例说明每个数字含义。
+- 第一个数字(5)主版本号：文件格式改动时，将作为新的版本发布；
+- 第二个数字(7)发行版本号：新增特性或者改动不兼容时，发行版本号需要更改；
+- 第三个数字(27)发行序列号：主要是小的改动，如bug的修复、函数添加或更改、配置参数的更改等。
+
+关系型数据库与非关系型数据库的区别:
+1.关系型数据库:
+优点：
+1、易于维护：都是使用表结构，格式一致；
+2、使用方便：SQL语言通用，可用于复杂查询；
+3、复杂操作：支持SQL，可用于一个表以及多个表之间非常复杂的查询。
+缺点：
+1、读写性能比较差，尤其是海量数据的高效率读写；
+2、固定的表结构，灵活度稍欠；
+3、高并发读写需求，传统关系型数据库来说，硬盘I/O是一个很大的瓶颈。
+
+2.非关系型数据库严格上不是一种数据库，应该是一种数据结构化存储方法的集合，可以是文档或者键值对等。
+优点：
+1、格式灵活：存储数据的格式可以是key,value形式、文档形式、图片形式等等，文档形式、图片形式等等，使用灵活，应用场景广泛。
+2、速度快：nosql可以使用硬盘或者随机存储器作为载体，而关系型数据库只能使用硬盘；
+3、高扩展性；
+4、成本低：nosql数据库部署简单，基本都是开源软件。
+缺点：
+1、不提供sql支持，学习和使用成本较高；
+2、无事务处理；
+3、数据结构相对复杂，复杂查询方面稍欠。
+
+MySQL的官方网址： http://www.mysql.com/ ，MySQL的社区版本下载地址为： http://dev.mysql.com/downloads/mysql/ ，在写本文时，当前的MySQL最新版本是：8.0 。
+
+**什么是sql？**
+SQL代表结构化查询语言(Structured Query Language)。SQL是用于访问数据库的标准化语言。
+
+SQL包含三个部分：
+数据定义语言包含定义数据库及其对象的语句，例如表，视图，触发器，存储过程等。
+数据操作语言包含允许您更新和查询数据的语句。
+数据控制语言允许授予用户权限访问数据库中特定数据的权限。
+
+### mysql安装
+关闭防火墙和selinux
+#### 1、编译安装mysql5.7
+1、清理安装环境：
+# yum erase mariadb mariadb-server mariadb-libs mariadb-devel -y
+# userdel -r mysql
+# rm -rf /etc/my*
+# rm -rf /var/lib/mysql
+2、创建mysql用户
+# useradd -r mysql -M -s /bin/false
+3、从官网下载tar包
+wget https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-boost-5.7.27.tar.gz
+https://downloads.mysql.com/archives/get/p/23/file/mysql-boost-5.7.34.tar.gz
+4、安装编译工具
+# yum -y install ncurses ncurses-devel openssl-devel bison gcc gcc-c++ make
+cmake:
+# yum -y install cmake
+5、创建mysql目录
+mkdir -p /usr/local/mysql
+6、解压
+tar xzvf mysql-boost-5.7.27.tar.gz -C /usr/local/
+注:如果安装的MySQL5.7及以上的版本，在编译安装之前需要安装boost,因为高版本mysql需要boots库的安装才可以正常运行。否则会报CMake Error at cmake/boost.cmake:81错误
+安装包里面自带boost包
+7、编译安装
+cd 解压的mysql目录
+cd /usr/local/mysql-5.7.27/
+cmake . \
+-DWITH_BOOST=boost/boost_1_59_0/ \
+-DCMAKE_INSTALL_PREFIX=/usr/local/mysql \
+-DSYSCONFDIR=/etc \
+-DMYSQL_DATADIR=/usr/local/mysql/data \
+-DINSTALL_MANDIR=/usr/share/man \
+-DMYSQL_TCP_PORT=3306 \
+-DMYSQL_UNIX_ADDR=/tmp/mysql.sock \
+-DDEFAULT_CHARSET=utf8 \
+-DEXTRA_CHARSETS=all \
+-DDEFAULT_COLLATION=utf8_general_ci \
+-DWITH_READLINE=1 \
+-DWITH_SSL=system \
+-DWITH_EMBEDDED_SERVER=1 \
+-DENABLED_LOCAL_INFILE=1 \
+-DWITH_INNOBASE_STORAGE_ENGINE=1
+
+提示：boost也可以使用如下指令自动下载，如果不下载bost压缩包，把下面的这一条添加到配置中第二行
+-DDOWNLOAD_BOOST=1/
+参数详解:
+-DCMAKE_INSTALL_PREFIX=/usr/local/mysql \   安装目录
+-DSYSCONFDIR=/etc \   配置文件存放 （默认可以不安装配置文件）
+-DMYSQL_DATADIR=/usr/local/mysql/data \   数据目录   错误日志文件也会在这个目录
+-DINSTALL_MANDIR=/usr/share/man \     帮助文档 
+-DMYSQL_TCP_PORT=3306 \     默认端口
+-DMYSQL_UNIX_ADDR=/tmp/mysql.sock \  sock文件位置，用来做网络通信的，客户端连接服务器的时候用
+-DDEFAULT_CHARSET=utf8 \    默认字符集。字符集的支持，可以调
+-DEXTRA_CHARSETS=all \   扩展的字符集支持所有的
+-DDEFAULT_COLLATION=utf8_general_ci \  支持的
+-DWITH_READLINE=1 \    上下翻历史命令
+-DWITH_SSL=system \    使用私钥和证书登陆（公钥）  可以加密。 适用与长连接。坏处：速度慢
+-DWITH_EMBEDDED_SERVER=1 \   嵌入式数据库
+-DENABLED_LOCAL_INFILE=1 \    从本地倒入数据，不是备份和恢复。
+-DWITH_INNOBASE_STORAGE_ENGINE=1  默认的存储引擎，支持外键
+
+make && make install
+8、初始化
+# cd /usr/local/mysql
+# chown -R mysql.mysql .
+# ./bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data     ---初始化完成之后，一定要记住提示最后的密码用于登陆或者修改密码
+初始化,只需要初始化一次
+# vim /etc/my.cnf
+[mysqld]
+basedir=/usr/local/mysql
+#指定安装目录
+datadir=/usr/local/mysql/data
+#指定数据存放目录
+socket=/usr/local/mysql/data/mysql.sock
+# 用于本地连接的socket套接字
+port=3306
+default-storage-engine = innodb
+innodb_large_prefix=on
+innodb_file_per_table = on
+max_connections = 10000
+collation-server = utf8_general_ci
+character_set_server=utf8
+user=mysql
+log-error=/usr/local/mysql/mysql.log
+[client]　　　　　　　　　　
+port = 3306
+socket = /usr/local/mysql/data/mysql.sock
+# 用于本地连接的socket套接字
+default-character-set = utf8
+# 数据库默认字符集
+
+9、启动mysql
+# cd /usr/local/mysql
+# ./bin/mysqld_safe --user=mysql &
+
+10、登录mysql
+# /usr/local/mysql/bin/mysql -uroot -p'初始化后的密码'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 2
+Server version: 5.7.27
+Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+mysql> exit
+
+11、修改密码
+# /usr/local/mysql/bin/mysqladmin -u root -p'GP9TKGgY9i/8'  password 'QianFeng@123'
+mysqladmin: [Warning] Using a password on the command line interface can be insecure.
+Warning: Since password will be sent to server in plain text, use ssl connection to ensure password safety.
+
+12、添加环境变量
+# vim /etc/profile    ---添加如下
+PATH=$PATH:$HOME/bin:/usr/local/mysql/bin
+[root@mysql-server mysql]# source /etc/profile
+之后就可以在任何地方使用mysql命令登陆Mysql服务器：
+[root@mysql-server mysql]# mysql -uroot -p'QianFeng@123'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 5
+Server version: 5.7.27 Source distribution
+
+Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql>exit
+
+13、配置mysqld服务的管理工具(init.d方式)：
+# cd /usr/local/mysql/support-files/
+# cp mysql.server /etc/init.d/mysqld
+# chkconfig --add mysqld
+# chkconfig mysqld on
+先将原来的进程杀掉
+# /etc/init.d/mysqld start 
+Starting MySQL. SUCCESS! 
+# netstat -lntp 
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      1087/sshd           
+tcp6       0      0 :::22                   :::*                    LISTEN      1087/sshd           
+tcp6       0      0 :::3306                 :::*                    LISTEN      31249/mysqld        
+# /etc/init.d/mysqld stop
+
+14.配置系统启动服务systemctl方式
+#vim /usr/lib/systemd/system/mysqld.service
+[Unit]
+Description=MySQL Server
+Documentation=man:mysqld(8)
+Documentation=http://dev.mysql.com/doc/refman/en/using-systemd.html
+After=network.target
+After=syslog.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+User=mysql
+Group=mysql
+ExecStart=/usr/local/mysql/bin/mysqld --defaults-file=/etc/my.cnf
+LimitNOFILE = 5000
+
+#systemctl daemon-reload
+#systemctl enable mysqld.service
+数据库编译安装完成.
+
+
+
+
+
+
+
+
+
+
+
+
