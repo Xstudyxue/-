@@ -1,0 +1,20 @@
+dbname.*:数据库名称
+'dbusername'@'%':dbusername登录任意主机
+identified by '访问口令':指定口令
+
+#创建数据库
+create database dbname;
+#使用root用户给指定用户授权
+grant all privileges on dbname.* to 'dbusername'@'%' identified by 'password';
+#刷新数据库配置或者授权信息
+flush privileges;
+
+#外部连接数据库
+#服务器ip
+ip:192.168.241.23
+#指定端口，默认为3306
+port:3306
+#数据库名称
+dbaname:*
+dbuser:dbusername
+dbpass:password
