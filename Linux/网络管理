@@ -1,25 +1,16 @@
 ### 网络发展概述
-
 ```
 ip地址
 子网掩码
 网关
 DNS
 ```
-
 #### 1、IP地址
-
-```
 ( 32=4*8 ; 255(D)=1111 1111(B) =28-1 )
 所谓IP地址就是给每个连接在Internet上的主机分配的一个32bit地址。
 按照TCP/IP协议规定，IP地址用二进制来表示，每个IP地址长32bit，比特换算成字节，就是4个字节。
 例如一个采用二进制形式的IP地址是“00001010000000000000000000000001”，
 这么长的地址，人们处理起来也太费劲了。为了方便人们的使用，IP地址经常被写成十进制的形式，中间使用符号“.”分开不同的字节。于是，上面的IP地址可以表示为“10.0.0.1”。IP地址的这种表示法叫做“点分十进制表示法”，这显然比1和0容易记忆得多。
-
-```
-
-![image-20230329220126747](img/image-20230329220126747.png)
-
 ##### IP地址的分类
 
 ```
@@ -43,35 +34,22 @@ D类地址：范围从224-239，D类IP地址第一个字节以“1110”开始�
 E类地址：范围从240-254，以“11110”开始，为将来使用保留。 全零（"0．0．0．0"）地址对应于当前主机。全"1"的IP地址（"255．255．255．255"）是当前子网的广播地 址。
 240.0.0.0-255.255.255.254 保留地址
 
-
 ------------------------------------------------------
 其中A类分配给政府机关使用，B类地址给大中型企业使用，C类地址给个人使用。这三种是主要的。
-
 IP地址分为五类，A类保留给政府机构，B类分配给中等规模的公司，C类分配给任何需要的人，D类用于组播，E类用于实验，各类可容纳的地址数目不同。
-
 其中A类、B类、和C类这三类地址用于TCP/IP节点，其它两类D类和E类被用于特殊用途。
 A、B、C、D、E三类IP地址的特征：当将IP地址写成二进制形式时：
 
 A类：0打头
-
 B类：10打头
-
 C类：110打头
-
 D类：1110打头
-
 E类：11110打头 
-
 A、B、C、D、E三类IP地址的特征：当将IP地址写成十进制形式时：
-
 A类：1.0.0.1—126.255.255.254
-
 B类：128.0.0.1—191.255.255.254。
-
 C类：192.0.0.1—223.255.255.254
-
 D类：224.0.0.1—239.255.255.254
-
 E类：240.0.0.1—255.255.255.254
 
 1. A类地址
@@ -101,13 +79,8 @@ E类：240.0.0.1—255.255.255.254
 5. E类地址
 ⑴ E类地址也不分网络地址和主机地址，它的第1个字节的前五位固定为11110。
 ⑵ E类地址范围：240.0.0.1—255.255.255.254
-```
-
-
 
 #### 2、子网掩码
-
-```
 * IP地址是由网络号和主机号两部分组成的
 * 子网掩码的作用：告诉计算机哪些是网络号，哪些是主机号
 * 子网掩码和IP地址类似，也是32位二进制数，也可以用10进制数表示
@@ -118,45 +91,23 @@ E类：240.0.0.1—255.255.255.254
 它是一种用来指明一个IP地址的哪些位标识的是主机所在的子网以及哪些位标识的是主机的位掩码。
 子网掩码不能单独存在，它必须结合IP地址一起使用。子网掩码只有一个作用，就是将某个IP地址划分成网络地址和主机地址两部分
 
-```
-
-<img src="img/image-20230329220856570.png" alt="image-20230329220856570" style="zoom:67%;" />
-
 ##### 扩展知识-子网划分 [了解]
-
-```
 一、根据IP地址和子网掩码求 网络地址 和 广播地址：
-
    一个主机的IP地址是202.112.14.137，掩码是255.255.255.224，要求计算这个主机所在网络的网络地址和广播地址 ？
-
 1、根据子网掩码可以知道网络号有多少位，主机号有多少位!
-
 255.255.255.224 转二进制：11111111 11111111 11111111 11100000
-
 网络号有27位，主机号有5位
-
 网络地址就是：把IP地址转成二进制和子网掩码进行与运算（逻辑乘法：0x0=0;0x1=0;1x0=0;1x1=1 ）
-
 11001010 01110000 00001110 10001001
-
 IP地址&子网掩码
-
 11001010 01110000 00001110 10001001
-
 11111111 11111111 11111111 11100000
-
 11001010 01110000 00001110 10000000
-
 即：202.112.14.128
-
 广播地址：网络地址的主机位有5位全部变成1 ，10011111 即159 即：202.112.14.159
-
 主机数：2^5-2=30 个
-```
 
 #### 3、网关
-
-```
 路由：是指分组从源到目的地时，决定端到端路径的网络范围的进程
 调制解调器：把计算机的数字信号翻译成可沿普通电话线传送的模拟信号
 网关(Gateway)又称网间连接器、协议转换器。网关就是一个网络连接到另一个网络的“关口”。也就是网络关卡。
@@ -167,59 +118,32 @@ IP地址&子网掩码
 若目标IP在同一网段则可以直接通信不需要经过网关，否则需要
 
 同一网段怎么确认？
-```
-
-<img src="img/image-20230329234315130.png" alt="image-20230329234315130" style="zoom:50%;" />
-
-
 
 ```
 以windows为例，怎么去查看电脑的ip信息
 
 win+r键  -》 cmd -》 ipconfig
-```
-
-![](img/image-20230329233846957.png)
 
 **网关一般是 软件层面的路由器**
-
-<img src="img/image-20230329234521965.png" alt="image-20230329234521965" style="zoom: 80%;" />
-
 **小实验 - 查看与某个IP通信需要经过哪些路由器/网关**
-
-```
 Windows 系统命令： tracert -d ip地址
 ·如果不加参数-d，则会将地址解析为主机名，所以会很慢，加上后则不转化，速度就好快很多了。 
 
 见下图我们可以发现，当前用的是wifi ip是 192.168.31.135
                              目标ip是 192.168.31.213   （直接到达没有经过任何网关）
-```
 
-![image-20230329235621305](img/image-20230329235621305.png)
-
-```
 比如现在我们去访问www.baidu.com  进行观察
 
 怎么去获取www.baidu.com的ip地址
 方法1： ping
 方法2： nslookup
 
-见下图发现，我们去访问百度，是通过路由器去层层转发的
-```
-
-![image-20230330000047886](img/image-20230330000047886.png)
-
-![image-20230330000325975](image-20230330000325975.png)
-
 #### 4、DNS
-
-```
 DNS 是域名系统 (Domain Name System) 的缩写，是因特网的一项核心服务，它作为可以将域名和IP地址相互映射的一个分布式数据库，能够使人更方便的访问互联网，而不用去记住能够被机器直接读取的IP数串。
 
 尽管IP地址能够唯一地标记网络上的计算机，但IP地址是一长串数字，不直观，而且用户记忆十分不方便，于是人们又发明了另一套字符型的地址方案，即所谓的域名地址。IP地址和域名是一一对应的，这份域名地址的信息存放在一个叫域名服务器(DNS，Domain name server)的主机内，使用者只需了解易记的域名地址，其对应转换工作就留给了域名服务器。域名服务器就是提供IP地址和域名之间的转换服务的服务器。
 
 没有域名的情况下可以使用IP+端口号访问
-
 
 公共的DNS服务
 百度： 114.114.114.114
@@ -227,13 +151,8 @@ DNS 是域名系统 (Domain Name System) 的缩写，是因特网的一项核心
 白云本地的DNS： 202.96.128.86  202.96.134.33
 阿里云： 223.5.5.5   223.6.6.6
 详细见后面服务章节讲解
-```
-
-
 
 ### systemctl-服务管理
-
-```
                     EL7                                                       EL6
 查看状态: # systemctl status 服务名称                  # /etc/init.d/iptables status
 立即关闭: # systemctl stop 服务名称                    # /etc/init.d/iptables stop
@@ -246,11 +165,7 @@ disable 开机关闭[下一次开机生效]
 enable  开机启动[下一次开机生效]
 
 yum安装的服务
-```
-
 ### 防火墙[了解]
-
-```
 1、firewalld防火墙预定义了9个区域
 	trusted(信任区域)：允许所有的传入流量。
 	public(公共区域)：允许与ssh或dhcpv6-client预定义服务匹配的传入流量，其余均拒绝。是新添加网络接口的默认区域。
@@ -350,12 +265,7 @@ firewall-cmd --zone=internal --remove-port=443/tcp
 firewall-cmd --add-port=2048-2050/udp
 firewall-cmd --list-all
 
-
-```
-
 案例：开启防火墙，允许windows通过直接访问IP可以访问到apache服务
-
-```
 开放服务的方式
 # yum install httpd -y
 # systemctl start httpd
@@ -369,37 +279,21 @@ firewall-cmd --list-all
 firewall-cmd --permanent --add-port=80/udp --add-port=80/tcp
 firewall-cmd --reload #重载配置生效
 firewall-cmd --list-ports #检查开放的端
-```
-
-
 
 ### SELINUX[了解]
-
 SELinux（security enhanced linux）安全增强型Linux系统，它是一个linux内核模块，也是Linux的一个安全子系统。
-
 Selinux的主要作用就是最大限度地减小系统中服务进程可访问的资源（最小权限原则）
-
-```shell
     查看状态: # getenforce      #enforcing:拦截{开启}  permissive:提醒不拦截 disabled: 不提醒不拦截
     [临时]立即关闭: # setenforce 0    #将状态改为permissive
-    
     [永久]开机不启动: # vim /etc/selinux/config     // 手动修改 SELINUX=disabled  
     			    或
     			    # sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config	//直接执行替换
-```
 
 案例：误删 /var/spool/mail 目录，进行正常恢复，但发现任然无法接收邮件
-
-```
 ls -Zd 	/var/spool/mail/			//查看目录的安全上下文
 restorecon -Rv /var/spool/mail/		//恢复selinux安全上下文， -R递归 -v显示过程
-```
-
-
 
 ### 一、查看网络的信息
-
-```shell
     IP、网关、DNS、主机名  --- 4个信息
         # ifconfig         #查看IP、掩码、MAC...
         # ifconfig ens33   #只显示ens33的信息   
@@ -407,7 +301,6 @@ restorecon -Rv /var/spool/mail/		//恢复selinux安全上下文， -R递归 -v�
         # hostname -I      #直接打印出IP地址
     网关:
     	# route -n     
-
 DNS:
 查看:
      # cat /etc/resolv.conf
@@ -419,34 +312,24 @@ DNS:
      # hostname
  修改:
     临时生效:  # hostname 主机名        #下一次开机会失效, 6,7都一样，并且要开新打开终端才能更新
-    		 
-
     开机生效: 
     	 # hostnamectl  set-hostname 主机名    //是临时修改，也是永久修改
         el6: 修改/etc/sysconfig/network,将HOSTNAME的值改成想要的主机名
         el7: 将主机名写入/etc/hostname 
-```
 
 ### 二、常见网络接口【了解】
-
-```
  enp3s0   以太网接口    eth0,eth1，ens33   
  wlan0    无线接口
  lo       本地回环接口    127.0.0.1   localhost
  virbr0   桥接接口  
  vmnet1  vmware提供的
  vmnet8  vmware提供的
-```
 
 ### 三、修改网络信息-network [重点]
-
-```
 network  服务
     静态配置ip地址
         1.全局网络配置文件(ip/掩码/默认网关)   //永久配置
-
         # cd /etc/sysconfig/network-scripts/
-
         # vim ifcfg-ens33
            TYPE=Ethernet                    #网络类型   以太网
            BOOTPROTO=none              		#协议  none static 静态   dhcp 动态
@@ -478,8 +361,6 @@ network  服务
 扩展: 查找网段中没有使用的IP
 # yum -y install nmap
 # nmap -sP 10.3.139.0/24 |grep "report for" 显示的都是正在使用的ip
-
-
 --------------------------------------------------------------
 扩展：为一个网卡绑定多个ip [永久]
     # cd /etc/sysconfig/network-scripts/
@@ -492,7 +373,6 @@ network  服务
     NETMASK1=255.255.255.0
     NETMASK2=255.255.255.0
 --------------------------------------------------------------
-
 
 临时配置ip地址  重启电脑或者重启网络服务将不生效了
 # ifconfig ens33 192.168.1.252 netmask 255.255.255.0  //临时修改ip
@@ -512,70 +392,34 @@ network  服务
 	# vim /etc/resolv.conf 
 		nameserver 114.114.114.114
 		nameserver 8.8.8.8
-```
-
-
 
 #### 1、VMware虚拟机 NAT网络
-
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](img/casvSGVSDV)
-
-
-
-```
 宿主机: 虚拟化软件所安装的机器,通常是物理机
 客户机: 虚拟机
-```
 
 **虚拟机NAT网络配置**
-
 1.将虚拟机网卡改成NAT模式
-
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](img/asADADA)
 
 2.打开编辑-虚拟网络编辑器
 
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](img/QWERTGHJK)
-
 3.修改网卡配置文件,将ip地址设置成步骤2中网络内的一台主机,
 将网关设置为步骤2中看到的网关地址
-
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](img/ZXCVqqedd)
 
 4.重启网卡
 \# ifdown ens33; ifup ens33
 
 #### 2、VMware网络不正常的情况
-
 nat模式的网
-
 1. 没有vmnet虚拟网卡
-
-   <img src="img/image-20230330001455047.png" alt="image-20230330001455047" style="zoom: 67%;" />
-
-   ```
    解决方案： 
    先用： vmware -》 虚拟网络编辑器 - 》 还原默认设置
    备用：正常卸载VMwarwe，下载cclear软件，进行注册表清除，然后在进行安装vmware
-   ```
 
 2. VMware软件相关服务没有开启
-
-   <img src="img/image-20230330001718405.png" alt="image-20230330001718405" style="zoom:67%;" />
-
-   ```
    解决方案： 重启vmware，或者手动启动相关服务
-   
-   ```
-   
-
 桥接的网
 
-<img src="img/image-20230815101340781.png" alt="image-20230815101340781" style="zoom: 50%;" />
-
 ### 四、修改网络信息-NetworkManager【扩展】
-
-```
 开启服务:
 # systemctl start NetworkManager
 关闭服务:
@@ -611,11 +455,8 @@ nat模式的网
 
 2、客户端配置[GUI]
 # nmtui		//UI的方式
-```
 
 ### 五、网卡bond
-
-```
 网卡（接口）绑定是将多块 网卡 逻辑地连接到一起从而允许故障转移或者提高吞吐率的方法。
 Linux 绑定驱动程序提供了一种将多个网卡聚合到一个逻辑的绑定接口的方法。
 
@@ -628,41 +469,15 @@ bond网卡的支持的工作模式：
 1 - active-backup(主备模式)
 特点：一个链路处于主状态 ，一个处于从状态，所有流量都在主链路上处理，从不会有任何流量。当主端口down掉时，从端口接手主状态。
 
-```
-
 ##### **实验一. mode 0**   -  需要交换机支持
-
-```
 链路处于负载均衡状态，这种模式能**增加带宽**，同时具有**容错**能力。
-```
-
 实验过程
 1.添加两张网卡,采用同样的连接方式
-
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](img/zzxcvfd)
-
-
-
 2.查看网卡的名称,可以看到名称分别为ens35,ens36
-
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/2.png](img/cvbngtyu)
-
-
-
 3.加载bonding模块
-
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/3.png](img/ghhjrtt789)
-
-```
 # modprobe bonding
-```
-
 4.配置bonding
-
-<img src="img/vrer534624hjg" alt="file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/4.png" style="zoom:200%;" />
-
-```
-[root@woo ~]# vi /etc/sysconfig/network-scripts/ifcfg-bond0
+# vi /etc/sysconfig/network-scripts/ifcfg-bond0
 TYPE=Bond
 DEVICE=bond0
 BOOTPROTO=static
@@ -674,12 +489,7 @@ NETMASK=255.255.255.0
 GATEWAY=192.168.190.2
 DNS1=114.114.114.114
 
-```
-
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/5.png](img/aasdf4567)
-
-```
-[root@woo ~]# vi /etc/sysconfig/network-scripts/ifcfg-ens33
+# vi /etc/sysconfig/network-scripts/ifcfg-ens33
 TYPE=Ethernet
 BOOTPROTO=static
 DEVICE=ens33
@@ -687,60 +497,35 @@ ONBOOT=yes
 MASTER=bond0
 SLAVE=yes
 
-```
-
-
-
 5.重启系统生效或者重启network网络服务
-
-```
 由于NetworkManage会跟network冲突
 # systemctl stop NetworkManager
 # systemctl disable NetworkManage
-
 # systemctl restart network			//重启生效
-```
 
 查看bond信息:
 
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/6.png](img/24566hhnm)
-
-
 查看接口带宽:
-
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/7.png](img/12345567sdfg)
-
-
 
 6.测试
   6-1. 开启一个窗口ping一个网站    
   6-2. 在ping的过程中断开其中一张网卡,并观察ping的情况
   6-3. 这种模式需要交换机的支持,所以断开一张网卡可能就ping不通了. mode 1模式没有这种要求.
-
 ##### **实验二. mode 1**
-
   链路处于主备状态,一个网卡处于活动状态 ，一个处于备份状态，所有流量都在主链路上处理。
   当活动网卡down掉时，启用备份的网卡。
-
 ##### 实验三.关闭bond
-
-```
 1、检查bond0涉及哪些网卡
 # cat /proc/net/bonding/bond0
-
 2、修改网络网卡配置文件
 /etc/sysconfig/network-scripts/ifcfg-（ens33或ens37），去掉master=bond0和slave=yes两行配置。
 如果ens33和ens37网卡需要配置IP，此将BOOTPROTO=none修改为BOOTPROTO=static，同时设置ipaddress、netmask、gateway（可选）三项。
 3、删除不需要的bond配置文件
 # rm -rf /etc/sysconfig/network-scripts/ifcfg-bond0
-
 4、删除bond设备
 删除/sys/class/net/bonding_masters文件中bond0配置：
 # echo -bond0 >/sys/class/net/bonding_masters 
 命令执行。其中，-bond0表示从bonding_masters 文件中剔除bond0，同理+bond0表示加入。
 目的：删除bond0设备。
-
 5、 重启网络
 # systemctl restart network
-```
-
