@@ -1,0 +1,242 @@
+### Linux用户管理
+
+#### 1 用户概览
+
+##### 1.1. 用户/组基本概念!
+
+====================================================
+
+Users and groups：
+
+ . Every process (running program) on the system runs as a particular user.
+
+系统上的每个进程（运行的程序）都是作为特定用户运行的
+
+. Every file is owned by a particular user. 
+
+每个文件是由一个特定的用户拥有 
+
+. Access to files and directories are restricted by user. 
+
+访问文件和目录受到用户的限制 
+
+ . The user associated with a running process determines the files and directories accessible to that process. 
+
+  与正在运行的进程相关联的用户确定该进程可访问的文件和目录
+
+#######################################################
+
+
+
+关于用户的和组的文件
+
+/etc/passwd		记录用户的信息
+
+<img src="image/image-20220725101416652.png" alt="image-20220725101416652" style="zoom:50%;" />
+
+
+
+/etc/group		记录组的信息
+
+/home				默认用户的家
+
+/etc/shadow	存放用户的登入密码，加密显示
+
+/etc/skel			用户家目录的框架	
+
+/var/spool/mail/	邮件的目录
+
+#### 2 用户管理
+
+=======================================================
+
+groupadd ,groupdel  useradd ,id,usermod ,userdel  passwd ,chage
+
+##### 2.1 用户组
+
+```shell
+[root@tianyun ~]# groupadd hr
+
+[root@tianyun ~]# groupadd it
+
+[root@tianyun ~]# groupadd net01 -g 2000		        //添加组net01，并指定gid 2000
+
+[root@tianyun ~]# grep 'net01' /etc/group		        //查看/etc/group中组net01信息
+
+[root@tianyun ~]# groupdel net01	                    //删除组net01
+```
+
+
+
+##### 2.2用户
+
+useradd creates users 
+
+＝＝创建用户 未指定选项＝＝
+
+```shell
+ [root@tianyun ~]# useradd user01
+```
+
+​	选项：
+
+```
+-u		指定uid
+-g		指定用户的主组也叫基本组
+-G		指定用户的附加组
+-M		不创建家目录
+-s		指定用户的登入shell   -s /sbin/nologin	不允许登入
+-d		指定家目录
+
+案例：
+1、要求创建一个用户user01
+useradd user01 | id user01
+2、要求创建一个用户user02，他UID是1666
+useradd user02 -u 1666 | id user02
+3、要求创建一个用户user03，他的基本组是HR
+groupadd HR | useradd user03 -g HR | id user03
+4、要求创建一个用户user04，他的附加组是IT
+groupadd IT | useradd user04 -G IT
+5、要去创建一个用户叫tomcat，他不允许登入，也不允许有家目录
+useradd tomcat -s /sbin/nologin -M
+6、要求创建一个用户叫git，他的家在/git
+ useradd git -d /git
+```
+
+如果useradd命令无法使用，手动创建用户的过程
+
+```
+
+
+
+```
+
+ . 未指定该用户的主组
+
+ . 未指定该用户的附加组
+
+ . 未指定用户的HOME . 未指定用户的SHELL
+
+ . 未指定用户的UID...
+
+```shell
+[root@tianyun ~]# grep 'user01' /etc/passwd /etc/shadow /etc/group
+```
+
+ /etc/passwd:user01:x507:512::/home/user01:/bin/bash /etc/shadow:user01:!!:16589:0:99999:7::: 
+
+/etc/group:user01：x:512:
+
+```shell
+[root@tianyun ~]# id user01
+```
+
+  uid=507(user01) gid=512(user01) groups=512(user01)
+
+```
+id
+选项：
+-u		//只打印UID
+-g		//只打印基本组ID
+-n		//一般配合-ugG使用， -un 打印出用户名 ， -gn 打印基本组名字 ， -Gn 打印出附加组名字
+```
+
+  
+
+```shell
+[root@tianyun ~]# ls /var/spool/mail/user01 
+```
+
+ 
+
+/var/spool/mail/user01
+
+***小结： 如果创建一个用户时，未指定任何组（主组或附加组），系统会创建一个和用户名相同的组作为用户的Primary Group.
+
+  
+
+  #####
+
+##### 2.3.创建用户
+
+指定选项
+
+
+
+```shell
+root@tianyun ~]# useradd user02 -u 503        //创建用户usr02，指定uid
+
+[root@tianyun ~]# useradd user03 -d /aaa	     //创建用户user03 指定家目录
+[root@tianyun ~]# useradd user05 -s /sbin/nologin 	    //创建用户并指定shell
+[root@tianyun ~]# useradd user07 -G hr,it,fd		    //创建用户，指定附加组
+[root@tianyun ~]# useradd user10 -u 4000 -s /sbin/nologin
+```
+
+userdel deletes users
+
+##### 2.4删除用户
+
+```shell
+[root@tianyun ~]# userdel user10		                           //删除用户user10，但不删除用户家目录和mail spool
+
+[root@tianyun ~]# ll -d /home/user10/
+drwx------ 3 506 510 4096 09-01 21:14 /home/user10/
+[root@tianyun ~]# ll /var/spool/mail/user10 
+-rw-rw---- 1 506 mail 0 09-01 21:14 /var/spool/mail/user10
+[root@tianyun ~]# userdel -r user2                              //删除用户user2，同时删除用户家目录和邮件文件
+```
+
+**＝＝用户密码＝＝**
+
+```shell
+[root@tianyun ~]# passwd alice                                  //root可以给任何用户设置密码
+[zhuzhu@tianyun ~]$ passwd                                      //普通用户只能给自己修改密码，而且必须提供原密码
+```
+
+
+
+**= =切换用户= =**
+
+```
+su  切换用户
+[root@tianyun ~]# su - user03		//管理员切换普通用户不需要密码
+[user03@tianyun ~]$ su - user04		//普通用户之间互相切换需要密码
+```
+
+usermod modifies existing users
+
+#### 3 组成员管理
+
+注意：只针对已存在的用户
+
+```shell
+usermod 选项 组名 用户名
+[root@tianyun ~]# usermod -G hr niuniu2                     //覆盖原有的附加组
+[root@tianyun ~]# usermod -G fd,it niuniu2
+[root@tianyun ~]# usermod -aG hr niuniu2                   //增加新的附加组
+
+选项：
+	-G		//覆盖原有的附加组，添加新的附加组
+	-aG		//增加新的附加组
+	-u		//修改用户的UID
+	-s		//修改用户的登入shell    就两种：/bin/bash  能登入(默认)   /sbin/nologin   不能登入
+	-d		//修改用户的家，但是不会进行创建，得先创建出来 cp -r /etc/skel /用户名称 或 加上 -m 自动创建
+
+
+-----------------------------------
+gpasswd 选项 用户名  组名
+[root@tianyun~]# gpasswd -a jack wheel                     //usermod -aG hr zhuzhu
+[root@tianyun~]# gpasswd -M zhuzhu,maomao100 hr            
+[root@tianyun~]# gpasswd -d zhuzhu hr
+
+选项
+	-a		//添加单个用户到组
+	-M		//添加多个用户，用逗号,隔开到组
+	-d		//从组里删除用户(对于用户而言，就是删除附加组)
+```
+
+＝＝其它选项管理＝＝
+
+```shell
+[root@tianyun ~]# usermod -s /sbin/nologin niuniu2
+```
