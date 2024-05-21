@@ -1,0 +1,1219 @@
+## 磁盘管理
+
+---
+
+- 磁盘分区
+- 磁盘分区 - fdiak / parted
+- 挂载
+- SWAP -  交换分区
+-  LVM  -   逻辑卷
+
+---
+
+查看CPU:
+
+```
+# lscpu
+# cat /proc/cpuinfo
+```
+
+查看磁盘:
+
+```
+# lsblk
+```
+
+查看内存:
+
+```
+# free -m/h
+# cat /proc/meminfo
+```
+
+Linux里磁盘的命名方式
+
+```
+  	/dev/sda  
+            sd——表示一种串口设备
+                sata
+                usb
+                scsi
+                sas
+    /dev/hda
+            hd——表示一种并口设备
+                ide
+    /dev/vda
+      同种设备命名的排序：第一块设备/dev/sda   第二块设备 /dev/sdb  ......
+           			  第一个设备的第一个分区/dev/sda1 第二个分区/dev/sda2 ......
+```
+
+机械硬盘的结构
+    1）物理结构
+
+![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](img/1-16614413950843.png)
+
+![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](img/2)
+
+   2）逻辑结构
+       磁道：以盘片中心为圆心，半径大小不同的同心圆组成的环形区域，称为磁道  
+       扇区：磁道上的一段圆弧   1扇区512B B（Byte）  1Byte（字节）=8bit（比特）
+       柱面：是虚的，类似于桶壁，是由相同半径的磁道组成的圆柱形环壁  13个柱面=100M       
+
+       磁盘容量的计算公式：
+       磁盘容量=512byte(一个扇区大小)*扇区数量*柱面的个数*磁头的个数
+
+固态硬盘
+
+![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](img/3)
+
+#### 磁盘分区
+
+```
+1.为什么要分区？
+    易于管理和使用,加速文件查找速度
+    数据安全
+    
+2.分区的类型？//磁盘标签
+    MBR  最大支持2TB以内的硬盘  
+    主分区: 编号1-4,与扩展分区的和不能超过4个,可直接格式化使用
+    扩展分区：编号1-4,最多只能有一个,不能直接格式化使用  
+        逻辑分区：在扩展分区上划分,编号从5开始, 可格式化使用
+    分区不是无限分的，对于串口设备，最多15个分区，1-4编号是主分区或者是扩展分区，5-15编号是逻辑分区(MSDOS分区表格式)  
+    GPT   能支持2T以上的磁盘，最多可分128个分区,没有主分区扩展分区之说
+
+3.分区相关
+    1）分区    fdisk   -n  -p   -1  -  -+1G   -w
+    2）通知内核重读分区表  partprobe  //可选操作，刷新
+    3）创建文件系统 或称为格式化   mkfs.xxx   /dev/sdb1
+    4）挂载使用  mkdir  /sdb1  ;  mount  /dev/sdb1   /sdb1 
+
+4.分区的命令：
+    fdisk：
+        # fdisk /dev/sdb
+        # partprobe
+        # mkfs.xfs /dev/sdb1         
+        # mount  /dev/sdb1 /mnt/sdb1
+         
+        #df  -h
+         
+    parted：能够划分2T以上的硬盘，小于2T的也可以分
+ ===========================================
+如果设备名称被误删怎么办?
+	# rm -rf /dev/sdb1
+    # mount /dev/sdb1  /mnt/sdb1/
+        mount: 特殊设备 /dev/sdb1 不存在
+    # lsblk 
+        NAME        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+        sda           8:0    0   20G  0 disk 
+        ├─sda1        8:1    0    1G  0 part /boot
+        └─sda2        8:2    0   19G  0 part 
+          ├─cl-root 253:0    0   17G  0 lvm  /
+          └─cl-swap 253:1    0    2G  0 lvm  [SWAP]
+        sdb           8:16   0   10G  0 disk 
+        └─sdb1        8:17   0    2G  0 part 
+        sr0          11:0    1  4.1G  0 rom  /run/media/root/Cen
+    # mknod /dev/sdb1 b 8 17  //创建设备文件   b:块设备  8 17 :主设备号,次设备号
+    # mount /dev/sdb1  /mnt/sdb1/
+```
+
+#### 磁盘分区 - fdisk
+
+```
+# fdisk -l /dev/sdb  列出指定设备的分区表信息
+
+磁盘 /dev/sdb：10.7 GB, 10737418240 字节，20971520 个扇区
+Units = 扇区 of 1 * 512 = 512 bytes
+扇区大小(逻辑/物理)：512 字节 / 512 字节
+I/O 大小(最小/最佳)：512 字节 / 512 字节
+
+-------------------------------------------------
+一、分区 [主分区]
+#1
+欢迎使用 fdisk (util-linux 2.23.2)。
+
+更改将停留在内存中，直到您决定将更改写入磁盘。
+使用写入命令前请三思。
+
+Device does not contain a recognized partition table
+使用磁盘标识符 0x2656627c 创建新的 DOS 磁盘标签。
+
+命令(输入 m 获取帮助)：m
+命令操作
+   d   delete a partition   //删除分区
+   l   list known partition types   //列出已知分区类型
+   m   print this menu   //打印菜单，打印帮助
+   n   add a new partition   //创建分区
+   p   print the partition table   //打印分区表
+   q   quit without saving changes  //不保存退出
+   t   change a partition's system id  //更改分区id
+   w   write table to disk and exit  //保存并退出
+  
+命令(输入 m 获取帮助)：n
+Partition type:
+   p   primary (0 primary, 0 extended, 4 free)  //主分区
+   e   extended    //扩展分区
+Select (default p): p
+分区号 (1-4，默认 1)：1
+起始 扇区 (2048-20971519，默认为 2048)：     
+将使用默认值 2048
+Last 扇区, +扇区 or +size{K,M,G} (2048-20971519，默认为 20971519)：+1G   //指定分区大小
+分区 1 已设置为 Linux 类型，大小设为 1 GiB
+
+命令(输入 m 获取帮助)：p
+
+磁盘 /dev/sdb：10.7 GB, 10737418240 字节，20971520 个扇区
+Units = 扇区 of 1 * 512 = 512 bytes
+扇区大小(逻辑/物理)：512 字节 / 512 字节
+I/O 大小(最小/最佳)：512 字节 / 512 字节
+磁盘标签类型：dos
+磁盘标识符：0x2656627c
+
+   设备 Boot      Start         End      Blocks   Id  System
+/dev/sdb1            2048     2099199     1048576   83  Linux
+
+命令(输入 m 获取帮助)：n
+Partition type:
+   p   primary (1 primary, 0 extended, 3 free)
+   e   extended
+Select (default p): p
+分区号 (2-4，默认 2)：2
+起始 扇区 (2099200-20971519，默认为 2099200)：
+将使用默认值 2099200
+Last 扇区, +扇区 or +size{K,M,G} (2099200-20971519，默认为 20971519)：+2G
+分区 2 已设置为 Linux 类型，大小设为 2 GiB
+
+命令(输入 m 获取帮助)：p
+
+磁盘 /dev/sdb：10.7 GB, 10737418240 字节，20971520 个扇区
+Units = 扇区 of 1 * 512 = 512 bytes
+扇区大小(逻辑/物理)：512 字节 / 512 字节
+I/O 大小(最小/最佳)：512 字节 / 512 字节
+磁盘标签类型：dos
+磁盘标识符：0x2656627c
+
+   设备 Boot      Start         End      Blocks   Id  System
+/dev/sdb1            2048     2099199     1048576   83  Linux
+/dev/sdb2         2099200     6293503     2097152   83  Linux
+
+命令(输入 m 获取帮助)：w
+The partition table has been altered!
+
+Calling ioctl() to re-read partition table.
+正在同步磁盘。
+
+二、通知内核重读分区表(el6)
+查看分区文件是否存在
+# ls /dev/sd
+sda   sda1  sda2  sdb   sdb1  sdb2 
+
+如果不存在，通知内核重读分区表
+# partx -a /dev/sdb    
+partx: /dev/sdb: error adding partitions 1-2 
+
+或 # partprobe
+
+内核记录分区表的文件:    # cat /proc/partitions
+
+三、创建文件系统 make file system (格式化)
+# mkfs.xfs /dev/sdb1   //命令后接分区
+
+四、挂载使用
+    1.创建挂载点
+        # mkdir /mnt/sdb1
+
+    2.将分区挂载到本地目录
+        # mount /dev/sdb1 /mnt/sdb1
+
+        # df -h		//查看磁盘挂载情况
+        文件系统             容量  已用  可用 已用% 挂载点
+        /dev/mapper/cl-root   17G  3.5G   14G   21% /
+        devtmpfs             473M     0  473M    0% /dev
+        tmpfs                489M  144K  489M    1% /dev/shm
+        tmpfs                489M  7.0M  482M    2% /run
+        tmpfs                489M     0  489M    0% /sys/fs/cgroup
+        /dev/sda1           1014M  155M  860M   16% /boot
+        /dev/sr0             4.1G  4.1G     0  100% /mnt/test
+        tmpfs                 98M   16K   98M    1% /run/user/0
+        /dev/sdb1           1014M   33M  982M    4% /mnt/sdb1
+ 
+ 二、扩展分区 [逻辑分区]
+ # fdisk /dev/sdb
+欢迎使用 fdisk (util-linux 2.23.2)。
+
+更改将停留在内存中，直到您决定将更改写入磁盘。
+使用写入命令前请三思。
+
+
+命令(输入 m 获取帮助)：p
+
+磁盘 /dev/sdb：10.7 GB, 10737418240 字节，20971520 个扇区
+Units = 扇区 of 1 * 512 = 512 bytes
+扇区大小(逻辑/物理)：512 字节 / 512 字节
+I/O 大小(最小/最佳)：512 字节 / 512 字节
+磁盘标签类型：dos
+磁盘标识符：0x2656627c
+
+   设备 Boot      Start         End      Blocks   Id  System
+/dev/sdb1            2048     2099199     1048576   83  Linux
+/dev/sdb2         2099200     6293503     2097152   83  Linux
+
+命令(输入 m 获取帮助)：n
+Partition type:
+   p   primary (2 primary, 0 extended, 2 free)
+   e   extended
+Select (default p): e
+分区号 (3,4，默认 3)：3
+起始 扇区 (6293504-20971519，默认为 6293504)：
+将使用默认值 6293504
+Last 扇区, +扇区 or +size{K,M,G} (6293504-20971519，默认为 20971519)：+3G
+分区 3 已设置为 Extended 类型，大小设为 3 GiB
+
+命令(输入 m 获取帮助)：p
+
+磁盘 /dev/sdb：10.7 GB, 10737418240 字节，20971520 个扇区
+Units = 扇区 of 1 * 512 = 512 bytes
+扇区大小(逻辑/物理)：512 字节 / 512 字节
+I/O 大小(最小/最佳)：512 字节 / 512 字节
+磁盘标签类型：dos
+磁盘标识符：0x2656627c
+
+   设备 Boot      Start         End      Blocks   Id  System
+/dev/sdb1            2048     2099199     1048576   83  Linux
+/dev/sdb2         2099200     6293503     2097152   83  Linux
+/dev/sdb3         6293504    12584959     3145728    5  Extended
+
+命令(输入 m 获取帮助)：n
+Partition type:
+   p   primary (2 primary, 1 extended, 1 free)
+   l   logical (numbered from 5)
+Select (default p): l
+添加逻辑分区 5
+起始 扇区 (6295552-12584959，默认为 6295552)：
+将使用默认值 6295552
+Last 扇区, +扇区 or +size{K,M,G} (6295552-12584959，默认为 12584959)：+1G
+分区 5 已设置为 Linux 类型，大小设为 1 GiB
+
+命令(输入 m 获取帮助)：n
+Partition type:
+   p   primary (2 primary, 1 extended, 1 free)
+   l   logical (numbered from 5)
+Select (default p): l
+添加逻辑分区 6
+起始 扇区 (8394752-12584959，默认为 8394752)：
+将使用默认值 8394752
+Last 扇区, +扇区 or +size{K,M,G} (8394752-12584959，默认为 12584959)：+1G
+分区 6 已设置为 Linux 类型，大小设为 1 GiB
+
+命令(输入 m 获取帮助)：P
+
+磁盘 /dev/sdb：10.7 GB, 10737418240 字节，20971520 个扇区
+Units = 扇区 of 1 * 512 = 512 bytes
+扇区大小(逻辑/物理)：512 字节 / 512 字节
+I/O 大小(最小/最佳)：512 字节 / 512 字节
+磁盘标签类型：dos
+磁盘标识符：0x2656627c
+
+   设备 Boot      Start         End      Blocks   Id  System
+/dev/sdb1            2048     2099199     1048576   83  Linux
+/dev/sdb2         2099200     6293503     2097152   83  Linux
+/dev/sdb3         6293504    12584959     3145728    5  Extended
+/dev/sdb5         6295552     8392703     1048576   83  Linux
+/dev/sdb6         8394752    10491903     1048576   83  Linux
+
+命令(输入 m 获取帮助)：W
+The partition table has been altered!
+
+Calling ioctl() to re-read partition table.
+正在同步磁盘。
+
+# ll /dev/sd
+sda   sda1  sda2  sdb   sdb1  sdb2  sdb3  sdb5  sdb6        
+        
+        
+随堂练习
+1、添加一块新的磁盘，请问这个磁盘的名称叫
+/dev/sdb
+
+2、将这块磁盘划分为5个分区提供使用，请大概写出操作过程？
+
+3、将分区1 进行格式化，然后挂载到 /mnt/test 目录下？
+# mkfs.xfs /dev/sdb1
+# mkdir /mnt/test
+# mount /dev/sdb1 /mnt/test
+# df -Th
+```
+
+#### 磁盘分区 - parted
+
+```
+列出所有设备的分区表信息
+# parted -l
+
+分区-使用过程:
+1.分区
+2.通知内核重读分区表(刷新)
+3.格式化
+4.挂载使用
+
+parted命令使用:
+语法: 
+    parted  [选项]  设备   命令  参数
+    选项:
+        -s      不交互
+    常用命令:
+    p,print                     打印分区表
+    mklabel,mktable       		创建磁盘标签,后面可接msdos或gpt
+    mkpart                     	创建新的分区,语法: mkpart  类型或名字  起始  结束
+    rm                          删除分区,后接要删除的分区编号
+    rescue                      恢复分区,对于误删的分区进行恢复,语法: rescue 起始  结束
+*注意:创建磁盘标签将会丢失所有的数据
+【在使用parted进行分区时，一定要创建磁盘标签】
+
+1.分区
+parted可以对msdos(MBR)或gpt类型的磁盘的进行分区
+实验:将sdb分一个主分区,一个扩展分区,在扩展分区中分一个逻辑分区
+msdos类型:
+1).查看磁盘情况,可以看到没有任何分区
+[root@clone1 ~]# parted /dev/sdb p
+Model: VMware, VMware Virtual S (scsi)
+Disk /dev/sdb: 2147MB
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos            #磁盘标签已经是msdos. 如果不是,需要更改
+Disk Flags: 
+
+Number  Start  End  Size  Type  File system  Flags  
+
+2).分一个主分区,大小为500M
+[root@clone1 ~]# parted -s /dev/sdb mkpart p 0 500M     #-s 不交互
+    P.S: 对于MSDOS类型,此命令中的p表示primary
+[root@clone1 ~]# parted /dev/sdb p
+Model: VMware, VMware Virtual S (scsi)
+Disk /dev/sdb: 2147MB                                #从这里可以看到此磁盘最大位置
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+Disk Flags: 
+
+Number  Start  End    Size   Type     File system  Flags
+ 1      512B   500MB  500MB  primary                            #可以看到已分好
+ 
+3).剩下的空间分到扩展分区中
+[root@clone1 rpms]# parted -s /dev/sdb mkpart e 500M 2147M
+    P.S: 此处的e表示extended
+[root@clone1 rpms]# parted /dev/sdb p
+Model: VMware, VMware Virtual S (scsi)
+Disk /dev/sdb: 2147MB
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+Disk Flags: 
+
+Number  Start  End     Size    Type      File system  Flags
+ 1      512B   500MB   500MB   primary
+ 2      500MB  2147MB  1647MB  extended               lba
+ 
+ 4).在扩展分区里划分一个逻辑分区
+ # parted -s /dev/sdb mkpart l 500M 1000M
+		P.S: 此处的l表示logical
+
+====================================================
+mklabel  gpt|msdos      //会清空所有数据
+p            打印分区表
+mkpart 		 类型   起始位置   结束位置            创建分区
+rm   分区编号                                             删除分区
+
+
+```
+
+#### 文件系统
+
+```
+文件系统：
+    磁盘上组织文件的方法，成为文件系统。
+    文件系统是对存储空间的分配和管理，负责文件的存储并对存入的文件进行保护和检索的系统
+    数据在磁盘或分区的存储形式，用来管理文件存储的结构，把整个的硬盘分区按照文件系统的规格分为一个个等大小的块block。
+
+1.linux的文件系统：ext2 ext3 ext4 xfs    windows ：FAT16 FAT32 NTFS  
+
+文件系统结构：
+super block：超级块，不同的文件系统不相同的，记录该文件系统的整体信息，包括inode/block总量，使用量，剩余量以及文件的格式及相关的信息等等。超级块坏了，分区不能使用
+inode(i节点、索引节点)：记录文件的属性（文件的大小、权限、时间、i节点的编号），但是不记录文件名。一个文件占用一个inode，同时i节点要记录文件数据所在的block编号
+    文件名存在目录中
+    inode的数量和你能够创建文件的数量有关
+    如果两个或两个文件以上的i节点相同，说明他们是相同的文件
+    block(数据块):实际记录文件的内容的，一个文件可能占用多个block。
+
+
+查找系统支持的文件系统类型，.后面的都是文件系统类型
+    # mkfs.     按两下tab，出来备选列表
+    mkfs.btrfs   mkfs.fat
+    mkfs.cramfs  mkfs.minix
+    mkfs.ext2    mkfs.msdos
+    mkfs.ext3    mkfs.vfat
+    mkfs.ext4    mkfs.xfs
+    
+    Linux 支持的文件系统类型：minix, ext,
+       ext2,  xia,  msdos,  umsdos,  vfat,   proc,   nfs,
+       iso9660, hpfs, sysv, smb, ncpfs
+
+制作文件系统的命令  
+    # mkfs.xfs  分区名
+    创建文件系统的选项
+    -b   ：格式化时指定块的大小 默认4096 
+    -f		强制格式化
+ 
+ ================================================   
+ Superblock  沒有Superblock ，就沒有filesystem
+  • block 与 inode 的总量；
+  • 未使用与已使用的 inode / block 数量；
+  • block 与 inode 的大小 (block 为 1, 2, 4K，inode 为 128bytes 或 256bytes)；
+  • filesystem 的挂载时间、最近一次写入数据的时间、最近一次检查 (fsck) 的时间等文件系统相关信息；
+  • 每个block group 都可能含有 superblock，这样可以进行用于 superblock  的修复；
+  
+inode table: 	存储文件的元数据
+  • 文件的权限(read/write/excute)；
+  • 文件的属主/属组(owner/group)；
+  • 文件的大小；
+  • 文件的(ctime)；
+  • 文件的(atime)；
+  • 文件的(mtime)；
+  • 记录文件内容所在的block number (pointer)；  
+
+data block:	  存储文件的实际数据
+```
+
+##### 软链接和硬链接       
+
+```
+软链接：也称为符号链接 
+1.类似于windows快捷方式
+2.产生新的inode
+3.可以跨文件系统创建
+4.删除源文件后链接文件无效
+5.可以对目录做软链接，目录里面的内容会进行同步
+
+创建软链接
+    网卡配置文件
+    /etc/sysconfig/network-scripts/ifcfg-ens33 
+    
+    给网卡配置文件做软链接，链接到/etc/ens33
+    
+    ln  -s   链接源   链接名   	//创建链接文件
+    ln  -sf  链接源    链接名		//修改链接的源
+    	[不管是源文件还是链接文件，最好都用上绝对路径]
+    # ln -s /etc/sysconfig/network-scripts/ifcfg-ens33  /etc/ifcfg-ens33
+    # ll /etc/ifcfg-ens33 
+lrwxrwxrwx. 1 root root 42 7月   5 22:19 /etc/ifcfg-ens33 -> /etc/sysconfig/network-scripts/ifcfg-ens33
+
+      写绝对路径
+    
+    # ls -li /etc/ifcfg-ens33  /etc/sysconfig/network-scripts/ifcfg-ens33 
+18317160 lrwxrwxrwx. 1 root root 42 7月   5 22:19 /etc/ifcfg-ens33 -> /etc/sysconfig/network-scripts/ifcfg-ens33
+ 2399912 -rw-r--r--. 1 root root 74 7月   4 19:09 /etc/sysconfig/network-scripts/ifcfg-ens33
+
+硬链接
+1.对主要数据文件备份 防止误删除
+2.不产生新的inode
+3.任意删除一个文件名,文件都不会损坏
+4.不可以对目录做硬链接
+5.不可以跨设备和文件系统创建
+
+    ln   链接源    链接名
+    # ln /etc/sysconfig/network-scripts/ifcfg-ens33 /opt/ifcfg-ens33
+    # ll /opt/ifcfg-ens33 
+    -rw-r--r--. 2 root root 74 7月   4 19:09 /opt/ifcfg-ens33
+
+    # ls -il /opt/ifcfg-ens33 /etc/sysconfig/network-scripts/ifcfg-ens33
+2399912 -rw-r--r--. 2 root root 74 7月   4 19:09 /etc/sysconfig/network-scripts/ifcfg-ens33
+2399912 -rw-r--r--. 2 root root 74 7月   4 19:09 /opt/ifcfg-ens33
+
+
+ # find / -inum 2399912 -exec ls -li {} \;
+2399912 -rw-r--r--. 2 root root 74 7月   4 19:09 /etc/sysconfig/network-scripts/ifcfg-ens33
+2399912 -rw-r--r--. 2 root root 74 7月   4 19:09 /opt/ifcfg-ens33
+```
+
+#### 挂载-mount
+
+```
+挂载的目的：通过挂载点，得到访问设备的入口
+1.挂载的命令
+mount
+# mount /dev/sdc1 /mnt/sdc1
+
+2.挂载的选项
+mount [-t vfstype]  [-o option[,option]...]  device dir
+             -t 指定文件系统类型  -o 指定挂载属性
+             -a ：依照配置文件/etc/fstab的数据将所有未挂载的分区磁盘都挂载
+     镜像文件: iso9660       
+             
+挂载属性：
+    ro            只读文件系统 read only
+    rw            可读写      read write
+    async         异步写入 
+    sync          同步写入
+    auto/noauto   是否支持开机挂载 
+    dev/nodev     是否支持设备文件
+    exec/noexec   是否允许分区上拥有可运行二进制文件"命令" 
+    suid/nosuid   是否允许分区上含有suid的文件格式，文件能存在，作用不能生效
+    user/nouser   是否允许分区让任何使用者运行mount
+    remount  	  重新挂载已挂载的文件系统，在线修改挂载属性
+    _netdev       如果连的上就开机挂载，如果连不上就不挂载
+    
+  defaults
+              Use  default  options: rw, suid, dev, exec,
+              auto, nouser, and async.
+
+[root@localhost ~]# mount -o ro /dev/sdc1 /mnt/sdc1   //设置为只读文件系统
+[root@localhost ~]# cd /mnt/sdc1   
+[root@localhost sdc1]# touch a.txt
+touch: 无法创建"a.txt": 只读文件系统
+[root@localhost sdc1]# mount -o remount,rw /mnt/sdc1  //重新挂载修改属性为读写
+[root@localhost sdc1]# touch a.txt
+[root@localhost sdc1]# ls a.txt 
+a.txt
+
+# vim /etc/fstab
+第1列：可以写设备文件名也可以使用设备的uuid   uuid是唯一，建议使用uuid
+
+查看所有设备的uuid
+# blkid 
+/dev/sda1: UUID="28632ebb-0670-41c3-82cb-642c35dc6232" TYPE="xfs" 
+/dev/sda2: UUID="Ac7k0N-2mx5-QIYu-1ToA-Qcqq-X5nN-bf3IKX" TYPE="LVM2_member" 
+/dev/mapper/cl-root: UUID="1979fc25-33fa-416e-864a-c35f30fd8a51" TYPE="xfs" 
+/dev/mapper/cl-swap: UUID="db0240f7-1a4e-4462-81fc-186f47abfb0d" TYPE="swap" 
+/dev/loop0: UUID="2016-12-05-13-55-45-00" LABEL="CentOS 7 x86_64" TYPE="iso9660" PTTYPE="dos" 
+[root@server ~]# blkid /dev/sda2
+/dev/sda2: UUID="Ac7k0N-2mx5-QIYu-1ToA-Qcqq-X5nN-bf3IKX" TYPE="LVM2_member" 
+
+查看指定设备的uuid
+# blkid /dev/sda1
+/dev/sda1: UUID="28632ebb-0670-41c3-82cb-642c35dc6232" TYPE="xfs" 
+
+开机挂载
+例:希望开机将/dev/sdb1挂载到/mnt/sdb1目录
+两种方法:
+1. fstab - 这种方法如果有错将导致系统启动失败
+  1).修改/etc/fstab,添加以下记录(不含绿色字):
+    /dev/sdb1     /mnt/sdb1       xfs        defaults       0            0
+    设备名称       挂载点        文件系统类型    挂载属性  		dump        fsck
+  2).使用mount -a测试
+  
+2. rc.local - 这个文件是开机过程中执行的一个脚本,不会影响系统启动
+  1).修改/etc/rc.d/rc.local,添加挂载命令
+    # echo 'mount /dev/sdb1 /mnt/sdb1/' >> /etc/rc.d/rc.local
+    等于
+    # vim /etc/rc.d/rc.local	//添加以下内容
+    mount /dev/sdb1 /mnt/sdb1/
+  2).给此文件加上可执行权限
+    # chmod +x  /etc/rc.d/rc.local
+```
+
+问题：如果不小心写/etc/fstab 永久挂载时，重启之后发现系统无法正常启动？
+
+![image-20220513105541870](img/image-20220513105541870.png)
+
+解决：
+
+```
+1、输入root的密码，然后回车进入操作系统
+2、vim /etc/fstab   //把自己写的挂载取消注释或者删除
+3、reboot    //重启
+4、重新正常进入系统
+将/etc/fstab 打的注释，进行取消
+5、mount -a	//触发检查哪个有问题
+```
+
+#### SWAP - 交换分区
+
+```
+制作交换分区
+    方法两种:
+    1.用分区实现【传统分区，逻辑卷】
+    2.用文件实现
+    
+    查看swap
+    # free -m
+                    total        used    free      shared   buff/cache   available
+    Mem:       7856       592     5282        1176        1981        5828
+    Swap:      14335     0          14335
+
+    # top
+    KiB Swap: 14680060 total, 14680060 free,        0 used.  5967972 avail Mem 
+
+    # swapon -s  
+    文件名				类型		     大小           	 已用	  权限
+    /dev/dm-1      partition	 14680060	 0       -1
+
+    # swapon -d
+    NAME         TYPE        SIZE   USED   PRIO
+    /dev/dm-1  partition  14G    0B        -1
+    
+    # swapon -a		//开启所有的swap分区
+    # swapoff -a	//关闭所有的swap分区
+
+第一种方法:用分区实现
+    1.准备新分区 
+    /dev/sdb2		分区
+    或
+    /dev/vg0/lv1	逻辑卷
+    
+    2.格式化成swap分区
+    # mkswap /dev/sdb2
+    正在设置交换空间版本 1，大小 = 975868 KiB
+    无标签，UUID=0393e1a0-bf52-48d5-9cb7-2fe3dbf2c99a
+
+    3.激活swap分区
+    # swapon /dev/sdb2
+    
+    4.查看swap分区
+    # swapon -s
+    文件名			  类型	    	大小	        已用	权限
+    /dev/dm-1    partition	2097148	0      -1
+    /dev/sdb2     partition	975868	0      -2
+    
+    5.挂载[永久]
+    # vim /etc/fstab 
+    /dev/sdb2       swap   swap  defaults  0 0 
+
+第二种方法:用文件实现
+    dd    复制文件，根据设置参数转换为文件命令
+            if: input file|device        从 file|device中读而不是标准输入。
+            of: output file|device     写到file|device里去而不是标准输出。
+            bs: blocksize      块的大小            
+            count:                块的数量
+    
+    /dev/zero 无限0资源设备   
+    /dev/null  垃圾桶 黑洞设备文件        
+    
+    1.使用/dev/zero设备制作1G的/tmp/swap.txt文件 
+    # dd if=/dev/zero  of=/tmp/swap.txt   bs=1M  count=1024
+    记录了1024+0 的读入
+    记录了1024+0 的写出
+    1073741824字节(1.1 GB)已复制，2.0213 秒，531 MB/秒
+    
+    # ll /tmp/swap.txt -h
+    -rw-r--r--. 1 root root 1.0G 7月   5 23:33 /tmp/swap.txt
+     
+     2.格式化成swap分区
+     # mkswap /tmp/swap.txt 
+正在设置交换空间版本 1，大小 = 1048572 KiB
+无标签，UUID=ca74fb34-8ba0-4ee8-b88e-53949c985c7f
+    
+    3.激活swap
+    # swapon /tmp/swap.txt
+    swapon: /tmp/swap.txt：不安全的权限 0644，建议使用 0600。
+    
+    4.查看swap分区
+    # swapon -d
+    NAME          TYPE       SIZE USED PRIO
+    /dev/sdb2     partition  953M   0B   -1
+    /dev/dm-1     partition    2G   0B   -2
+    /tmp/swap.txt file      1024M   0B   -3
+    
+    5.挂载
+    # vim /etc/fstab 
+    /tmp/swap.txt       swap   swap  defaults  0 0 
+--------------------------------- 
+卸载swap  
+    1.让swap无效      
+    # swapoff /tmp/swap.txt 
+    # swapoff /dev/sdb2
+    
+    2.删除/etc/fstab配置文件内的设置
+    
+    3.删除交换文件
+    # rm -rf /tmp/swap.txt
+    
+    # swapoff -a   //关闭swap交换分区
+```
+
+#### LVM - 逻辑卷
+
+```
+lvm  逻辑卷管理
+    磁盘空间的动态划分和管理
+    
+lvm能够实现分区的动态的拉伸和回缩
+
+lvm的创建过程其实是一个先整合，再划分的过程。
+
+一、LVM的创建过程
+    1）添加硬盘或者创建分区，通知内核
+    2）创建物理卷 PV （pvcreate） 
+    3）创建卷组 VG    （vgcreate）
+    4）创建逻辑卷  LV （lvcreate）
+    5）创建文件系统    （mkfs.xfs）
+    6）挂载使用            (mount autofs /etc/fstab)
+
+1)
+# parted /dev/sdd mklabel gpt 
+# parted /dev/sdd mkpart primary 1 1G
+# parted /dev/sdd mkpart primary  1G 2G
+# parted /dev/sdd mkpart primary  2G 3G
+# parted /dev/sdd mkpart primary  3G 4G
+# ll /dev/sdd
+sdd   sdd1  sdd2  sdd3  sdd4  
+
+2)创建物理卷 
+# pvcreate /dev/sdd{1..4}  ->  pvcreate /dev/sdd1 /dev/sdd2 /dev/sdd3 /dev/sdd4
+  Physical volume "/dev/sdd1" successfully created.
+  Physical volume "/dev/sdd2" successfully created.
+  Physical volume "/dev/sdd3" successfully created.
+  Physical volume "/dev/sdd4" successfully created.
+
+    2.1)查看物理卷
+    # pvs
+      PV         VG Fmt  Attr PSize   PFree  
+      /dev/sda2  cl lvm2 a--   19.00g      0 
+      /dev/sdd1     lvm2 ---  953.00m 953.00m
+      /dev/sdd2     lvm2 ---  953.00m 953.00m
+      /dev/sdd3     lvm2 ---  954.00m 954.00m
+      /dev/sdd4     lvm2 ---  954.00m 954.00m
+
+    # pvscan
+      PV /dev/sda2   VG cl              lvm2 [19.00 GiB / 0    free]
+      PV /dev/sdd3                      lvm2 [954.00 MiB]
+      PV /dev/sdd2                      lvm2 [953.00 MiB]
+      PV /dev/sdd4                      lvm2 [954.00 MiB]
+      PV /dev/sdd1                      lvm2 [953.00 MiB]
+      Total: 5 [22.72 GiB] / in use: 1 [19.00 GiB] / in no VG: 4 [3.72 GiB]
+
+    # pvdisplay  
+      "/dev/sdd3" is a new physical volume of "954.00 MiB"
+      --- NEW Physical volume ---
+      PV Name               /dev/sdd3
+      VG Name               
+      PV Size               954.00 MiB
+      Allocatable           NO
+      PE Size               0   
+      Total PE              0
+      Free PE               0
+      Allocated PE          0
+      PV UUID               kRYrRB-0BZm-Z2h1-tQxu-kDUC-FvQF-4YSZ5L
+      ...
+   
+3）创建卷组
+    语法：vgcreate [-s 大小] 卷组的名字  物理卷的设备路径
+    # vgcreate -s 8M vg0 /dev/sdd{1..4}
+    Volume group "vg0" successfully created
+
+    -s 指定PE大小
+        PE（物理扩展单元） 大小（默认是4M）
+        
+    3.1）
+        # vgs
+          VG  #PV #LV #SN Attr   VSize  VFree
+          cl    1   2   0 wz--n- 19.00g    0 
+          vg0   4   0   0 wz--n-  3.72g 3.72g
+ 
+        # vgscan
+          Reading volume groups from cache.
+          Found volume group "vg0" using metadata type lvm2
+          Found volume group "cl" using metadata type lvm2
+          
+        # vgdisplay 
+      --- Volume group ---
+      VG Name               vg0
+      System ID             
+      Format                lvm2
+      Metadata Areas        4
+      Metadata Sequence No  1
+      VG Access             read/write
+      VG Status             resizable
+      MAX LV                0
+      Cur LV                0
+      Open LV               0
+      Max PV                0
+      Cur PV                4
+      Act PV                4
+      VG Size               3.72 GiB
+      PE Size               8.00 MiB
+      Total PE              476
+      Alloc PE / Size       0 / 0   
+      Free  PE / Size       476 / 3.72 GiB
+      VG UUID               PWOx9H-9eP0-vkdz-v31T-cHxO-C80x-4BAMfE
+
+4）创建逻辑卷      
+    # lvcreate -n lv0 -L 1500M vg0
+      Rounding up size to full physical extent 1.47 GiB
+      Logical volume "lv0" created.
+  
+        -n 指定lv的名字
+        -L 指定lv的大小
+        vg0  取vg0卷组的空间做lv
+  
+    # lvcreate -n lv0 -l 188 vg0  
+        -l 指定使用了多少个PE    // -l 100%FREE     指把所有卷组的空间给逻辑卷
+            LE 逻辑扩展单元
+        
+    4.1)  
+        #lvs
+        #lvscan
+        #lvdisplay
+            
+5）创建文件系统
+    # mkfs.xfs /dev/vg0/lv0  
+
+6）挂载
+    # mkdir /lv0
+    # mount /dev/vg0/lv0 /lv0/
+    # vim /etc/fstab 
+    /dev/vg0/lv0 /lv0 xfs defaults 0 0
+    
+```
+
+
+
+#### LVM - 逻辑卷管理(扩容和缩容)
+
+```
+xfs和ext4文件系统
+    扩容的区别
+        扩容文件系统的命令不一样
+        xfs    使用的命令是xfs_growfs
+        ext4  使用的命令是resize2fs
+        
+---------------------------------------
+扩容：
+lv扩容
+    在线扩容
+    第1种情况：卷组内有空闲空间，直接从卷组取空间
+        1）对逻辑卷扩容
+        # lvextend -L +500M /dev/vg0/lv0   +表示在原来的空间
+    大小上加上多少空间大小
+      Rounding size to boundary between physical extents: 504.00 MiB.
+      Size of logical volume vg0/lv0 changed from 1.47 GiB (188 extents) to 1.96 GiB (251 extents).
+      Logical volume vg0/lv0 successfully resized.
+      
+        2）对文件系统扩容
+        # xfs_growfs /dev/vg0/lv0 
+        【如果文件系统是ext4】
+        # resize2fs /dev/vg0/lv0
+   lvs
+  LV   VG     Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  root centos -wi-ao---- 26.99g                                                    
+  swap centos -wi-ao----  2.00g      
+     第2种情况：卷组内没有剩余空间
+        1）创建新分区
+            # parted /dev/sdd mkpart primary  4G 5G    
+            # ll /dev/sdd
+            sdd   sdd1  sdd2  sdd3  sdd4  sdd5  
+            
+        2）创建物理卷
+            # pvcreate /dev/sdd5
+            Physical volume "/dev/sdd5" successfully created.
+            
+        3）加入卷组 vg扩容
+            # vgextend vg0 /dev/sdd5
+            Volume group "vg0" successfully extended
+            
+        4）对逻辑卷扩容    
+            # lvextend -L +4500M /dev/vg0/lv0 
+              Rounding size to boundary between physical extents: 4.40 GiB.
+              Size of logical volume vg0/lv0 changed from 1.96 GiB (251 extents) to 4.40 GiB (563 extents).
+              Logical volume vg0/lv0 successfully resized.
+
+        5）对文件系统扩容
+            # xfs_growfs /dev/vg0/lv0 
+			【如果文件系统是ext4】
+       		 # resize2fs /dev/vg0/lv0
+       		 
+  -----------------------------------------------
+  	XFS不支持缩容
+
+	ext4支持缩容  
+   
+ 缩容：
+ext4缩容，xfs不支持缩容   
+
+lv缩容
+    注意：
+        1.风险大有可能造成数据的损坏
+        2.确保缩减后的空间大小依然能存储原来的所有数据
+        3.不要在线缩容
+        4.在缩减之前强制检查文件系统
+
+现在要在创建一个逻辑卷lv1，lv1的大小要求为1G，卷组内没有空间，但逻辑卷lv0的空间过大，缩减lv0，给lv1
+
+        给lv0缩减
+            1）先卸载
+                # umount /lv0
+               
+            2）强制检查文件系统
+                # e2fsck -f /dev/vg0/lv0    
+                       
+            3）缩减文件系统
+                # resize2fs /dev/vg0/lv0  1800M		//缩减文件系统到1800M
+                
+            4）缩减逻辑卷
+                # lvreduce -L 1800M /dev/vg0/lv0                  
+            
+            5）测试缩减逻辑卷后逻辑卷能否正常使用
+                # mount /dev/vg0/lv0 /lv0
+                # cd /lv0
+                # cat 
+                lost+found/ test.txt    
+                # cat test.txt 
+                ext4
+                # df -h
+                文件系统             容量  已用  可用 已用% 挂载点
+                /dev/mapper/cl-root   17G  4.3G   13G   26% /
+                devtmpfs             473M     0  473M    0% /dev
+                tmpfs                489M   84K  489M    1% /dev/shm
+                tmpfs                489M  7.1M  482M    2% /run
+                tmpfs                489M     0  489M    0% /sys/fs/cgroup
+                /dev/sda1           1014M  155M  860M   16% /boot
+                tmpfs                 98M   16K   98M    1% /run/user/42
+                tmpfs                 98M     0   98M    0% /run/user/0
+                /dev/mapper/vg0-lv0  1.7G  6.1M  1.6G    1% /lv0
+```
+
+
+
+```
+扩容案例：
+# df -Th
+文件系统                类型      容量  已用  可用 已用% 挂载点
+/dev/mapper/centos-root xfs     17G  16G   1G    96% /
+/dev/mapper/centos-home xfs		10G  1G    9G    10% /home
+  
+当发现根分区使用已超过96%，目前没有新的磁盘,但是发现 /home 目录多余空间，问怎么去给根分区扩容？
+1、做备份, /home 目录做一个备份
+# tar caf home.tar.gz /home
+
+2、取消挂载，删除home逻辑卷
+# umount /home
+# lvremove /dev/centos/home
+
+3、给root逻辑卷进行扩容
+# vgdisplay     //查看一下剩余多少PE块
+
+# lvextend -l +2559 /dev/centos/root
+
+# xfs_growfs /dev/centos/root             //通过上面信息可得知，root逻辑卷的文件系统是xfs
+
+4、把备份的home.tar.gz  里面的内容放到/home
+# tar xf home.tar.gz
+# mv home/* /home/
+```
+
+#### RAID - 磁盘阵列
+
+```
+raid 磁盘阵列  独立的磁盘冗余阵列
+简单来说raid就是一个将多块物理磁盘按照不同的方式组合起来形成一个硬盘组，从而提供比单个磁盘更高的存储性和安全性。
+
+组成raid的不同方式称为raid的级别   0  1  5
+
+优点：
+增强了存储能力
+可高效恢复磁盘
+支持热插拔
+
+raid的分类：
+软raid：用软件实现，为了提高速度，所有操作都是通过操作系统及cpu实现
+硬raid：通过硬件来实现
+    1.主板集成raid
+    2.阵列卡做raid
+   
+简单说RAID就是一种将多块物理磁盘按照不同的方式组合起来形成一个硬盘组，从而提供比单个磁盘更高的存储性能和安全性。
+  
+组成raid的不同方式称为raid的级别。
+
+RAID类型                       个数                	利用率            	优缺点
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+RAID0   条带集   	       		  2＋                 100%          	  读写速率最快，不容错
+RAID1   镜像集                    2			      50%	           读写速率一般，容错
+RAID5   带奇偶校验条带集   		   3＋                 (n-1）/n      	   读写速率快，容错，允许坏一块
+RAID6   带奇偶校验条带集双校验dp    4＋                 (n-2）/n          读写快，容错，允许坏两块
+RAID10 RAID1的安全＋RAID0的高速    4 					50%			     读写速率快，容错
+RAID50 RAID5的安全＋RAID0的高速    6					(n-2）/n 		读写速率快，容错
+RAID60 RAID6的安全＋RAID0的高速    8					(n-4）/n 	    读写速率快，容错
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+```
+
+常见raid级别：
+raid 0   条带raid    最少2块磁盘
+
+![img](img/0ab9d69cdde824f28aa54f15445b3ace.png)
+
+```
+           10M
+           / \
+          5M 5M
+         sda  sdb 
+
+数据存储的方式：同时将数据平均分配到2块磁盘上  n块
+优点：读写速度快
+缺点：安全性差
+最小磁盘数：2
+磁盘总容量：2个之和   n个之和
+允许坏几块：不能坏
+```
+
+raid 1   镜像raid   最少2块磁盘
+
+![img](img/8b00213dcfb68648fe3ca5c1e17ad487.png)
+
+```
+        10M
+        /  \
+       10M  10M   
+      sda    sdb  
+        
+数据存储的方式：第2块磁盘相当于第1块磁盘的备份 
+优点：安全性高
+缺点：占用空间，写速度相比其他的慢  
+最小磁盘数：2
+磁盘总容量：n/2
+允许坏几块：n/2
+```
+
+raid 5 
+    通过校验码恢复数据   0是校验码
+    最好4块磁盘  如其中一块磁盘坏了，自动把坏了磁盘中的数据写入第4块磁盘 第4个磁盘是做热备
+
+![](img/aac91462ac68b20a6965540045d69c3c.png)
+
+```
+10M      1    1     0   
+         0    1     1
+         1    0     1
+        sda  sdb    sdc(校验)   sdd(备份)
+
+数据存储的方式：有1块磁盘的空间是存校验码的
+优点：是raid0和raid1的折中方案，即考虑数据的安全性又考虑存储性能 
+最小磁盘数：3
+最优磁盘数：4
+磁盘总容量：n-1
+允许坏几块：1
+```
+
+raid 6
+    2组校验码   0第一组是校验码  2是第2组校验码  
+
+```
+10M    sda  sdb  sdc sdd
+        1    1    0   2
+        2    1    1   0
+        1    0    2   1
+            
+数据存储的方式：有2块磁盘的空间是存校验码的
+优点：和raid5相对安全性提升  和raid5相比存储性能下降了
+最小磁盘数：4
+磁盘总容量：n-2
+允许坏几块：2            
+
+```
+
+
+raid 10  raid1+raid0
+
+![img](img/dca2fa78157a9d6ce832714c85b6eef7.png)
+
+```
+raid0              md2                        10M
+                 /    \                     /      \
+raid1         md0     md1                 5M       5M    
+              /  \    /  \               /  \     /  \
+            sda  sdb sdc sdd           5M   5M   5M   5M
+            
+性能较好
+最小磁盘数：4   
+磁盘总容量：n/2     
+允许坏几块：每组各允许坏一块
+```
+
+##### 软raid模拟实验
+
+```
+准备5个分区   每个分区是2G
+/dec/sdc1～/dev/sdc5
+
+制作raid5    
+语法：mdadm [mode] <raiddevice> [options]  <compo‐
+       nent-devices>
+
+    -C, --create  创建阵列
+    -n, --raid-devices=    指定设备数量  后面跟上设备列表
+    -x, --spare-devices=  指定备盘
+    -l, --level=          指定raid的级别
+    -v, --verbose         显示创建过程
+    -D                    查看raid的详细信息
+
+1）# mdadm -C /dev/md0 -l 5 -n 3 -x 1  /dev/sdc{1..4}
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md0 started.
+  
+2）查看创建好的raid阵列  
+# mdadm -D /dev/md0
+    
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] 
+md0 : active raid5 sdc3[4] sdc4[3](S) sdc2[1] sdc1[0]
+      972800 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
+      
+unused devices: <none>
+
+制作配置文件：将当前raid信息保存至配置文件，已便以后进行装配
+# mdadm -Ds  >  /etc/mdadm.conf
+
+# cat /etc/mdadm.conf
+ARRAY /dev/md0 metadata=1.2 spares=1 name=localhost.localdomain:0 UUID=2c27b2c5:3d35cee8:be4398a6:25d2d9cd
+
+3）格式化制作文件系统
+# mkfs.xfs /dev/md0
+
+4）挂载
+# mkdir /md0
+# mount /dev/md0 /md0
+# df -h
+文件系统             容量  已用  可用 已用% 挂载点
+/dev/mapper/cl-root   17G  4.3G   13G   26% /
+devtmpfs             473M     0  473M    0% /dev
+tmpfs                489M   84K  489M    1% /dev/shm
+tmpfs                489M  7.1M  482M    2% /run
+tmpfs                489M     0  489M    0% /sys/fs/cgroup
+/dev/sda1           1014M  155M  860M   16% /boot
+tmpfs                 98M   16K   98M    1% /run/user/42
+tmpfs                 98M     0   98M    0% /run/user/0
+/dev/md0             946M   33M  914M    4% /md0
+
+5）开机挂载
+# vim /etc/fstab
+/dev/md0  /md0  xfs defaults 0 0
+
+测试：
+1.# cd /md0   
+2.# cp /etc/passwd /etc/group /etc/gshadow /etc/shadow /etc/login.defs  .
+3.将阵列中的一个分区指定为坏的分区  /dev/sdc1
+# mdadm -f /dev/md0 /dev/sdc1     //可以查看/proc/mdstat文件，对应磁盘会出现F，如果是硬件服务器，一般黄灯代表有问题，红灯就是坏了
+mdadm: set /dev/sdc1 faulty in /dev/md0
+
+4.查看数据是否完整
+5.查看raid阵列的信息
+6.热拔（删除）/dev/sdc1
+# mdadm -r /dev/md0 /dev/sdc1
+mdadm: hot removed /dev/sdc1 from /dev/md0
+7.添加新设备到raid阵列
+# mdadm -a /dev/md0 /dev/sdc5
+mdadm: added /dev/sdc5
+
+关闭raid（需要先卸载raid）
+# umount /dev/md0
+
+# mdadm -S /dev/md0
+mdadm: stopped /dev/md0
+
+启动阵列（必须有原来raid阵列的配置文件 启动后在挂载使用）
+# mdadm -A /dev/md0
+mdadm: /dev/md0 has been started with 3 drives and 1 spare.
+
+删除raid
+清理阵列
+1.先卸载
+2.停止阵列
+3.删除配置文件
+4.清除成员的元数据 mdadm  --zero-superblock 成员设备
+
+```
+
