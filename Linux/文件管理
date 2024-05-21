@@ -1,34 +1,18 @@
----
-typora-copy-images-to: image
----
-
 ### 文件管理
-
 #### 1.Linux目录结构
-
 ##### **1.1 WINDOWS/LINUX 对比**
-
 Windows: 以多根的方式组织文件 C:\ D:\ E:\
 Linux: 以单根的方式组织文件 /
-
 ##### **1.2 简介**
-
-```shell
 /目录结构： FSH (Filesystem Hierarchy Standard)
 [root@tianyun ~]# ls /
 bin dev lib media net root srv usr
 boot etc lib64 misc opt sbin sys var
 cgroup home lost+found mnt proc selinux tmp
-```
-
-
 
 ##### **1.3 图示**
-
 ![1](image/1.png)
-
 ##### **1.4 目录功能**
-
 bin 普通用户使用的命令 /bin/ls, /bin/date
 sbin 管理员使用的命令 /sbin/service 
 dev 设备文件 /dev/sda,/dev/sda1
@@ -36,28 +20,20 @@ root root用户的HOME
 home 存储普通用户家目录 
 lost+found fsck修复时，存储没有链接的文件或目录
 proc 虚拟的文件系统，反映出来的是内核，进程信息或实时状态 
-
 usr 系统文件，相当于C:\Windows
 /usr/local 软件安装的目录，相当于C:\Program
-
 boot 存放的系统启动相关的文件，例如kernel,grub(引导装载程序)
 etc 配置文件（系统相关如网络/etc/sysconfig/network
-
 lib 库文件Glibc
 lib64 库文件Glibc
-
 tmp 临时文件(全局可写：进程产生的临时文件) 
 var 存放的是一些变化文件，比如数据库，日志，邮件....
-
 ==设备（主要指存储设备）挂载目录==
-
 media 移动设备默认的挂载点
 mnt 手工挂载设备的挂载点
 
 #### 2.文件管理
-
 ##### 2.1 文件类型
-
 - --  普通文件（文本文件，二进制文件，压缩文件，电影，图片。。。）
 - d 目录文件（蓝色）
 - b 设备文件（块设备）存储设备硬盘，U盘 /dev/sda, /dev/sda1
@@ -67,11 +43,8 @@ mnt 手工挂载设备的挂载点
 - p 管道文件
 
 ##### 2.2示例1
-
 查看各式各样的文件类型。你能找出几种呢？
-
-```shell
-[root@tianyun ~]# ll -d /etc/hosts /bin/ls /home /dev/sda /dev/tty1 /etc/grub2.cfg /dev/log /run/dmeventd-client
+# ll -d /etc/hosts /bin/ls /home /dev/sda /dev/tty1 /etc/grub2.cfg /dev/log /run/dmeventd-client
 -rwxr-xr-x. 1 root root 117616 Nov 20 2015 /bin/ls
 srw-rw-rw- 1 root root 0 Mar 14 2017 /dev/log
 brw-rw---- 1 root disk 8, 0 Mar 14 09:03 /dev/sda
@@ -79,70 +52,46 @@ crw--w---- 1 root tty 4, 1 Mar 14 09:03 /dev/tty1
 lrwxrwxrwx. 1 root root 22 Dec 21 01:40 /etc/grub2.cfg -> ../boot/grub2/grub.cfg
 -rw-r--r-- 1 root root 392 Feb 22 15:51 /etc/hosts
 drwxr-xr-x. 10 root root 4096 Mar 14 11:00 /home
-```
-
-
 
 ##### **2.3 示例2**
-
-```shell
-[root@tianyun ~]$ file /etc/hosts
+$ file /etc/hosts
 /etc/hosts: ASCII text
-
-root@tianyun ~]$ file /bin/ls
+$ file /bin/ls
 /bin/ls: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.32, BuildID[sha1]=aa7ff68f13de25936a098016243ce57c3c982e06, stripped
-
-[root@tianyun ~]$ file /dev/sda
+$ file /dev/sda
 /dev/sda: block special
-
-[root@tianyun ~]$ file /dev/tty1
+$ file /dev/tty1
 /dev/tty1: character special
-
-[root@tianyun ~]$ file /etc/grub2.cfg 
+$ file /etc/grub2.cfg 
 /etc/grub2.cfg: broken symbolic link to `../boot/grub2/grub.cfg'
-
-[root@tianyun ~]$ file /home
+$ file /home
 /home: directory
-
-[root@tianyun ~]$ file /run/dmeventd-client 
+$ file /run/dmeventd-client 
 /run/dmeventd-client: fifo (named pipe)
-```
-
 **注意**
-
 通过颜色判断文件的类型是不一定正确的！！！
 Linux系统中文件是没有扩展名！！！
 
 #### 3.文件管理命令
-
 ##### **3.1  改变目录**
-
 cd 	绝对路径 cd /home/alice
-
 cd 	相对路径 cd .  ..
-
 cd 	专用：
-
 cd - 	返回上次目录 
-
 cd 	直接回家
-
 ##### 3.2 目录的管理
-
-```
 增删改查
 增---
 mkdir		创建目录
-		选项：
-			-p		创建联级目录
-			-v		显示创建过程
+选项：
+	-p		创建联级目录
+	-v		显示创建过程
 集合:
 {1..10}  代表1到10
 {1,2,3}  代表1和2和3
 案例：
 在/tmp 里面创建a1 a2 a3 ... a100 这样的100个目录怎么去创建？
 # mkdir /tmp/a{1..100}
-
 删---
 rm		删除目录
 		选项：
@@ -151,20 +100,16 @@ rm		删除目录
 案例：
 1、删除/tmp里面的a目录
 # rm -rf /tmp/a
-
 2、想删除a1 a2 a3 ... a100 这样的100个目录怎么去删除？
 # rm -rf a{1..100}
-
 支持通配符
 *		所有的意思  （匹配所有的字符）
-
 改---
 cp		复制目录
 		选项：
 			-r		复制目录
 mv		改名或者移动
 		[不管是文件还是目录，都不需要选项]
-		
 查---
 ls		列出当前目录有哪些文件
 		选项：
@@ -174,204 +119,103 @@ ls		列出当前目录有哪些文件
 			-h			换算文件大小的单位
 			
 ```
-
-
-
 ##### **2.2 创建文件**
-
-```shell
 touch file1.txt //无则创建，有则修改时间
-
 touch file3 file4
-
 touch /home/file10.txt
-
 touch /home/file5 file6
-
 touch /home/{zhuzhu,gougou}
-
 touch file{1..20}
-
 touch file{a..c}
-
 touch yang{a,b,c} //{}集合，等价touch yanga yangb yangc
-```
 
 ##### **2.3 创建目录**
-
 语法：mkdir    -v 详细 -p 递归 目录 
-
-```shell
 mkdir dir1
-
 mkdir /home/dir2 /home/dir3
-
 mkdir /home/{dir4,dir5}
-
 mkdir -v /home/{dir6,dir7}		#显示详细信息，遍历
-
 mkdir -v /home/dir8/111/22
-
 mkdir -pv /home/dir8/111/222 #包括其父母的创建，不会有任何消息输出
-
 mkdir -pv /home/{yang/{dir1,111},tianyun}
-```
 
 ##### **2.4.复制**
-
 ==复制 cp -r 目录 -v 详细 -f 强制   -n  静默
-
 Usage: cp [OPTION]... [-T] SOURCE DEST
-
-```shell
 cd
-
 mkdir /home/dir{1,2}
-
 cp -v install.log /home/dir1	  //-v 显示详细信息
-
 cp -v install.log /home/dir1/yang.txt
-
 cp -rv /etc /home/dir1    //-r 拷贝文件夹
-
 cp  -rv  源文件1 源文件2 源文件N  目标文件 //将多个文件拷贝到同一个目录
-
 cp -rv /etc/sysconfig/network-scripts/ifcfg-eth0 /etc/passwd /etc/grub.conf /etc/hosts .
-
 cp -r /etc /tmp
-
 cp -rfn /etc /tmp    //-f, --force 强制
-```
 
 ##### **2.5 移动**
-
 1.创建一个新文件file1
-
-```shell
 touch  /root/file1
-```
-
 2.把file1文件移动到/tmp目录中。
-
-```shell
 mv    /root/file1    /tmp
 ls    /tmp/file1
-```
-
 3.把file1文件更名为file2
-
-```shell
 mv    /tmp/file1     /tmp/file2
-```
-
 4.观察file1文件已经更名为file2
-
-```shell
 ls  /tmp/file1    /tmp/file2
-```
 
 ##### **2.6 删除**
-
 ==删除 rm -r 递归 -f force强制 -v 详细过程     *通配符
-
 示例1：删除/home/dir1 
-
-```shell
 cd /home
-
 rm -rf dir1
-```
-
 -r 递归
 -f force强制
 -v 详细过程
-
 示例2：
-
-```
-```shell
-[root@tianyun ~]# mkdir /home/dir10
-[root@tianyun ~]# touch /home/dir10/{file2,file3,.file4}
-[root@tianyun ~]# rm -rf /home/dir10/* //不包括隐藏文件
-[root@tianyun ~]# ls /home/dir10/ -a
-​```
+# mkdir /home/dir10
+# touch /home/dir10/{file2,file3,.file4}
+# rm -rf /home/dir10/* //不包括隐藏文件
+# ls /home/dir10/ -a
 . .. .file4
-```
 
 示例3：
-
-```shell
-[root@tianyun ~]# rm -rf file*
-[root@tianyun ~]# rm -rf *.pdf
-```
+# rm -rf file*
+# rm -rf *.pdf
 
 ##### **2.7 查看文件内容**
-
 cat全部
-
-```shell
 cat  /etc/passwd
-```
-
 -n 显示行号
-
 -A 包括控制字符（换行符/制表符）
-
 more翻页
-
-```shell
 more  /etc/passwd
-```
-
 head头部
-
-```shell
-[root@tianyun ~]# head /etc/passwd
-[root@tianyun ~]# head -2 /etc/passwd
-```
-
+# head /etc/passwd
+# head -2 /etc/passwd
 tail尾部
-
-```shell
-[root@tianyun ~]# tail /etc/passwd
-[root@tianyun ~]# tail -1 /etc/passwd
-[root@tianyun ~]# tail /var/log/messages
-[root@tianyun ~]# tail -20 /var/log/messages
-[root@tianyun ~]# tail -f /var/log/secure //-f 动态查看文件的尾部
-[root@tianyun ~]# tail -F /var/log/secure //-F 动态查看文件的尾部
+# tail /etc/passwd
+# tail -1 /etc/passwd
+# tail /var/log/messages
+# tail -20 /var/log/messages
+# tail -f /var/log/secure //-f 动态查看文件的尾部
+# tail -F /var/log/secure //-F 动态查看文件的尾部
 注：vim, gedit编辑文件时，索引号会改变
-```
-
 grep过滤关键字	grep 针对文件内容进行过滤
-
-```shell
 grep 'root' /etc/passwd
-
 grep '^root' /etc/passwd
-
 grep 'bash$' /etc/passwd
-
 grep 'failure' /var/log/secure
-```
 
 ##### **2.8 修改文件内容**-vi vim
-
 VI 的三个模式 
-
-![1528092982235](image/1528092982235.png)
-
 命令模式
-
 光标定位：
-
 - hjkl		#上下左右   ===  方向键
-	 0 $	        #行首行尾
-	 gg G 	#页首页尾
+0 $	        #行首行尾
+gg G 	#页首页尾
 - 3G   / 3gg       #进入第三行  
 - /string     #查找字符，n下一个    (n N 可以循环的)    
-
 文本编辑：
-
 - 文本编辑（少量）
 - y 复制 yy 3yy ygg yG (以行为单位)
 - d 删除 dd 3dd dgg dG (以行为单位) 
@@ -381,29 +225,19 @@ VI 的三个模式
 - u undo撤销
 - ^r redo重做
 - r 可以用来修改一个字符
-
 进入其它模式：
-
 - a 进入插入模式    -- 会在光标的后面开始插入
-
 - i 进入插入模式     -- 会在光标的前面开始插入
 - o 进入插入模式    -- 会另起一行，开始插入
 - A 进入插入模式    -- 会在光标所在的行尾开始插入
-
-
 - : 进入末行模式（扩展命令模式）
-
 - v 进入可视模式
 - ^v 进入可视块模式
 - V 进入可视行模式
 - R 进入替换模式
-
 扩展命令模式：
-
 保存退出
-
 - :10 进入第10行 
-
 - :w 保存 
 - :q 退出 
 - :wq 保存并退出 
@@ -412,119 +246,65 @@ VI 的三个模式
 - :wq! 强制保存退出
 - :x 保存并退出 
 - ZZ                  //快捷键保存退出， ctrl + zz
-
 查找替换
-
 - :范围 s/old/new/选项 
-
 - :1,5 s/root/yang/          从1－5行的root 替换为yang
-
   范围： 
-
   ​     %			//所有的行
-
   ​	  2			//只会替换第2行
-
   ​      2,5       //替换2到5行
-
   选项：
-
   ​       g			//把一行里面匹配的内容全部修改
-
 读入文件/写文件(另存为)
-
 - :w 存储到当前文件
 - :w /tmp/aaa.txt 另存为/tmp/aaa.txt 
 - :1,3 w /tmp/2.txt
 - :r /etc/hosts 读入文件到当前行后     
 - :5 r /etc/hosts 读入文件到第5行后
-
 设置环境 (临时)： 
-
 - :set nu 设置行号 
-
 - :set ic 不区分大小写，比如高亮关键字，同时把小写和大写都高亮出来
-
 - :set ai 自动缩进
-
 - :set list 显示控制字符
-
 - :set nonu 取消设置行号 
-
 - :set noic  区分大小写，默认就是区分大小写
-
 - :set paste   原封不动的去粘贴内容
-
   设置环境(永久)
-
   vim /etc/vimrc 		//vim的配置文件
-
   在最下面添加配置的命令
-
   比如：显示行号
-
   set number
-
-  ![image-20220722110600091](image/image-20220722110600091.png)
-
-  
-
   可视块模式
-
   批量删除
 
   ​		ctrl + v 进入可视块模式
-
   ​		方向键去选择对应的块
-
   ​		按 d  或 x 进行删除
-
   批量添加
-
   ​		案例：批量给文件打上注释 前面加上#
-
   ​		ctrl + v 进入可视块模式
-
-  ​        方向键在第一列  全部选上
-
+  ​        	方向键在第一列  全部选上
   ​		按 shift +i  (也就是大写i)
-
-  ​	    输入# 	(输入你想添加的内容)
-
+  ​	    	输入# 	(输入你想添加的内容)
   ​		按两下Esc  Esc
-
   可视行模式
-
   用法一样
-
   shift +v   (大写的v)
-
   可视模式
-
   用法一样
-
   v
-
   【可视行和可视这两个模式主要还是用来删除文件内容】
 
-  
-
 ##### 2.9 文件基本信息
-
 **时间类型**
-
 访问时间：atime，查看内容 //RHEL6会延后修改atime
 修改时间：mtime，修改内容
 改变时间：ctime，文件属性，比如权限
 删除时间：dtime，文件被删除的时间
-
 **查询示例**
-
-```shell
-[root@tianyun ~]# ls -l install.log
+# ls -l install.log
 -rw-r--r-- 1 root root 34793 10-23 13:49 install.log
-
-[root@tianyun ~]# stat install.log
+# stat install.log
 File: “install.log”
 Size: 34793 Blocks: 80 IO Block: 4096 一般文件
 Device: 802h/2050d Inode: 65282 Links: 1
@@ -532,6 +312,5 @@ Access: (0644/-rw-r--r--) Uid: ( 0/ root) Gid: ( 0/ root)
 Access: 2012-10-23 16:53:20.000000000 +0800
 Modify: 2012-10-23 13:49:46.000000000 +0800
 Change: 2012-10-23 13:49:52.000000000 +0800
-```
 
 ls -l 文件名 仅看的是文件的修改时间
