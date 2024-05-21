@@ -1,108 +1,74 @@
 ## 磁盘管理
-
 ---
-
 - 磁盘分区
 - 磁盘分区 - fdiak / parted
 - 挂载
 - SWAP -  交换分区
 -  LVM  -   逻辑卷
-
 ---
-
 查看CPU:
-
-```
 # lscpu
 # cat /proc/cpuinfo
-```
-
 查看磁盘:
-
-```
 # lsblk
-```
-
 查看内存:
-
-```
 # free -m/h
 # cat /proc/meminfo
-```
-
 Linux里磁盘的命名方式
-
-```
-  	/dev/sda  
-            sd——表示一种串口设备
-                sata
-                usb
-                scsi
-                sas
-    /dev/hda
-            hd——表示一种并口设备
-                ide
-    /dev/vda
-      同种设备命名的排序：第一块设备/dev/sda   第二块设备 /dev/sdb  ......
-           			  第一个设备的第一个分区/dev/sda1 第二个分区/dev/sda2 ......
-```
+/dev/sda  
+sd——表示一种串口设备
+ata
+usb
+scsi
+sas
+/dev/hda
+hd——表示一种并口设备
+ide
+/dev/vda
+同种设备命名的排序：第一块设备/dev/sda   第二块设备 /dev/sdb  ......
+第一个设备的第一个分区/dev/sda1 第二个分区/dev/sda2 ......
 
 机械硬盘的结构
     1）物理结构
-
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](img/1-16614413950843.png)
-
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](img/2)
 
    2）逻辑结构
        磁道：以盘片中心为圆心，半径大小不同的同心圆组成的环形区域，称为磁道  
        扇区：磁道上的一段圆弧   1扇区512B B（Byte）  1Byte（字节）=8bit（比特）
        柱面：是虚的，类似于桶壁，是由相同半径的磁道组成的圆柱形环壁  13个柱面=100M       
-
        磁盘容量的计算公式：
        磁盘容量=512byte(一个扇区大小)*扇区数量*柱面的个数*磁头的个数
-
 固态硬盘
 
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](img/3)
-
 #### 磁盘分区
-
-```
 1.为什么要分区？
-    易于管理和使用,加速文件查找速度
-    数据安全
-    
+易于管理和使用,加速文件查找速度
+数据安全
 2.分区的类型？//磁盘标签
-    MBR  最大支持2TB以内的硬盘  
-    主分区: 编号1-4,与扩展分区的和不能超过4个,可直接格式化使用
-    扩展分区：编号1-4,最多只能有一个,不能直接格式化使用  
-        逻辑分区：在扩展分区上划分,编号从5开始, 可格式化使用
-    分区不是无限分的，对于串口设备，最多15个分区，1-4编号是主分区或者是扩展分区，5-15编号是逻辑分区(MSDOS分区表格式)  
-    GPT   能支持2T以上的磁盘，最多可分128个分区,没有主分区扩展分区之说
-
+MBR  最大支持2TB以内的硬盘  
+主分区: 编号1-4,与扩展分区的和不能超过4个,可直接格式化使用
+扩展分区：编号1-4,最多只能有一个,不能直接格式化使用  
+逻辑分区：在扩展分区上划分,编号从5开始, 可格式化使用
+分区不是无限分的，对于串口设备，最多15个分区，1-4编号是主分区或者是扩展分区，5-15编号是逻辑分区(MSDOS分区表格式)  
+GPT   能支持2T以上的磁盘，最多可分128个分区,没有主分区扩展分区之说
 3.分区相关
-    1）分区    fdisk   -n  -p   -1  -  -+1G   -w
-    2）通知内核重读分区表  partprobe  //可选操作，刷新
-    3）创建文件系统 或称为格式化   mkfs.xxx   /dev/sdb1
-    4）挂载使用  mkdir  /sdb1  ;  mount  /dev/sdb1   /sdb1 
-
+1）分区    fdisk   -n  -p   -1  -  -+1G   -w
+2）通知内核重读分区表  partprobe  //可选操作，刷新
+3）创建文件系统 或称为格式化   mkfs.xxx   /dev/sdb1
+4）挂载使用  mkdir  /sdb1  ;  mount  /dev/sdb1   /sdb1 
 4.分区的命令：
-    fdisk：
-        # fdisk /dev/sdb
-        # partprobe
-        # mkfs.xfs /dev/sdb1         
-        # mount  /dev/sdb1 /mnt/sdb1
-         
-        #df  -h
-         
-    parted：能够划分2T以上的硬盘，小于2T的也可以分
- ===========================================
+fdisk：
+# fdisk /dev/sdb
+# partprobe
+# mkfs.xfs /dev/sdb1         
+# mount  /dev/sdb1 /mnt/sdb1
+#df  -h
+parted：能够划分2T以上的硬盘，小于2T的也可以分
+===========================================
 如果设备名称被误删怎么办?
-	# rm -rf /dev/sdb1
-    # mount /dev/sdb1  /mnt/sdb1/
-        mount: 特殊设备 /dev/sdb1 不存在
-    # lsblk 
+# rm -rf /dev/sdb1
+# mount /dev/sdb1  /mnt/sdb1/
+mount: 特殊设备 /dev/sdb1 不存在
+# lsblk 
         NAME        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
         sda           8:0    0   20G  0 disk 
         ├─sda1        8:1    0    1G  0 part /boot
@@ -112,31 +78,22 @@ Linux里磁盘的命名方式
         sdb           8:16   0   10G  0 disk 
         └─sdb1        8:17   0    2G  0 part 
         sr0          11:0    1  4.1G  0 rom  /run/media/root/Cen
-    # mknod /dev/sdb1 b 8 17  //创建设备文件   b:块设备  8 17 :主设备号,次设备号
-    # mount /dev/sdb1  /mnt/sdb1/
-```
+# mknod /dev/sdb1 b 8 17  //创建设备文件   b:块设备  8 17 :主设备号,次设备号
+# mount /dev/sdb1  /mnt/sdb1/
 
 #### 磁盘分区 - fdisk
-
-```
 # fdisk -l /dev/sdb  列出指定设备的分区表信息
-
 磁盘 /dev/sdb：10.7 GB, 10737418240 字节，20971520 个扇区
 Units = 扇区 of 1 * 512 = 512 bytes
 扇区大小(逻辑/物理)：512 字节 / 512 字节
 I/O 大小(最小/最佳)：512 字节 / 512 字节
-
--------------------------------------------------
 一、分区 [主分区]
 #1
 欢迎使用 fdisk (util-linux 2.23.2)。
-
 更改将停留在内存中，直到您决定将更改写入磁盘。
 使用写入命令前请三思。
-
 Device does not contain a recognized partition table
 使用磁盘标识符 0x2656627c 创建新的 DOS 磁盘标签。
-
 命令(输入 m 获取帮助)：m
 命令操作
    d   delete a partition   //删除分区
@@ -160,7 +117,6 @@ Last 扇区, +扇区 or +size{K,M,G} (2048-20971519，默认为 20971519)：+1G 
 分区 1 已设置为 Linux 类型，大小设为 1 GiB
 
 命令(输入 m 获取帮助)：p
-
 磁盘 /dev/sdb：10.7 GB, 10737418240 字节，20971520 个扇区
 Units = 扇区 of 1 * 512 = 512 bytes
 扇区大小(逻辑/物理)：512 字节 / 512 字节
@@ -183,21 +139,18 @@ Last 扇区, +扇区 or +size{K,M,G} (2099200-20971519，默认为 20971519)：+
 分区 2 已设置为 Linux 类型，大小设为 2 GiB
 
 命令(输入 m 获取帮助)：p
-
 磁盘 /dev/sdb：10.7 GB, 10737418240 字节，20971520 个扇区
 Units = 扇区 of 1 * 512 = 512 bytes
 扇区大小(逻辑/物理)：512 字节 / 512 字节
 I/O 大小(最小/最佳)：512 字节 / 512 字节
 磁盘标签类型：dos
 磁盘标识符：0x2656627c
-
    设备 Boot      Start         End      Blocks   Id  System
 /dev/sdb1            2048     2099199     1048576   83  Linux
 /dev/sdb2         2099200     6293503     2097152   83  Linux
 
 命令(输入 m 获取帮助)：w
 The partition table has been altered!
-
 Calling ioctl() to re-read partition table.
 正在同步磁盘。
 
@@ -329,7 +282,6 @@ Calling ioctl() to re-read partition table.
 # ll /dev/sd
 sda   sda1  sda2  sdb   sdb1  sdb2  sdb3  sdb5  sdb6        
         
-        
 随堂练习
 1、添加一块新的磁盘，请问这个磁盘的名称叫
 /dev/sdb
@@ -341,11 +293,8 @@ sda   sda1  sda2  sdb   sdb1  sdb2  sdb3  sdb5  sdb6
 # mkdir /mnt/test
 # mount /dev/sdb1 /mnt/test
 # df -Th
-```
 
 #### 磁盘分区 - parted
-
-```
 列出所有设备的分区表信息
 # parted -l
 
@@ -420,12 +369,8 @@ p            打印分区表
 mkpart 		 类型   起始位置   结束位置            创建分区
 rm   分区编号                                             删除分区
 
-
-```
-
 #### 文件系统
 
-```
 文件系统：
     磁盘上组织文件的方法，成为文件系统。
     文件系统是对存储空间的分配和管理，负责文件的存储并对存入的文件进行保护和检索的系统
@@ -478,11 +423,9 @@ inode table: 	存储文件的元数据
   • 记录文件内容所在的block number (pointer)；  
 
 data block:	  存储文件的实际数据
-```
 
 ##### 软链接和硬链接       
 
-```
 软链接：也称为符号链接 
 1.类似于windows快捷方式
 2.产生新的inode
@@ -529,11 +472,9 @@ lrwxrwxrwx. 1 root root 42 7月   5 22:19 /etc/ifcfg-ens33 -> /etc/sysconfig/net
  # find / -inum 2399912 -exec ls -li {} \;
 2399912 -rw-r--r--. 2 root root 74 7月   4 19:09 /etc/sysconfig/network-scripts/ifcfg-ens33
 2399912 -rw-r--r--. 2 root root 74 7月   4 19:09 /opt/ifcfg-ens33
-```
 
 #### 挂载-mount
 
-```
 挂载的目的：通过挂载点，得到访问设备的入口
 1.挂载的命令
 mount
@@ -605,26 +546,17 @@ a.txt
     mount /dev/sdb1 /mnt/sdb1/
   2).给此文件加上可执行权限
     # chmod +x  /etc/rc.d/rc.local
-```
 
 问题：如果不小心写/etc/fstab 永久挂载时，重启之后发现系统无法正常启动？
-
-![image-20220513105541870](img/image-20220513105541870.png)
-
 解决：
-
-```
 1、输入root的密码，然后回车进入操作系统
 2、vim /etc/fstab   //把自己写的挂载取消注释或者删除
 3、reboot    //重启
 4、重新正常进入系统
 将/etc/fstab 打的注释，进行取消
 5、mount -a	//触发检查哪个有问题
-```
 
 #### SWAP - 交换分区
-
-```
 制作交换分区
     方法两种:
     1.用分区实现【传统分区，逻辑卷】
@@ -640,7 +572,7 @@ a.txt
     KiB Swap: 14680060 total, 14680060 free,        0 used.  5967972 avail Mem 
 
     # swapon -s  
-    文件名				类型		     大小           	 已用	  权限
+    文件名	   类型		 大小            已用	 权限
     /dev/dm-1      partition	 14680060	 0       -1
 
     # swapon -d
@@ -722,20 +654,15 @@ a.txt
     
     3.删除交换文件
     # rm -rf /tmp/swap.txt
-    
     # swapoff -a   //关闭swap交换分区
-```
 
 #### LVM - 逻辑卷
 
 ```
 lvm  逻辑卷管理
     磁盘空间的动态划分和管理
-    
 lvm能够实现分区的动态的拉伸和回缩
-
 lvm的创建过程其实是一个先整合，再划分的过程。
-
 一、LVM的创建过程
     1）添加硬盘或者创建分区，通知内核
     2）创建物理卷 PV （pvcreate） 
@@ -916,37 +843,26 @@ lv扩容
             # xfs_growfs /dev/vg0/lv0 
 			【如果文件系统是ext4】
        		 # resize2fs /dev/vg0/lv0
-       		 
-  -----------------------------------------------
   	XFS不支持缩容
-
 	ext4支持缩容  
-   
  缩容：
 ext4缩容，xfs不支持缩容   
-
 lv缩容
     注意：
         1.风险大有可能造成数据的损坏
         2.确保缩减后的空间大小依然能存储原来的所有数据
         3.不要在线缩容
         4.在缩减之前强制检查文件系统
-
 现在要在创建一个逻辑卷lv1，lv1的大小要求为1G，卷组内没有空间，但逻辑卷lv0的空间过大，缩减lv0，给lv1
-
         给lv0缩减
             1）先卸载
                 # umount /lv0
-               
             2）强制检查文件系统
-                # e2fsck -f /dev/vg0/lv0    
-                       
+                # e2fsck -f /dev/vg0/lv0          
             3）缩减文件系统
                 # resize2fs /dev/vg0/lv0  1800M		//缩减文件系统到1800M
-                
             4）缩减逻辑卷
                 # lvreduce -L 1800M /dev/vg0/lv0                  
-            
             5）测试缩减逻辑卷后逻辑卷能否正常使用
                 # mount /dev/vg0/lv0 /lv0
                 # cd /lv0
@@ -965,11 +881,7 @@ lv缩容
                 tmpfs                 98M   16K   98M    1% /run/user/42
                 tmpfs                 98M     0   98M    0% /run/user/0
                 /dev/mapper/vg0-lv0  1.7G  6.1M  1.6G    1% /lv0
-```
 
-
-
-```
 扩容案例：
 # df -Th
 文件系统                类型      容量  已用  可用 已用% 挂载点
@@ -994,11 +906,9 @@ lv缩容
 4、把备份的home.tar.gz  里面的内容放到/home
 # tar xf home.tar.gz
 # mv home/* /home/
-```
 
 #### RAID - 磁盘阵列
 
-```
 raid 磁盘阵列  独立的磁盘冗余阵列
 简单来说raid就是一个将多块物理磁盘按照不同的方式组合起来形成一个硬盘组，从而提供比单个磁盘更高的存储性和安全性。
 
@@ -1016,7 +926,6 @@ raid的分类：
     2.阵列卡做raid
    
 简单说RAID就是一种将多块物理磁盘按照不同的方式组合起来形成一个硬盘组，从而提供比单个磁盘更高的存储性能和安全性。
-  
 组成raid的不同方式称为raid的级别。
 
 RAID类型                       个数                	利用率            	优缺点
@@ -1029,14 +938,11 @@ RAID10 RAID1的安全＋RAID0的高速    4 					50%			     读写速率快，�
 RAID50 RAID5的安全＋RAID0的高速    6					(n-2）/n 		读写速率快，容错
 RAID60 RAID6的安全＋RAID0的高速    8					(n-4）/n 	    读写速率快，容错
 －－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
-```
 
 常见raid级别：
 raid 0   条带raid    最少2块磁盘
 
 ![img](img/0ab9d69cdde824f28aa54f15445b3ace.png)
-
-```
            10M
            / \
           5M 5M
@@ -1048,13 +954,9 @@ raid 0   条带raid    最少2块磁盘
 最小磁盘数：2
 磁盘总容量：2个之和   n个之和
 允许坏几块：不能坏
-```
 
 raid 1   镜像raid   最少2块磁盘
 
-![img](img/8b00213dcfb68648fe3ca5c1e17ad487.png)
-
-```
         10M
         /  \
        10M  10M   
@@ -1066,15 +968,10 @@ raid 1   镜像raid   最少2块磁盘
 最小磁盘数：2
 磁盘总容量：n/2
 允许坏几块：n/2
-```
 
 raid 5 
     通过校验码恢复数据   0是校验码
     最好4块磁盘  如其中一块磁盘坏了，自动把坏了磁盘中的数据写入第4块磁盘 第4个磁盘是做热备
-
-![](img/aac91462ac68b20a6965540045d69c3c.png)
-
-```
 10M      1    1     0   
          0    1     1
          1    0     1
@@ -1086,12 +983,10 @@ raid 5
 最优磁盘数：4
 磁盘总容量：n-1
 允许坏几块：1
-```
 
 raid 6
     2组校验码   0第一组是校验码  2是第2组校验码  
 
-```
 10M    sda  sdb  sdc sdd
         1    1    0   2
         2    1    1   0
@@ -1103,14 +998,10 @@ raid 6
 磁盘总容量：n-2
 允许坏几块：2            
 
-```
-
-
 raid 10  raid1+raid0
 
 ![img](img/dca2fa78157a9d6ce832714c85b6eef7.png)
 
-```
 raid0              md2                        10M
                  /    \                     /      \
 raid1         md0     md1                 5M       5M    
@@ -1121,11 +1012,9 @@ raid1         md0     md1                 5M       5M
 最小磁盘数：4   
 磁盘总容量：n/2     
 允许坏几块：每组各允许坏一块
-```
 
 ##### 软raid模拟实验
 
-```
 准备5个分区   每个分区是2G
 /dec/sdc1～/dev/sdc5
 
@@ -1133,12 +1022,12 @@ raid1         md0     md1                 5M       5M
 语法：mdadm [mode] <raiddevice> [options]  <compo‐
        nent-devices>
 
-    -C, --create  创建阵列
-    -n, --raid-devices=    指定设备数量  后面跟上设备列表
-    -x, --spare-devices=  指定备盘
-    -l, --level=          指定raid的级别
-    -v, --verbose         显示创建过程
-    -D                    查看raid的详细信息
+    -C, --create  		创建阵列
+    -n, --raid-devices=    	指定设备数量  后面跟上设备列表
+    -x, --spare-devices=  	指定备盘
+    -l, --level=          	指定raid的级别
+    -v, --verbose         	显示创建过程
+    -D                    	查看raid的详细信息
 
 1）# mdadm -C /dev/md0 -l 5 -n 3 -x 1  /dev/sdc{1..4}
 mdadm: Defaulting to version 1.2 metadata
@@ -1214,6 +1103,3 @@ mdadm: /dev/md0 has been started with 3 drives and 1 spare.
 2.停止阵列
 3.删除配置文件
 4.清除成员的元数据 mdadm  --zero-superblock 成员设备
-
-```
-
