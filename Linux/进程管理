@@ -1,0 +1,707 @@
+
+
+### 一 .进程管理
+
+**关于进程 process**
+
+What is a process?  
+
+什么是进程
+
+ Process life cycle  
+
+ 进程的生命周期 
+
+Process states  
+
+进程状态 
+
+#### 1.1.  什么是进程？
+
+ 进程是已启动的可执行程序的运行实例，进程有以下组成部分：
+
+ • 已分配内存的地址空间； 
+
+• 安全属性，包括所有权凭据和特权；
+
+ • 程序代码的一个或多个执行线程；
+
+ • 进程状态。
+
+ **程序**： 二进制文件，静态 /bin/date, /usr/sbin/httpd，/usr/sbin/sshd, /usr/local/nginx/sbin/nginx
+
+ **进程**： 是程序运行的过程， 动态，有生命周期及运行状态。
+
+
+
+进程的生命周期
+
+![](image\1.png)
+
+
+
+父进程复制自己的地址空间（fork）创建一个新的（子）进程结构。每个新进程分配一个唯一的进程 ID （PID），满足跟踪安全性 
+
+PID 和 父进程 ID （PPID）是子进程环境的元素，任何进程都可以创建子进程，所有进程都是第一个系统进程的后代：
+
+ Centos5/6:  init 
+
+Centos7:     systemd  
+
+子进程继承父进程的安全性身份、过去和当前的文件描述符、端口和资源特权、环境变量，以及程序代码。**随后**，子进程可能exec 自己的程序代码。
+
+通常，父进程在子进程运行期间处于睡眠（sleeping）状态。当子进程完成时发出（exit）信号请求，在退出时，
+
+ 子进程已经关闭或丢弃了其资源环境，剩余的部分称之为僵停（僵尸Zombie）。父进程在子进程退出时收到信号而被唤醒，清理剩 余的结构，然后继续执行其自己的程序代码。
+
+进程状态 
+
+在多任务处理操作系统中，每个CPU（或核心）在一个时间点上只能处理一个进程。在进程运行时，它对CPU 时间和资源分配的要求 会不断变化，从而为进程分配一个状态，它随着环境要求而改变。
+
+
+
+![](image\2.png)
+
+
+
+![](image\3.png)
+
+
+
+
+
+![=====================================================](image\4.png)
+
+#### 1.2.查看进程ps,top
+
+查看进程 process
+
+了解如进程的： 
+
+• PID,PPID 
+
+• 当前的进程状态 
+
+• 内存的分配情况 
+
+• CPU和已花费的实际时间
+
+ • 用户UID，他决定进程的特权
+
+#### 1.3.静态查看进程
+
+##### a 参数含义
+
+ ps
+
+```shell
+[root@tianyun ~]# ps aux |less
+```
+
+ USER       PID %CPU %MEM    VSZ   RSS TTY     STAT START   TIME COMMAND
+
+ root         1     0.0     0.0          2164   648 ?          Ss   08:47     0:00 init [5] 
+
+USER: 	运行进程的用户
+
+ PID： 	进程ID
+
+ %CPU:  CPU占用率 
+
+%MEM: 内存占用率
+
+ VSZ：	占用虚拟内存 
+
+RSS:  	占用实际内存 驻留内存
+
+ TTY： 	进程运行的终端 
+
+STAT：	进程状态	 man ps (/STATE)			     
+
+  		R 	运行      
+
+​	  	S 	可中断睡眠 Sleep    [静默]
+
+ 	 	D	不可中断睡眠 (usually IO)       
+ 	
+ 		T 	停止的进程       
+ 	
+ 		Z 	僵尸进程      
+ 	
+ 		 X    死掉的进程             【了解 】 	
+ 	
+ 		 Ss  	s进程的领导者，父进程 	  
+
+​    		S< <优先级较高的进程 	
+
+   	 	SN  N优先级较低的进程 	 
+   	
+   	  	R+	+表示是前台的进程组 	
+
+​	 	 Sl	以线程的方式运行	
+
+ START:	进程的启动时间
+
+ TIME：	进程占用CPU的总时间
+
+ COMMAND： 进程文件，进程名 
+
+```shell
+[root@tianyun ~]# ps aux --sort %cpu 		//从低到高
+
+[root@tianyun ~]# ps aux --sort -%cpu 		//从高到低，倒序
+
+[root@tianyun ~]# ps aux --sort rss |less	//从低到搞实际占用内存排序，把输出交给less
+[root@tianyun ~]# ps aux --sort -rss |less
+
+[root@tianyun ~]# yum -y install httpd
+
+ [root@tianyun ~]# systemctl start httpd 
+
+[root@tianyun ~]# ps auxf |grep [h]ttpd
+```
+
+root        8310  0.0  0.1  10092  2912 ?        Ss   14:19   0:00 /usr/sbin/httpd 
+
+apache    8311  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd apache    8312  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd 
+
+apache    8313  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd
+
+ apache    8314  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd apache    8315  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd
+
+ apache    8316  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd 
+
+apache    8318  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd 
+
+apache    8319  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd
+
+[root@tianyun ~]# ps -ef 
+
+UID        PID  PPID  C STIME TTY          TIME CMD 
+
+root         1     0  0 08:47 ?        00:00:00 init [5] 
+
+##### b.自定义显示字段
+
+```shell
+[root@tianyun ~]# ps axo user,pid,ppid,%mem,command 
+
+  [root@tianyun ~]# ps axo user,pid,ppid,%mem,command |grep httpd	
+```
+
+ root      8310     1  0.1 /usr/sbin/httpd apache    8311  8310  0.0 /usr/sbin/httpd 
+
+apache    8312  8310  0.0 /usr/sbin/httpd apache    8313  8310  0.0 /usr/sbin/httpd 
+
+apache    8314  8310  0.0 /usr/sbin/httpd apache    8315  8310  0.0 /usr/sbin/httpd 
+
+apache    8316  8310  0.0 /usr/sbin/httpd apache    8318  8310  0.0 /usr/sbin/httpd 
+
+apache    8319  8310  0.0 /usr/sbin/httpd root      9236  6798  0.0 grep httpd 
+
+[root@tianyun ~]# ps axo user,pid,ppid,%mem,%cpu,command --sort -%cpu |less 
+
+##### c.查看指定进程的PID
+
+```shell
+[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ cat /run/sshd.pid  	//查看服务的pid
+830
+
+[root@tianyun ~]# ps aux |grep sshd
+```
+
+ root     10180  0.0  0.0   7224  1024 ?        Ss   16:00   0:00 /usr/sbin/sshd
+
+```shell
+ [root@tianyun ~]# pgrep -l sshd            // 查看服务  数据库 apache
+
+ 10180 sshd
+
+ [root@tianyun ~]# pgrep sshd 
+
+10180 
+
+[root@tianyun ~]# pidof sshd 
+
+10180
+```
+
+
+
+##### d.查看进程树
+
+```shell
+[root@tianyun ~]# pstree
+```
+
+随堂练习：
+
+1、查看进程，以内存使用从大到小排序
+
+```
+ps aux   --sort -%mem
+```
+
+2、查看管理sleep命令的进程，只查看该进程的USER PID COMMAND
+
+```
+ps axo user,pid,command | grep slee[p]
+```
+
+3、查看Network服务的进程ID
+
+```
+pgrep -l Network
+ps aux | grep Network
+```
+
+
+
+### 二 .动态查看进程top
+
+##### 2.1.top
+
+第一部分：系统整体统计信息
+
+ top - 14:15:04 up 47 min,  2 users,  load average: 0.25, 0.18, 0.12 Tasks: 235 total,   1 running, 234 sleeping,   0 stopped,   0 zombie Cpu(s):  8.9%us,  1.0%sy,  0.0%ni, 90.1%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st Mem:   7944064k total,   746164k used,  7197900k free,    35724k buffers Swap:  1048568k total,        0k used,  1048568k free,   261492k cached 
+
+ load average: 0.86, 0.56, 0.78	  CPU最近 1分钟，5分钟，15分钟平均负载
+
+![](image\6.png)
+
+```
+第一行：top - 06:18:40 up 3:15, 1 user, load average: 0.06, 0.02, 0.00
+
+含义分别是：系统时间、运行时间、登录终端数、系统负载（三个数值分别为 1 分钟、5 分钟、15 分钟内的平均值，数值越小意味着负载越低）
+
+第二行：Tasks: 365 total, 1 running, 364 sleeping, 0 stopped, 0 zombie
+
+含义分别是：进程总数、运行中的进程数、睡眠中的进程数、停止的进程数、僵尸的进程数。
+
+
+第三行：%Cpu(s): 0.4 us, 0.5 sy, 0.0 ni, 98.8 id, 0.0 wa, 0.3 hi, 0.0 si, 0.0 st
+
+含义分别是：用户占用资源百分比、系统内核占用资源百分比、改变过优先级的进程资源百分比、空闲的资源百分比、等待输入输出的cpu时间百分比、硬中断占用的cpu百分比、软中断占用的cpu百分比和用于虚拟cpu的情况。
+
+第四行：MiB Mem：7790.6 total, 4309.7 free,2571.4 used, 909.5buff/cache
+
+含义分别是：物理内存总量、内存使用量、内存空闲量、作为内核缓存的内存量。
+
+第五行：MiB Swap: 2095.0 total, 2095.0 free, 0.0 used. 4882.7 avail Mem
+
+含义分别是：虚拟内存总量、虚拟内存空闲量、虚拟内存使用量、已被提前加载的内存量。
+
+第二部分：
+第六行：PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ COMMAND
+
+从第六行开始，就是具体的系统进程的资源使用的详细情况，依次分别表示：进程ID、进程所有者的用户名、优先级、nice值（负值表示搞优先级，正值表示低优先级）、进程使用的虚拟内存总量（KB）、进程使用的未被换出的物理内存大小(KB)、共享内存大小（KB）、进程状态、进程上次更新到现在的CPU时间占用百分比、物理内存占比、进程使用的CPU时间总计（单位1/100秒）、命令名。默认各进程是按照CPU的占用量来排序的。
+```
+
+
+
+第二部分：进程信息 
+
+命令
+
+ h|?帮助
+
+ M	按内存的使用排序
+
+ P	按CPU使用排序 
+
+N	以PID的大小排序
+
+ R	对排序进行反转(从小到大)
+
+ f	自定义显示字段
+
+​			按空格键选中是否显示
+
+​			按 → ，选中要调整的位置，上下方向键调整位置，按 ← 进行停止调整
+
+ 1	显示所有CPU的负载 
+
+ <	向前
+
+\>	向后 
+
+z	彩色 
+
+W 保存top环境设置 ~/.toprc 
+
+##### 2.2 htop
+
+```
+# htop   // top命令增强版 ‘带皮肤’
+
+该命令默认是没有安装的，得手动安装一下
+# wget -O /etc/yum.repos.d/epel.repo https://mirrors.aliyun.com/repo/epel-7.repo      //添加epel源
+# yum install htop -y	//安装htop命令
+
+【跟top命令使用基本相同，了解即可】
+```
+
+======================================================
+
+### 三 .信号控制进程
+
+##### 3.1.kill pkill
+
+kill,killall,pgrep,pkill,top
+
+![](image\7.png)
+
+
+
+给进程发送信号
+
+```shell
+ [root@tianyun ~]# kill -l	
+```
+
+​        //列出所有支持的信号 编号 信号名
+
+-1 	SIGHUP 		重新加载配置  PID不变
+
+-2 	SIGINT		键盘中断   ctrl + C 
+
+-3	SIGQUIT       键盘退出，中断一次，在继续
+
+-9 	SIGKILL		强制终止
+
+-15   SIGTERM	    终止（正常结束），缺省信号（优雅的退出）
+
+-18	SIGCONT	    继续，将停止的进程继续在后台运行
+
+-19	SIGSTOP	    停止
+
+ -20	SIGTSTP      暂停^Z
+
+作业1： 给vsftpd进程发送信号1,15 vsftpd信号测试
+
+```shell
+ [root@tianyun ~]# yum -y install vsftpd
+
+ [root@tianyun ~]# systemctl start vsftpd
+
+ [root@tianyun ~]# ps aux |grep vsftpd 
+ root      9160  0.0  0.0  52580   904 ?        Ss   21:54   0:00 /usr/sbin/vsftpd /etc/vsftpd/vsftpd.conf
+
+[root@tianyun ~]# kill -1 9160			//发送重启信号，例如vsftpd的配置文件发生改变，希望重新加载
+```
+
+```shell
+ root      9160  0.0  0.0  52580   904 ?        Ss   21:54   0:00 /usr/sbin/vsftpd /etc/vsftpd/vsftpd.conf 
+
+ [root@tianyun ~]# kill 9160	    //发送停止信号，vsftpd服务有停止的脚本 systemctl stop vsftpd
+
+ [root@tianyun ~]# ps aux |grep vsftpd 
+
+crond信号测试
+
+[root@tianyun ~]# ps aux |grep vim
+
+root      4362  0.0  0.2  11104  2888 pts/1    S+   23:02   0:00 vim file1
+root      4363  0.1  0.2  11068  2948 pts/2    S+   23:02   0:00 vim file2
+
+[root@tianyun ~]# kill 4362
+[root@tianyun ~]# kill -9 4363
+
+[root@tianyun ~]# killall vim				//给所有vim进程发送信号
+[root@tianyun ~]# killall httpd
+
+作业3：信号测试18,19
+```
+
+```shell
+[root@tianyun ~]# ps aux |grep sshd
+root      5571  0.0  0.0  64064  1164 ?        		Ss   09:35   0:00 /usr/sbin/sshd
+
+[root@tianyun ~]# kill -STOP 5571
+[root@tianyun ~]# ps aux |grep sshd
+root      5571  0.0  0.0  64064  1164 ?        		Ts   09:35   0:00 /usr/sbin/sshd
+
+[root@tianyun ~]# kill -cont 5571
+[root@tianyun ~]# ps aux |grep sshd
+root      5571  0.0  0.0  64064  1164 ?        		Ss   09:35   0:00 /usr/sbin/sshd
+```
+
+
+
+```shell
+[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ ps aux |grep crond
+root      22319  0.0  0.1 124140  1568 ?         Ss   14:54   0:00 /usr/sbin/crond -n
+yang     22427  0.0  0.0 112648   964 pts/2    R+   15:07   0:00 grep --color=auto crond
+[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ 
+[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ sudo kill -19 22319
+[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ ps aux |grep crond
+root     22319  0.0  0.1 124140  1568 ?        Ts   14:54   0:00 /usr/sbin/crond -n
+yang     22431  0.0  0.0 112648   964 pts/2    R+   15:07   0:00 grep --color=auto crond
+[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ 
+[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ sudo kill -cont 22319
+[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ ps aux |grep crond
+root     22319  0.0  0.1 124140  1568 ?        Ss   14:54   0:00 /usr/sbin/crond -n
+yang     22436  0.0  0.0 112648   960 pts/2    R+   15:08   0:00 grep --color=auto crond
+```
+
+作业4：踢出一个从远程登录到本机的用户 
+
+```shell
+[root@tianyun ~]# pkill --help 
+pkill: invalid option -- '-' Usage: pkill [-SIGNAL][-fvx] [-n|-o][-P PPIDLIST] [-g PGRPLIST][-s SIDLIST] 	[-u EUIDLIST] [-U UIDLIST][-G GIDLIST] [-t TERMLIST][PATTERN]
+
+ [root@tianyun ~]# pkill -u alice 
+
+[root@tianyun ~]# w  
+15:46:44 up  2:19,  4 users,  load average: 0.17, 0.12, 0.08 
+
+USER     TTY      FROM              LOGIN@   IDLE   JCPU   PCPU WHAT 
+
+root     tty1     :0               21:32     ?     4:22   4:22  /usr/bin/Xorg :
+
+ root     pts/0    :0.0             15:46    0.00s  0.00s  0.00s w
+
+ root     pts/3    172.16.8.100     15:46    2.00s  0.01s  0.00s sleep 50000
+
+[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ w  
+
+15:17:25 up  5:42,  3 users,  load average: 0.00, 0.01, 0.05 
+
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT yang     pts/0    123.120.22.32    15:00   21.00s  0.00s  0.00s -bash yang     pts/1    123.120.22.32    15:00    5.00s  0.00s  0.00s w 
+
+yang     pts/2    123.120.22.32    12:04   13.00s  0.12s  0.02s vim file1 [yang@iZm5eiwihahzq6ds23gbf6Z ~]$ pkill -t pts/2                //终止pts/2上所有进程 [yang@iZm5eiwihahzq6ds23gbf6Z ~]$ pkill -9 -t pts/2            //终止pts/2上所有进程  并结束该pts/2
+
+[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ w
+
+  15:20:59 up  5:45,  3 users,  load average: 0.00, 0.01, 0.05 USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+
+ yang     pts/0    123.120.22.32    15:00    3:55   0.00s  0.00s -bash yang     pts/1    123.120.22.32    15:00    3.00s  0.01s  0.00s w 
+
+yang     pts/2    123.120.22.32    15:20    3.00s  0.00s  0.00s -bash [yang@iZm5eiwihahzq6ds23gbf6Z ~]$ sudo pkill -u yang 
+```
+
+【查  杀】
+
+1、查找关于 sleep 命令的进程pid
+
+```
+ps aux | grep sleep
+```
+
+2、正常退出sleep的进程
+
+```
+kill 进程PID
+```
+
+3、先生成一个ping www.baidu.com 的进程，然后查看该进程的PID，进行强制退出
+
+```
+先打开一个终端：
+# ping www.baidu.com
+
+在重新打开一个终端去查看
+# ps aux | grep pin[g]
+# kill -9 进程PID
+```
+
+
+
+### 四.进程优先级 nice  【扩展】
+
+Linux 进程调度及多任务
+
+ 相对优先级nice
+
+ 查看进程的nice级别
+
+ 启动具有不同nice级别的进程
+
+ 更改现有进程的nice级别
+
+Linux 进程调度及多任务 每个CPU（或CPU核心）在一个时间点上只能处理一个进程，通过时间片技术，Linux实际能够运行的进程（和线程数）可以超 出实际可用的CPU及核心数量。Linux内核**进程调度程序**将多个进程在CPU核心上快速切换，从而给用户多个进程在同时运行的假象
+
+##### 4.1.相对优先级 nice
+
+ 由于不是每个进程都与其他进程同样重要，可告知**进程调度程序**为不同的进程使用不同的**调度策略**。常规系统上运行的大多 数进程所使用的调度策略为 **SCHED_OTHER** (也称为**SCHED_NORMAL**)，但还有其它一些调度策略用于不同的目的。  
+
+**SCHED_OTHER** 调度策略运行的进程的**相对****优先级**称为进程的 nice 值，可以有40种不同级别的nice值
+
+![](image\8.png)
+
+
+
+优先级 PR
+
+PR=nice+20
+
+nice 值越高：   表示优先级越低，例如+19，该进程容易将CPU 使用量让给其他进程。
+
+ nice 值越低：   表示优先级越高，例如-20，该进程更不倾向于让出CPU。
+
+查看进程的nice级别
+
+使用top查看nice级别 
+
+NI: 实际nice级别
+
+ PR: 将nice级别显示为映射到更大优先级队列，-20映射到0，+19映射到39
+
+3.使用ps查看nice级别
+
+ [root@tianyun ~]# ps axo pid,command,nice  --sort=-nice
+
+ [root@tianyun ~]# ps axo pid,command,nice,cls  --sort=-nice **TS** 表示该进程使用的调度策略为**SCHED_OTHER**
+
+启动具有不同nice级别的进程
+
+启动进程时，通常会继承父进程的 nice级别，默认为0。
+
+```shell
+[root@tianyun ~]# nice -n -5 sleep 6000 & 
+[root@tianyun ~]# ps axo command,pid,nice |grep sleep
+
+[root@tianyun ~]# nice -n -20 /usr/sbin/httpd
+[root@tianyun ~]# ps axo pid,command,nice,cls |grep httpd
+```
+
+11116 /usr/sbin/httpd             -20  TS
+11119 /usr/sbin/httpd             -20  TS
+11120 /usr/sbin/httpd             -20  TS
+11121 /usr/sbin/httpd             -20  TS
+11122 /usr/sbin/httpd             -20  TS
+11123 /usr/sbin/httpd             -20  TS
+11124 /usr/sbin/httpd             -20  TS
+11125 /usr/sbin/httpd             -20  TS
+11126 /usr/sbin/httpd             -20  TS
+
+更改现有进程的nice级别
+
+1.使用top更改nice级别
+
+ r	调整进程的优先级（Nice Level） （-20高）  －－－0－－－ （19低） 
+
+2.使用shell更改nice级别
+
+ 
+
+```shell
+[root@tianyun ~]# sleep 7000
+```
+
+ & [3] 10089
+
+```shell
+ [root@tianyun ~]# renice -20 10089 
+ 10089: old priority 0, new priority -20 
+ 
+ [root@tianyun ~]# htop
+  F3 查找到具体的进程
+  F7  减
+  F8  加
+```
+
+### 五. **作业控制 jobs** [扩展]
+
+作业控制是一个命令行功能，允许一个shell 实例来运行和管理多个命令。
+如果没有作业控制，父进程fork()一个子进程后，将sleeping，直到子进程退出。
+使用作业控制，可以选择性暂停，恢复，以及异步运行命令，让 shell 可以在子进程运行期间返回接受其他命令。
+
+![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](image\9)
+
+
+
+
+foreground, background, and controlling terminal
+
+**foreground:**     前台进程是在终端中运行的命令，该终端为进程的控制终端。前台进程接收键盘产生的输入和信号，并允许从终端读取或写入到终端。
+**background:**    后台进程没有控制终端，它不需要终端的交互。
+
+```
+示例1:
+ctrl + c	//结束前台的进程
+ctrl + z	//把前台的进程放到后台，但是会停止进程
+[root@tianyun ~]# sleep 3000 &		                //运行程序（时），让其在后台执行
+[root@tianyun ~]# sleep 4000			            //ctrl+ Z,将前台的程序挂起（暂停）到后台
+[2]+  Stopped             sleep 4000
+
+[root@tianyun ~]# ps aux |grep sleep
+root      8895  0.0  0.0 100900   556 pts/0    S    12:13   0:00 sleep 3000
+root      8896  0.0  0.0 100900   556 pts/0    T    12:13   0:00 sleep 4000
+
+[root@tianyun ~]# jobs 						            //查看后台作业
+[1]-  Running                sleep 3000 &
+[2]+ Stopped                sleep 4000
+
+[root@tianyun ~]# bg %2					            //让作业2在后台继续运行
+[root@tianyun ~]# fg %1					            //把后台正在运行的作业1调到前台运行
+
+[root@tianyun ~]# kill %1					            //kill 1，终止作业为1的进程
+```
+
+**nohup** 英文全称 no hang up（不挂起），用于在系统后台不挂断地运行命令，退出终端不会影响程序的运行。
+
+**nohup** 命令，在默认情况下（非重定向时），会输出一个名叫 nohup.out 的文件到当前目录下，如果当前目录的 nohup.out 文件不可写，输出重定向到 **$HOME/nohup.out** 文件中。
+
+```
+实例
+以下命令在后台执行 root 目录下的 runoob.sh 脚本：
+
+# nohup /root/runoob.sh &
+在终端如果看到以下输出说明运行成功：
+
+appending output to nohup.out
+这时我们打开 root 目录 可以看到生成了 nohup.out 文件。
+
+如果要停止运行，你需要使用以下命令查找到 nohup 运行脚本到 PID，然后使用 kill 命令来删除：
+
+# ps -aux | grep "runoob.sh" 
+参数说明：
+a : 显示所有程序
+u : 以用户为主的格式来显示
+x : 显示所有程序，不区分终端机
+
+找到 PID 后，就可以使用 kill PID 来删除。
+
+# kill -9  进程号PID
+```
+
+随堂作业：
+
+1、生成一个 ping www.baidu.com 的进程，将其放到后台运行，该怎么操作
+
+```
+方法1：ping www.baidu.com &
+
+方法2： ping www.baidu.com
+       ctrl + z
+       jobs
+       bg %x
+```
+
+2、删除该进程，最少写出两种方法
+
+```
+方法1：关闭终端
+方法2：重新开一个终端
+      ps aux | grep ping 	//找出关于后台运行的ping 的 pid
+      kill -9  pid
+
+方法3： 重新开一个终端
+       killall ping
+```
+
+3、生成一个sleep 3600的进程，先将其放到后台停止运行，在将其设置后台运行，
+
+```
+sleep 3600
+按 ctrl + z
+jobs	//任务编号
+bg %任务编号
+```
+
+4、现有一个命令  java -jar java-demo.war , 现要求任何情况都让其不中断运行，该怎么做？
+
+```
+nohup java -jar java-demo.war &
+```
