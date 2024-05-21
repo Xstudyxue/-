@@ -1,707 +1,1608 @@
+**今日鸡汤：成功的路上并不拥挤，因为坚持的人并不多🌈🌈🌈**
+# Linux进程管理
+# 一、Linux进程和线程相关知识
+## 1.1、进程介绍
+- **在linux中，每个【运行着的程序】都称为一个进程。** 
+- 每一个进程都分配一个ID号（**叫做pid，进程号**）。  
+- 系统中每一个进程都以前台或者后台存在。**一般系统中的服务是以后台的方式存在直到关机才结束，这种进程就叫系统进程。** 
+* 那么，程序又是什么呢？
+  * 可以理解为，程序是一段代码有逻辑的一个脚本，**但是是静态的**，而进程是动态的。
+  * 例如：就是一些静态的二进制文件，比如/bin/date, /usr/sbin/httpd，/usr/sbin/sshd,  **/usr/sbin/nginx**，这些都是程序，**当他们运行起来之后就变成进程了**
+* 只有当程序运行起来之后，加载到内存中，**这个时候程序就是进程**，系统会为这个程序分配一个进程号去管理。
+* 如下图所示：
+
+![image-20231222093047387](assets/image-20231222093047387.png)
+
+* 可以将进程堪称是程序的一个副本（copy程序到内存，相当于副本）
+* **进程是有生命周期的（准备期、运行期、终止期）** 
+
+## 1.2、进程的组成部分和生命周期
+
+**1、组成部分**
+
+- 已分配内存的地址空间；
+- 进程 ID  PID；
+- 程序的代码；
+- 进程的状态；
 
 
-### 一 .进程管理
+* 单个cpu情况下如果多个进程要到cpu上运行。那进程在cpu上运行的时间就叫做时间片
 
-**关于进程 process**
+* 进程管理包括**进程调度、中断处理、信号处理、进程优先级、进程切换、进程状态、进程内存**等等。
 
-What is a process?  
-
-什么是进程
-
- Process life cycle  
-
- 进程的生命周期 
-
-Process states  
-
-进程状态 
-
-#### 1.1.  什么是进程？
-
- 进程是已启动的可执行程序的运行实例，进程有以下组成部分：
-
- • 已分配内存的地址空间； 
-
-• 安全属性，包括所有权凭据和特权；
-
- • 程序代码的一个或多个执行线程；
-
- • 进程状态。
-
- **程序**： 二进制文件，静态 /bin/date, /usr/sbin/httpd，/usr/sbin/sshd, /usr/local/nginx/sbin/nginx
-
- **进程**： 是程序运行的过程， 动态，有生命周期及运行状态。
+**2、进程的生命周期**
 
 
+- **描述如下：**
+  - 父进程复制自己的地址空间（fork）创建一个新的（子）进程结构。
+  - 每个新进程分配一个唯一的**进程 ID （PID）**，满足跟踪安全性之需。
+  - **PID 和 父进程 ID （PPID）是子进程环境的元素，任何进程都可以创建子进程。**
+  - 所有进程都是第一个系统进程的后代。
+    - centos5 或 6PID 为 1 的进程是：init
+    - **centos7 PID 为 1 的进程是：systemd**
 
-进程的生命周期
-
-![](image\1.png)
-
-
-
-父进程复制自己的地址空间（fork）创建一个新的（子）进程结构。每个新进程分配一个唯一的进程 ID （PID），满足跟踪安全性 
-
-PID 和 父进程 ID （PPID）是子进程环境的元素，任何进程都可以创建子进程，所有进程都是第一个系统进程的后代：
-
- Centos5/6:  init 
-
-Centos7:     systemd  
-
-子进程继承父进程的安全性身份、过去和当前的文件描述符、端口和资源特权、环境变量，以及程序代码。**随后**，子进程可能exec 自己的程序代码。
-
-通常，父进程在子进程运行期间处于睡眠（sleeping）状态。当子进程完成时发出（exit）信号请求，在退出时，
-
- 子进程已经关闭或丢弃了其资源环境，剩余的部分称之为僵停（僵尸Zombie）。父进程在子进程退出时收到信号而被唤醒，清理剩 余的结构，然后继续执行其自己的程序代码。
-
-进程状态 
-
-在多任务处理操作系统中，每个CPU（或核心）在一个时间点上只能处理一个进程。在进程运行时，它对CPU 时间和资源分配的要求 会不断变化，从而为进程分配一个状态，它随着环境要求而改变。
-
-
-
-![](image\2.png)
-
-
-
-![](image\3.png)
-
-
-
-
-
-![=====================================================](image\4.png)
-
-#### 1.2.查看进程ps,top
-
-查看进程 process
-
-了解如进程的： 
-
-• PID,PPID 
-
-• 当前的进程状态 
-
-• 内存的分配情况 
-
-• CPU和已花费的实际时间
-
- • 用户UID，他决定进程的特权
-
-#### 1.3.静态查看进程
-
-##### a 参数含义
-
- ps
-
-```shell
-[root@tianyun ~]# ps aux |less
+```sh
+[root@localhost ~]# ps -ef|grep systemd
+root          1      0  0 12月21 ?      00:00:01 /usr/lib/systemd/systemd --switched-root --system --deserialize 22
 ```
 
- USER       PID %CPU %MEM    VSZ   RSS TTY     STAT START   TIME COMMAND
+## 1.3、僵尸进程
 
- root         1     0.0     0.0          2164   648 ?          Ss   08:47     0:00 init [5] 
+**僵尸进程的特点：**
 
-USER: 	运行进程的用户
+- 不执行代码，占用内存地址空间
+- 使用 kill 命令是不能杀死僵尸进程的，因为它已经被认定为死亡了。
 
- PID： 	进程ID
+**僵尸进程的产生**
 
- %CPU:  CPU占用率 
+- 当一个进程接收到终止信号时，它结束之前需要一段时间来结束所有任务。 
 
-%MEM: 内存占用率
+- 在进程执行所有代码之后，它将相关终止报告发给父进程。
 
- VSZ：	占用虚拟内存 
+- 父进程正常情况下会移除所有子进程的数据结构。
 
-RSS:  	占用实际内存 驻留内存
+- **如果父进程没能接收子进程退出信号，那么子进程变为僵尸进程。**
+- **所以通常在很短的某个时刻内它是一个僵尸进程。**
 
- TTY： 	进程运行的终端 
+**如何杀掉僵尸进程？**
 
-STAT：	进程状态	 man ps (/STATE)			     
+- 可以尝试杀死僵尸进程的父进程，僵尸进程会随之消失。
 
-  		R 	运行      
+- **如果一个进程为僵尸状态，父进程是 init 或 systemd 那么需要重启系统来解决问题。**
 
-​	  	S 	可中断睡眠 Sleep    [静默]
+## 1.4、线程介绍
 
- 	 	D	不可中断睡眠 (usually IO)       
- 	
- 		T 	停止的进程       
- 	
- 		Z 	僵尸进程      
- 	
- 		 X    死掉的进程             【了解 】 	
- 	
- 		 Ss  	s进程的领导者，父进程 	  
+- **进程：进程是资源调用的最小单位**。所有事件由cpu处理，当一个事件正在被cpu处理时，其他事件就无法占用，处于等待的事件只有等前面的事件处理完才可以使用cpu。
+- 双核、三核cpu：为充分使用cpu，**一个事件细划分成若干个小的线程**，加速cpu同时处理。
+- **线程是进程的最小单位(多核会涉及到线程)**
+- 线程是进程中产生的一个执行单元，在同一个进程中可能会有其他线程并行运行。
+- 线程之间可以共享资源，比如内存、地址空间、打开文件等，线程共享的都是进程的资源。
+- **当进程是多任务，cpu是多核心时，多任务应该同时被每个核心处理，每个核心处理的任务叫线程资源**。 线程资源是共享的
+  - 进程是多任务的，CPU是多核心的，每一个cpu就会处理多个线程，用来做进程处理的加速作用
 
-​    		S< <优先级较高的进程 	
+## 1.5、中断处理（面试题）
 
-   	 	SN  N优先级较低的进程 	 
-   	
-   	  	R+	+表示是前台的进程组 	
+- 中断是优先级最高的任务之一。
 
-​	 	 Sl	以线程的方式运行	
+- 通常由 I/O 产生，比如网络接口、键盘、磁盘控制器等。
 
- START:	进程的启动时间
+- **当一个中断信号到达内核的时候，内核必须从当前执行的进程切换到一个新的进程，以便处理这个中断。**
 
- TIME：	进程占用CPU的总时间
+- 这意味着中断会导致上下文切换。也就是说大量中断会导致性能下降。
 
- COMMAND： 进程文件，进程名 
+- 注意：在 Linux 当中有两种类型的中断。硬中断和软中断。
+  - **硬中断是由硬件产生的，需要快速响应（比如：磁盘 IO 中断、键盘中断、鼠标中断等）**
+  - **软中断是由软件发起的一种中断事件。它通过在内核中调用一个特定的中断处理函数来触发。软中断可以被用来执行一些需要在内核空间中完成的任务，例如定时器处理、网络数据包处理等。**
 
-```shell
-[root@tianyun ~]# ps aux --sort %cpu 		//从低到高
+## 1.6、进程属性
 
-[root@tianyun ~]# ps aux --sort -%cpu 		//从高到低，倒序
+- 进程 ID（PID)：是唯一的数值
+- **父进程的 ID（PPID)**
+- 启动进程的用户 ID（UID）表示是哪个用户创建的这个进程和所属的组（GID）
+- **进程状态：状态分为运行 R、休眠 S、僵尸 Z、暂停 T、不可唤醒的休眠 D**  
 
-[root@tianyun ~]# ps aux --sort rss |less	//从低到搞实际占用内存排序，把输出交给less
-[root@tianyun ~]# ps aux --sort -rss |less
-
-[root@tianyun ~]# yum -y install httpd
-
- [root@tianyun ~]# systemctl start httpd 
-
-[root@tianyun ~]# ps auxf |grep [h]ttpd
+```sh
+R(TASK_RUNNING)           ##可执行态：正在被cpu处理，或已经加载好等待被cpu处理
+S(TASK_INTRRUPTABLE)       ##可唤醒休眠：使用cpu超时，进入休眠，再次使用时需要被激活
+D(TASK_UNINTRRUPTABLE)     ##不可唤醒休眠：使用cpu超时，仍有资源没有被加载好，不可以使用cpu
+T(TASK_STOP)           ##暂停状态：关闭无法使用程序，但可以人为唤醒
+Z(EXIT_ZOMBIE)     ##僵死态：进程已经结束，却占用资源不放，需要手动结束程序。“bug”
 ```
 
-root        8310  0.0  0.1  10092  2912 ?        Ss   14:19   0:00 /usr/sbin/httpd 
+- 进程资源占用：比如占用资源大小（内存、CPU 占用量）
+- 注意：有+的表示有任务时，CPU会优先处理，表示优先级高
 
-apache    8311  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd apache    8312  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd 
+# 二、静态查看进程的工具
 
-apache    8313  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd
+## 2.1、ps工具查看进程（掌握）
 
- apache    8314  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd apache    8315  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd
+### 1、ps命令的常用选项
 
- apache    8316  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd 
+- **ps（process缩写：进程）命令是用来查看目前系统中，有哪些正在执行的进程，以及它们执行的状况。可以不加任何参数**
+- **ps命令常用选项**
+  - 参数-a：显示当前终端机下的所有程序 
+  - 参数-u：已用户为主的格式来显示程序状况
+  - 参数-x：不以终端机来区分
+  - 参数-o：指定显示信息的字段
+  - 参数–sort：按指定的字段排序
+  - **参数ef：查看进程的父子关系**
 
-apache    8318  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd 
+### 2、ps aux中每一列的意义（面试题）
 
-apache    8319  0.0  0.0  10092  2060 ?        S    14:19   0:00  \_ /usr/sbin/httpd
+- **ps（process缩写：进程）命令是用来查看目前系统中，有哪些正在执行的进程，以及它们执行的状况。可以不加任何参数**
 
-[root@tianyun ~]# ps -ef 
 
-UID        PID  PPID  C STIME TTY          TIME CMD 
+* **使用ps aux命令【静态】查看进程状态**
 
-root         1     0  0 08:47 ?        00:00:00 init [5] 
+![image-20231222170110815](assets/image-20231222170110815.png)
 
-##### b.自定义显示字段
+- **上面的参数输出每列含义：**
+  - USER：启动这些进程的用户
+  - PID：进程的 ID
+  - %CPU 进程占用的 CPU 百分比；
+  - %MEM 占用内存的百分比；
+  - **VSZ：进程占用的虚拟内存大小（单位：KB）,可以理解为进程能使用的最大内存**
+  - **RSS：进程占用的物理内存大小（单位：KB），可以理解为进程当前使用的最大内存**
+  - TTY：**表明进程在哪个终端设备上运行。如果显示 ?  表示与终端无关，这种进程一般是内核态进程。另外， tty1-tty6 是本机上面的登入者程序，若为 pts/0 等，则表示运行在虚拟终端上的进程**。
+  - STAT：该程序目前的状态
+  - TIME ：**该进程实际使用 CPU 运行的时间。**
+  - COMMAND：该程序的实际指令（例如nginx的启动命令就是/usr/sbin/nginx）
 
-```shell
-[root@tianyun ~]# ps axo user,pid,ppid,%mem,command 
+* **注： 最后一列[xxxx] 使用方括号括起来的进程是【内核态】的进程，没有括起来的是【用户态】进程**
 
-  [root@tianyun ~]# ps axo user,pid,ppid,%mem,command |grep httpd	
+### 3、进程的5种基本状态和状态中的其他参数
+
+**5种基本状态**
+
+```sh
+R(TASK_RUNNING)           ##可执行态：正在被cpu处理，或已经加载好等待被cpu处理
+S(TASK_INTRRUPTABLE)       ##可唤醒休眠：使用cpu超时，进入休眠，再次使用时需要被激活
+D(TASK_UNINTRRUPTABLE)     ##不可唤醒休眠：使用cpu超时，仍有资源没有被加载好，不可以使用cpu
+T(TASK_STOP)           ##暂停状态：关闭无法使用程序，但可以人为唤醒
+Z(EXIT_ZOMBIE)     ##僵死态：进程已经结束，却占用资源不放，需要手动结束程序。“bug”
 ```
 
- root      8310     1  0.1 /usr/sbin/httpd apache    8311  8310  0.0 /usr/sbin/httpd 
+**状态中的其他参数**
 
-apache    8312  8310  0.0 /usr/sbin/httpd apache    8313  8310  0.0 /usr/sbin/httpd 
+```ini
+<：表示进程运行在高优先级上
+#例子：
+[root@localhost ~]# ps aux|grep 'S<'
+root          4  0.0  0.0      0     0 ?        S<   12月21   0:00 [kworker/0:0H]
 
-apache    8314  8310  0.0 /usr/sbin/httpd apache    8315  8310  0.0 /usr/sbin/httpd 
 
-apache    8316  8310  0.0 /usr/sbin/httpd apache    8318  8310  0.0 /usr/sbin/httpd 
+N：表示进程运行在低优先级上
+#例子：
+[root@localhost ~]# ps aux|grep SN
+root         36  0.0  0.0      0     0 ?        SN   12月21   0:00 [ksmd]
 
-apache    8319  8310  0.0 /usr/sbin/httpd root      9236  6798  0.0 grep httpd 
+L：表示进程有页面锁定在内存中
 
-[root@tianyun ~]# ps axo user,pid,ppid,%mem,%cpu,command --sort -%cpu |less 
+s：表示进程是控制进程
+#例子：
+[root@localhost ~]# ps aux|grep Ss
+root        501  0.0  0.1  39440  4972 ?        Ss   12月21   0:00 /usr/lib/systemd/systemd-journald
 
-##### c.查看指定进程的PID
 
-```shell
-[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ cat /run/sshd.pid  	//查看服务的pid
-830
+l：表示进程是多线程的
+#例子：
+[root@localhost ~]# ps aux|grep Sl
+root      12169  0.0  0.1 390856  5504 ?        Sl   09:06   0:00 gdm-session-worker [pam/gdm-password]
 
-[root@tianyun ~]# ps aux |grep sshd
++：表示当前进程运行在前台
+#例子：
+[root@localhost ~]# ps aux|grep nginx
+root       1137  0.0  0.0  39308   940 ?        Ss   12月21   0:00 nginx：master 
+root      20434  0.0  0.0 112828   976 pts/0    R+   17:20   0:00 grep --color=auto nginx
 ```
 
- root     10180  0.0  0.0   7224  1024 ?        Ss   16:00   0:00 /usr/sbin/sshd
+### 4、ps -ef查看进程后每一列的意义
 
-```shell
- [root@tianyun ~]# pgrep -l sshd            // 查看服务  数据库 apache
+```bash
+[root@localhost ~]# ps -ef
+UID         PID   PPID  C STIME TTY          TIME CMD
+root          2      0  0 12月21 ?      00:00:00 [kthreadd]
+#参数解释
+-e 显示所有进程， -f全格式；【主要用于显示所有进程的全面信息】
+#跟ps aux的每一列内容有点不太一样，最重要的内容就是ppid父进程id，ps -ef能看到父进程的id号，ps aux是没办法看到的，当我们没法杀掉一个僵尸进程时，可以通过杀它的父进程来将该僵尸进程杀掉
+```
 
- 10180 sshd
+![image-20231222204629710](assets/image-20231222204629710.png)
 
- [root@tianyun ~]# pgrep sshd 
+**上面的参数输出每列含义：**
 
-10180 
+- UID：启动这些进程的用户
 
-[root@tianyun ~]# pidof sshd 
+- PID：进程的 ID
 
-10180
+- **PPID：父进程的进程号**
+- C：进程生命周期中的 CPU 利用率
+- STIME：进程启动时的系统时间 systemtime
+
+- TTY：**表明进程在哪个终端设备上运行。如果显示 ? 表示与终端无关，这种进程一般是内核态进程。另外， tty1-tty6 是本机上面的登入者程序，若为 pts/0 等，则表示运行在虚拟终端上的进程**。
+
+- TIME：运行进程一共累计占用的 CPU 时间
+
+- CMD：启动的程序名称
+
+### 5、其他查看进程的参数（了解）
+
+- **ps命令的三个执行风格（unix bsd GUN）**
+- **说明：unix带有‘-’的    bsd不带‘-’**
+
+#### 5.1、ps a
+
+**展示与终端相关的进程，带字符终端的进程（当用户登陆系统后产生的进程都是带终端）**
+
+```sh
+[root@localhost ~]# ps a
+   PID TTY      STAT   TIME COMMAND
+  1679 tty1     Ssl+   0:03 /usr/bin/X :0 -background none -noreset -audit 4 -verbose -auth /run/gdm/auth-for-gdm-tfqILb/dat
+ 12830 pts/2    Ss+    0:00 bash
+ 22057 pts/3    Ss+    0:00 -bash
+ 22223 pts/4    Ss+    0:00 -bash
+ 22273 pts/5    Ss+    0:00 -bash
+ 22755 pts/0    Ss     0:00 -bash
+ 22796 pts/1    Ss+    0:00 -bash
+ 22953 pts/0    R+     0:00 ps a
+```
+
+#### 5.2、ps x
+
+**展示与终端无关的进程，不带字符终端的进程（除了某些有依赖关系的，其余都是?）**
+
+```sh
+[root@localhost ~]# ps x
+   PID TTY      STAT   TIME COMMAND
+     1 ?        Ss     0:02 /usr/lib/systemd/systemd --switched-root --system --deserialize 22
+……………………
+ 12830 pts/2    Ss+    0:00 bash
+ 20996 ?        S      0:06 [kworker/0:2]
+ 21755 ?        S      0:00 [kworker/u256:1]
+ 22055 ?        Ss     0:00 sshd: root@pts/3,pts/4,pts/5
+ 22057 pts/3    Ss+    0:00 -bash
+ 22223 pts/4    Ss+    0:00 -bash
+ 22273 pts/5    Ss+    0:00 -bash
+ 22642 ?        S      0:00 [kworker/u256:2]
+ 22710 ?        S      0:00 [kworker/1:0]
+ 22753 ?        Rs     0:00 sshd: root@pts/0,pts/1
+ 22755 pts/0    Ss     0:00 -bash
+ 22796 pts/1    Ss+    0:00 -bash
+```
+
+#### 5.3、ps u
+
+**ps u是用户信息归类的查看方式**
+
+```sh
+[root@localhost ~]# ps u
+USER        PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root       1679  0.0  1.5 353004 60788 tty1     Ssl+ 12月22   0:03 /usr/bin/X :0 -background none -noreset -audit 4
+root      12830  0.0  0.0 116976  3460 pts/2    Ss+  12月22   0:00 bash
+root      22057  0.0  0.0 116892  3416 pts/3    Ss+  09:05   0:00 -bash
+root      22223  0.0  0.0 116832  3404 pts/4    Ss+  09:19   0:00 -bash
+root      22273  0.0  0.0 116896  3404 pts/5    Ss+  09:20   0:00 -bash
+root      22755  0.0  0.0 116832  3408 pts/0    Ss   10:06   0:00 -bash
+root      22796  0.0  0.0 116832  3288 pts/1    Ss+  10:06   0:00 -bash
+root      23018  0.0  0.0 155448  1880 pts/0    R+   10:26   0:00 ps u
+#会展示USER用户
+```
+
+#### 5.4、ps f
+
+**展示进程层级关系**
+
+```sh
+[root@localhost ~]# ps f
+   PID TTY      STAT   TIME COMMAND
+ 22796 pts/1    Ss+    0:00 -bash
+ 22755 pts/0    Ss     0:00 -bash
+ 23083 pts/0    R+     0:00  \_ ps f		#ps f属于bash终端的
+ 22273 pts/5    Ss+    0:00 -bash
+ 22223 pts/4    Ss+    0:00 -bash
+ 22057 pts/3    Ss+    0:00 -bash
+ 12830 pts/2    Ss+    0:00 bash
+  1679 tty1     Ssl+   0:03 /usr/bin/X :0 -background none -noreset -audit 4 -verbose -auth /run/gdm/auth-for-gdm-tf
+```
+
+#### 5.5、ps -o
+
+- **显示指定参数，如pid comm nice pri pcpu ppid stat,user,group**
+- **后续可以用来直接过滤使用最高的pid号**
+
+```sh
+#指定查看pid号
+[root@localhost ~]# ps o pid
+   PID
+  1679
+ 12830
+ 22057
+ 22223
+ 22273
+ 22755
+ 22796
+ 23109
+
+#还可以结合着使用
+[root@localhost ~]# ps ax -o  pid,tty,stat
+   PID TT       STAT
+     1 ?        Ss
+     2 ?        S
+  1446 ?        S
+  1679 tty1     Ssl+
+ 12830 pts/2    Ss+
+ 20996 ?        S
+ 21755 ?        S
+ 22055 ?        Ss
+ 22057 pts/3    Ss+
+ 22223 pts/4    Ss+
+ 22273 pts/5    Ss+
+ 22642 ?        S
+ 22727 ?        S
+ 22753 ?        Ss
+ 22755 pts/0    Ss
+ 22796 pts/1    Ss+
+ 23110 pts/0    R+
+```
+
+#### 5.6、ps -e
+
+**显示所有进程**
+
+```sh
+[root@localhost ~]# ps -e
+   PID TTY          TIME CMD
+     1 ?        00:00:02 systemd
+     2 ?        00:00:00 kthreadd
+     4 ?        00:00:00 kworker/0:0H
+     6 ?        00:00:04 ksoftirqd/0
+………………
+  1135 ?        00:00:01 kworker/1:1H
+  1137 ?        00:00:00 nginx
+  1141 ?        00:00:00 nginx
+  1144 ?        00:00:00 nginx
+```
+
+#### 5.7、ps -f
+
+**显示进程信息的完整格式**
+
+```sh
+[root@localhost ~]# ps -f
+UID         PID   PPID  C STIME TTY          TIME CMD
+root      22755  22753  0 10:06 pts/0    00:00:00 -bash
+root      23190  22755  0 10:43 pts/0    00:00:00 ps -f
+```
+
+#### 5.8、ps -H（了解）
+
+**显示进程的层级结构**
+
+```sh
+[root@localhost ~]# ps -H
+   PID TTY          TIME CMD
+ 22755 pts/0    00:00:00 bash
+ 23191 pts/0    00:00:00   ps
+```
+
+#### 5.9、ps --sort以某个资源使用率给进程排序（掌握）
+
+- **ps --sort**
+- **例如：ps -aux --sort  %-cpu**
+- **%CPU前面的  -   是代表降序**，不加则默认升序，进程排序
+
+```sh
+#例子：筛选出进程使用Cpu的用量中排名 前五 的pid值
+[root@localhost ~]# ps -aux --sort -%cpu |head -n 6
+USER        PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root        720  0.1  0.1 221832  5304 ?        Ssl  12月22   2:03 /usr/bin/vmtoolsd
+root      12615  0.1  0.6 608676 25492 ?        Sl   12月22   0:47 /usr/bin/vmtoolsd -n vmusr
+root          1  0.0  0.1 191276  4284 ?        Ss   12月22   0:02 /usr/lib/systemd/systemd --switched-root --system --deserialize 22
+root          2  0.0  0.0      0     0 ?        S    12月22   0:00 [kthreadd]
+root          4  0.0  0.0      0     0 ?        S<   12月22   0:00 [kworker/0:0H]
+```
+
+**另外：**
+
+```sh
+ps ax显示信息如下：
+#PID     进程id
+#TTY    进程用到的终端
+#STAT  迸程状态
+#TIME   进程占用Cpu时长
+#COMMAND 进程名称
+
+ps aux显示信息如下：
+#USER   进程所有人
+#PID       迸程id
+#%CPU   进程使用Cpu的用量
+#%MEM   进程所用到的内存用量
+#VSZ       进程使用的虛拟内存大小
+#RSS       进程常驻内存中的数据大小
+#TTY       进程用到的终端
+#STAT     进程状态
+#START  进程运行时长
+#TIME    进程占用Cpu时长
+#COMMAND   进程名称
+```
+
+### 6、ps相关总结
+
+![image-20231223110307234](assets/image-20231223110307234.png)
+
+### 7、ps实战操作
+
+#### 7.1、ps查看进程pid
+
+```sh
+#使用aux参数查看ssh进程的pid号
+[root@localhost ~]# ps aux|grep sshd
+root       1077  0.0  0.1 112900  4352 ?        Ss   12月22   0:00 /usr/sbin/sshd -D
+root      27565  0.1  0.1 163884  6712 ?        Ss   20:23   0:01 sshd: root@pts/0,pts/1
+#grep过滤
+
+#使用-ef参数查看进程id
+[root@localhost ~]# ps -ef|grep sshd
+root       1077      1  0 12月22 ?      00:00:00 /usr/sbin/sshd -D
+root      27565   1077  0 20:23 ?        00:00:01 sshd: root@pts/0,pts/1
+```
+
+#### 7.2、 T   进程暂停状态
+
+* **准备2个终端，一个终端使用vim编辑文本，另外一个使用ps命令查看进程状态**
+* **在第一个终端中执行vim a.txt命令**
+
+* **在另一个终端执行：**
+
+```sh
+[root@localhost ~]# ps aux|grep txt|grep -v grep
+root      23958  0.0  0.1 149832  5540 pts/1    S+   11:53   0:00 vim a.txt
+#S 表示睡眠状态， + 表示前台
+```
+
+* **在 vim a.txt 这个终端上执行：**
+
+```sh
+# 按下： ctrl+z
+[1]+ 已停止 vim a.txt
+```
+
+![image-20231223120718887](assets/image-20231223120718887.png)
+
+* **继续在另一个终端执行：**
+
+```sh
+[root@localhost ~]# ps aux|grep txt|grep -v grep
+root      23958  0.0  0.1 149832  5540 pts/1    T    11:53   0:00 vim a.txt
+#T 表示停止状态
+```
+
+- 注：
+  - **ctrl-c 是发送 SIGINT 信号，终止一个进程**
+  - **ctrl-z 是发送 SIGSTOP 信号，挂起一个进程。将作业放置到后台(暂停)**
+  - **ctrl-d 不是发送信号，而是表示一个特殊的二进制值，表示 EOF。代表输入完成或者注销**
+- **还是回到第一个终端中操作：**
+
+```sh
+[root@localhost ~]# jobs		#查看后台任务
+[1]+  已停止               vim a.txt
+[root@localhost ~]# fg  %1		#将后台的第一个任务放在前台执行
+```
+
+* **另外一个终端操作：**
+
+```sh
+[root@localhost ~]# ps aux|grep txt|grep -v grep
+root      23958  0.0  0.1 149832  5540 pts/1    S+   11:53   0:00 vim a.txt
+#再次查看进程的状态又变成S+了
+```
+
+#### 7.3、R+ 正在前台运行
+
+* **准备2个终端，一个终端使用tar解压缩工具，另外一个使用ps命令查看进程状态**
+* **在另一个终端执行ps查看进程的命令**
+* **第一个终端执行解压缩命令**
+
+```sh
+#上传或者下载一个jdk的tar包
+[root@localhost ~]# wget http://10.36.137.254/soft/jdk-8u211-linux-x64.tar.gz
+[root@localhost ~]# ll -sh jdk-8u211-linux-x64.tar.gz 
+246M -rw-r--r-- 1 root root 186M 12月 23 20:27 jdk-8u211-linux-x64.tar.gz
+
+#执行解压命令
+[root@localhost ~]# tar -xzvf jdk-8u211-linux-x64.tar.gz  -C /usr/local/
+```
+
+*  **第二个立马终端执行ps命令**
+
+```sh
+[root@localhost ~]# ps aux|grep jdk|grep -v grep
+root      27812 42.0  0.0 125596  1276 pts/0    R+   20:31   0:00 tar -xzvf jdk-8u211-linux-x64.tar.gz -C /usr/local/
+#不断查看状态，状态会是R+
+```
+
+# 三、动态查看进程的工具
+
+## 3.1、图形化查看进程的工具（了解）
+
+- **windows中我们可以使用crtl+alt+delete打开任务管理器，任务管理器中我们能看到具体每一个进程占用的系统资源，在centos7中也有一条这种命令可以用来打开【任务管理器】查看进程使用的资源**
+- **执行【gnome-system-monitor】命令打开centos7的任务管理器**
+- **⚠️⚠️⚠️注意！！！只有桌面版的centos7才能执行该命令，而且要么就是在vmware虚拟机的桌面版中执行该命令，要么就是用mobaxterm工具执行该命令，其他终端都无法自己打开**
+
+![image-20231222143734683](assets/image-20231222143734683.png)
+
+![image-20231222143813855](assets/image-20231222143813855.png)
+
+![image-20231222143842216](assets/image-20231222143842216.png)
+
+## 3.2、top命令
+
+![image-20231228085208165](assets/image-20231228085208165.png)
+
+**top命令用于实时监测系统资源使用状况，包含，进程、cpu，内存等。**
+
+```sh
+[root@localhost ~]# top
+
+top - 20:44:30 up 1 day, 11:55,  4 users,  load average: 0.00, 0.02, 0.05
+Tasks: 223 total,   1 running, 222 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+KiB Mem :  3861300 total,   632784 free,   870572 used,  2357944 buff/cache
+KiB Swap:  4063228 total,  4063228 free,        0 used.  2696880 avail Mem 
+
+   PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND                                        
+    37 root      39  19       0      0      0 S   0.3  0.0   0:00.95 khugepaged                                     
+   417 root      20   0       0      0      0 S   0.3  0.0   1:08.66 xfsaild/dm-0                                   
+   720 root      20   0  221832   5304   4060 S   0.3  0.1   2:35.19 vmtoolsd                                       
+     1 root      20   0  191276   4284   2628 S   0.0  0.1   0:02.25 systemd     
+```
+
+### 1、性能部分介绍（面试题）
+
+![image-20231223204725542](assets/image-20231223204725542.png)
+
+- **第一行：系统相关信息**
+  - 程序名称：top
+  - 系统时间
+  - 系统运行时间：up
+  - 拥有的用户数：users
+  - cpu在三个时间点的占用率：load average，**时间分别是1分钟，5分钟，15分钟（面试题）**
+- **第二行：进程相关数量**
+  - 总进程数：total
+  - 运行数：running
+  - 睡眠数：sleeping
+  - 停止数：stoped
+  - 僵死数：zombie
+- **第三行（cpu使用情况）：**
+  - **用户打开的程序占用的CPU率：us** 
+  - **系统打开的程序占用的CPU率：sy **
+  - 程序优先级：ni
+  - **CPU空闲率：id**
+  - CPU切换程序等待时间：wa 
+  - 计算机硬件：hi
+  - 计算机软件：si
+  - 计算机虚拟机：st
+- **第四行（物理内存使用情况）：**
+  - **总内存数：total**
+  - **内存空闲量：free**
+  - 用户使用的总量：used
+  - 缓存硬盘内容：buff/cache
+- **第五行（虚拟内存使用率）：**
+  - 总内存数：total
+  - 内存空闲量：free
+  - 用户使用的总量：used
+  - 缓存硬盘内容：buff/cache
+
+### 2、进程部分（动态的ps命令）介绍
+
+![image-20231223205533626](assets/image-20231223205533626.png)
+
+* PID：进程id
+* USER：进程所有者的用户名 
+* PR：Priority，进程优先级
+* NI：nice值，也是优先级。负值表示高优先级，正值表示低优先级
+  * **两者的区别：**
+    * **`PR`是动态优先级**，它会根据进程的行为和资源需求进行动态调整。当进程需要更多的CPU时间或其他资源时，其优先级可能会提高。
+    * **而`NI`是静态优先级**，它在进程启动时指定，并且不会随着进程的行为而改变。
+* VIRT：进程使用的虛拟内存总量，**可以理解为能使用内存的总大小**，单位kb。 VIRT=**SWAP+RES**
+* RES：`RES`表示进程的驻留内存（Resident Set）大小。驻留内存是进程当前实际占用的物理内存大小，即进程当前使用的实际物理内存。**`RES`的值通常是进程【实际使用】的物理内存大小**。单位kb。
+* SHR：共享内存大小，单位kb
+* S：进程状态（D=不可中断的睡眠状态，R=运行，S=睡眠，T=跟踪/停止，Z=僵尸进程）
+* %CPU：上次更新到现在的CPU时间占用百分比
+* %MEM：进程使用的物理内存百分比，它是根据**进程的`RES`与总的物理内存大小**之间的比例计算得出的
+* TIME+：进程使用的CPU时间总计，单位1/100秒
+* COMMAND：进程正在执行的具体命令
+
+**面试题1：你能从top中看到什么信息？讲的越多越好（之前毕业班遇到的面试题）**
+
+**面试题2：top中的load average系统平均负载分别代表的是几分钟？这些值多少为正常？超过多少是异常的？？**
+
+- **对于单个处理器系统，理论上，load average的值应该小于1才能保持系统的正常运行。**对于多处理器系统，这个阈值可以相应地调高。**一般来说，如果load average在处理器核心数的范围内，系统的负载被认为是正常的。**
+- 但需要注意的是，这只是一个基本的参考值，具体的阈值还取决于系统的配置和运行的应用程序。某些高负载的应用程序或任务可能导致load average超过处理器核心数的情况，但这不一定表示系统出现了问题。因此，除了load average之外，还应该综合考虑其他系统性能指标，如CPU利用率、内存使用率等，来评估系统的性能和负载情况。
+
+### 3、top常用参数和内部指令
+
+**top命令参数**
+
+- **`-d` 或 `--delay`：指定刷新间隔时间，默认为3秒。**
+- **`-n` 或 `--iterations`：指定刷新次数，即显示多少次后退出。**
+- **`-b` 或 `--batch-mode`：以批处理模式运行，适用于将输出重定向到文件。**
+- **`-p` 或 `--pid`：仅显示指定进程ID的信息**。
+- `-u` 或 `--user`：仅显示指定用户名的进程信息。监控脚本  
+- `-s` 或 `--secure`：以安全模式运行，不显示命令行参数。
+- `-H` 或 `--threads`：显示每个进程的线程信息。
+- `-i` 或 `--idle`：仅显示空闲CPU的进程。
+- `-c` 或 `--command`：根据命令名称过滤进程。
+- `-o` 或 `--sort`：根据指定的列进行排序，例如`-o %CPU`按CPU使用率排序。
+- **后续在写zabbix监控脚本时经常使用top的相关参数，示例，获取nginx的cpu使用率：**
+
+```sh
+#首先获取nginx的pid
+[root@localhost ~]# ps -ef|grep nginx
+root       1137      1  0 12月22 ?      00:00:00 nginx: master process /usr/sbin/nginx
+nginx      1141   1137  0 12月22 ?      00:00:00 nginx: worker process
+nginx      1144   1137  0 12月22 ?      00:00:00 nginx: worker process
+
+#指定nginx的pid，使用grep、awk等工具将cpu使用率过滤出来
+[root@localhost ~]# top -d 2 -b1  -n1 -p PID|grep nginx|awk '{print $9}'
+0.0
+# PID指进程号，系统中需要存在这个进程才可以查看到对应的信息，否则看不到指定的进程信息，只能看到总览。
+```
+
+**top内部指令：**
+
+- 大写P：cpu排序
+- M：内存排序
+- T：累计展示cpu时间排序
+- s：指定刷新频率
+- k：操作进程
+- u：查看指定用户进程
+- z：设置色彩
+- <，>：向前，向后
+- q：退出
+- **数字键 1：显示每个内核的 CPU 使用率**
+
+## 3.3、htop命令
+
+- **`htop`是一个类似于`top`的进程查看工具，提供了更丰富的功能和更友好的用户界面。**
+- `htop`命令的界面更加直观，使用彩色标记和条形图等形式展示进程列表、CPU、内存、交换空间、负载等信息。
+- **`htop`命令支持更多的交互操作，如使用鼠标点击、快捷键切换排序方式、查看和设置进程优先级、终止进程等。**
+- `htop`还提供了一些额外的功能，如在进程列表中搜索、监视指定用户的进程等。
+
+* 系统默认没有安装htop工具，我们需要手动安装htop工具
+
+```sh
+[root@localhost ~]# yum -y install htop
+#安装完以后，直接使用htop命令即可
+[root@localhost ~]# htop
+```
+
+![image-20231223212509378](assets/image-20231223212509378.png)
+
+`htop`命令显示的界面主要由以下四个部分组成：
+
+- **标题栏（Header Bar）：**位于界面的顶部，显示系统的整体状态，包括 CPU 使用率、内存占用、进程数等。
+  - **其中：**
+    - **Tasks: 131** 表示一共有 131 个正在运行的进程。
+    - **278 thr** 表示这 131个进程由 278 个线程处理。 
+    - **1 running** 表示在这 131 个进程中，只有一个进程处于运行中。
+    - **uptime：**显示系统的运行时间。
+
+- **进程列表（Process List）：**位于界面的主要部分，显示当前运行的进程及其相关信息。每行表示一个进程，列显示进程的 ID、用户、CPU 使用率、内存占用、进程状态等信息。
+- **柱状图区域（Graphs Area）：**位于界面的左侧或右侧或顶部，以柱状图的形式展示系统资源的使用情况，如 CPU 使用率、内存占用、磁盘读写等。
+- **快捷键提示栏（Shortcut Keys Bar）：**位于界面的底部，显示常用的快捷键操作，帮助用户快速了解和使用`htop`的功能，便于管理控制。
+
+**下面是一些常用的`htop`内部指令和参数：**
+
+**内部指令：**
+
+- `F1` 或 `h`：显示帮助菜单。
+- `F2` 或 `S`：更改进程排序方式。
+- `F3` 或 `/`：根据进程命令行进行搜索。
+- `F4` 或 `t`：过滤进程显示。
+- `F5` 或 `L`：显示或隐藏进程树。
+- `F6` 或 `<` 或 `>`：切换排序列。
+- `F7` 或 `,`：减小nice值。
+- `F8` 或 `.`：增加nice值。
+- `F9` 或 `k`：发送信号给选中的进程。
+- `F10` 或 `q`：退出`htop`。
+- q：退出
+
+**参数：**
+
+- `-d` 或 `--delay`：指定刷新间隔时间，默认为1秒。
+- `-u` 或 `--user`：仅显示指定用户名的进程信息。
+- `-p` 或 `--pid`：仅显示指定进程ID的信息。
+- `-t` 或 `--tree`：以树状图显示进程。
+- `-s` 或 `--sort-key`：根据指定的列进行排序。
+- `-i` 或 `--ignore-case`：忽略大小写进行搜索。
+- `-v` 或 `--version`：显示`htop`的版本信息。
+
+# 四、进程优先级（了解）
+
+**⚠️⚠️⚠️此部分内容，在公司中可能会使用的很少，但是你得知道，如果在生产环境中，你老大给你提了这种需求，你得知道怎么去调整**
+
+## 4.1、进程优先级介绍
+
+- linux中进程有优先级。Linux是一个多用户、多任务的操作系统，系统中通常运行着非常多的进程，但CPU在一个周期内只能运算一条指令；
+- 哪个进程应该先运算，谁应该后运算呢？这就需要由进程的优先级来决定了。
+- **在Linux系统中，表示进程优先级的有两个参数：Pri和Nice；进程优先级是PRI值不是Nice值，但是Nice值会影响优先级，因为PRI (最终值) = PRI (原始值) + Nice值。**
+  - **注意：**
+    1. **进程的nice值不是进程的优先级，他们不是一个概念**，但是进程nice值会影响到进程的优先级变化；
+    2. 可以理解nice值是进程优先级的修正修正数据。
+    3. 通过 ps -el 指令可以查看到进程的详细信息，PRI 和 NI 的值合并在一起代表 Linux 进程的优先级。**PRI 其实就是最终优先级**，只不过它受 NI 值的调控。
+
+- 调整进程的优先级就是调整CPU 资源分配的先后顺序，就是ps命令中的PRI——进程的优先权（priority）;
+- **优先权高的进程有优先执行权利**。配置进程优先权对多任务环境的 Linux 很有用，可以改善系统性能;
+- 还可以把进程运行到指定的 CPU 上，**减少进程在CPU上的来回切换**，这样一来，我们可以把不重要的进程安排到某个 CPU，可以大大改善系统整体性能。
+
+* 调整nice优先级取值范围为（-20,19），**越小优先级越高⚠️⚠️⚠️默认优先级是 0**
+
+* **另外，除了nice的优先级，还有其他两种优先级（了解，一般我们不会改）**
+
+![image-20231223221253021](assets/image-20231223221253021.png)
+
+* **而且普通用户优先级只能调低不能调高**
+
+* **拓展：**
+  * **另外，CPU 在运算数据时，不是把一个任务计算完成后，再进行下一个进程的运算，而是先运算进程 1，再运算进程 2，接下来运算进程 3，然后再运算进程 1，直到进程任务结束，换句话说就是一直来回切换的，但是cpu的运行速度非常快，所以我们肉眼感知不到。**
+  * 不仅如此，由于进程优先级的存在，**进程并不是依次运算的，而是哪个进程的优先级高**，那么那个进程会在一次运算循环中被更多次地运算。
+  * 这样说很难理解，**我们换一种说法。**
+  * 假设我现在有 4 个孩子（进程）需要喂饭（运算），我更喜欢孩子 1（进程 1 优先级更高），孩子 2、孩子 3 和孩子 4 一视同仁（进程 2、进程 3 和进程 4 的优先级一致）。现在我开始喂饭了，我不能先把孩子 1 喂饱，再喂其他的孩子，而是需要循环喂饭（CPU 运算时所有进程循环运算）。那么，我在喂饭时（运算），会先喂孩子 1 一口饭，然后再去喂其他孩子。
+  * 而且在一次循环中，**我会给孩子 1（进程1）  多喂两口饭**，因为我更喜欢孩子 1（优先级高），而喂其他的孩子一口饭。这样，孩子 1 会先吃饱（进程 1 运算得更快），因为我更喜欢孩子 1。
+
+## 4.2、查看进程优先级
+
+**执行ps -l命令，-l是长格式显示**
+
+```sh
+[root@localhost ~]# ps -l
+F S   UID    PID   PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
+4 S     0  27609  27565  0  80   0 - 29259 do_wai pts/1    00:00:00 bash
+0 R     0  29081  27609  0  80   0 - 38331 -      pts/1    00:00:00 ps
+
+#参数解释：
+F: 进程的标志位（标识进程状态的字母代码）。
+S: 进程的状态，如运行（R）、睡眠（S）、僵尸（Z）等。
+UID: 进程的用户ID。
+PID: 进程的ID。
+PPID: 父进程的ID。
+C: 进程的CPU使用率。
+PRI: 进程的优先级。	#重点关注，代表这个进程可被执行的优先级，其值【越小】越早被执行；
+NI: 进程的nice值。	 #重点关注
+ADDR: 进程所在的内存地址。
+SZ: 进程使用的物理内存大小（以页为单位）。
+WCHAN: 进程等待的事件或资源。  
+TTY: 进程所在的终端。
+TIME: 进程占用的CPU时间。
+CMD: 进程的命令行。
+```
+
+- PRI 也还是比较好理解的，即进程的优先级，或者通俗点说就是程序被CPU执行的先后顺序，此值越小进程的优先级别越高。
+- 那NI呢？就是我们所要说的nice值了，其表示进程可被执行的优先级的修正数值。
+- PRI值越小越快被执行，那么加入nice值后，将会使得PRI变为：PRI(new)=PRI(old)+nice。
+- **这样，当nice值为负值的时候，那么该程序将会优先级值将变小，即其优先级会变高，则其越快被执行。**
+- **所以，调整进程优先级，在Linux下，我们就是调整进程nice值，nice其取值范围是-20至19，一共40个级别。**
+
+## 4.3、调整进程优先级
+
+### 4.3.1、在top中修改
+
+#### 1、输入top命令，进入top界面
+
+![image-20231223224034385](assets/image-20231223224034385.png)
+
+#### 2、输入r，'r'代表的是renice修改优先级
+
+![image-20231223224203528](assets/image-20231223224203528.png)
+
+#### 3、输入进程的 id
+
+**需要提前确定调整优先级的pid，可以再开一个终端查看，比如查看nginx的pid**
+
+![image-20231223224737815](assets/image-20231223224737815.png)
+
+```sh
+[root@localhost ~]# ps -ef|grep nginx
+root       1137      1  0 12月22 ?      00:00:00 nginx: master process /usr/sbin/nginx
+nginx      1141   1137  0 12月22 ?      00:00:00 nginx: worker process
+nginx      1144   1137  0 12月22 ?      00:00:00 nginx: worker process
+```
+
+**再进行调整nginx的优先级**
+
+#### 4、输入 NI 值（例如：NI = -10）
+
+**nice值越小，优先级越大，反之，值越大，优先级越小**
+
+**进程优先级结果：PRI(新的) = PRI(旧的) + NI(-10) = 70（PRI默认都为80）** 
+
+![image-20231223225051632](assets/image-20231223225051632.png)
+
+**如何确定nginx进程的优先级调整成功？**
+
+```sh
+[root@localhost ~]# ps -eal | grep nginx
+F S   UID    PID   PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
+1 S     0   1137      1  0  70 -10 -  9827 sigsus ?        00:00:00 nginx
+5 S   987   1141   1137  0  80   0 - 10445 ep_pol ?        00:00:00 nginx
+5 S   987   1144   1137  0  80   0 - 10445 ep_pol ?        00:00:00 nginx
+#F S   UID    PID   PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD头部是我自己补充上去的，方便查看
+#可以看到1137这个进程的PRI优先级已经变成了70，nice值是-10，我们手动调整的
+```
+
+**⚠️⚠️⚠️注意：普通用户无法直接修改NI的值，必须切换成root用户或者使用sudo提权执行top指令。**
+
+### 4.3.2、使用nice和renice命令进行调整
+
+#### 1、使用nice命令调整优先级
+
+* **`nice`命令用于在【启动进程前】设置进程的初始优先级。**
+* 它可以在命令行中使用，并通过指定优先级（nice值）来调整进程的优先级。较低的nice值表示较高的优先级。**只有具有足够权限（通常是root用户）的用户才能将nice值设置为负数（更高的优先级）。**
+
+- -n 参数是 nice 值的优先级别
+- **以 nice 值为 0 的方式调整nginx的优先级**
+
+```sh
+[root@localhost ~]# nice  -n 0  nginx 
+nginx: [emerg] bind() to 0.0.0.0:80 failed (98: Address already in use)
+nginx: [emerg] bind() to [::]:80 failed (98: Address already in use)
+nginx: [emerg] bind() to 0.0.0.0:80 failed (98: Address already in use)
+nginx: [emerg] bind() to [::]:80 failed (98: Address already in use)
+#告诉你，80端口早就被使用了，因为nginx已经启动了，nice命令没办法对已经启动的进程调整优先级
+
+#可以先将nginx停止再调整
+[root@localhost ~]# systemctl stop nginx
+[root@localhost ~]# nice  -n 0  nginx
+#-n 参数是 nice 值的优先级别
+
+#调整完后再次查看nginx的优先级
+[root@localhost ~]# ps -eal|grep nginx
+F S   UID    PID   PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
+1 S     0  29476      1  0  80   0 -  9827 sigsus ?        00:00:00 nginx
+5 S   987  29477  29476  0  80   0 - 10445 ep_pol ?        00:00:00 nginx
+5 S   987  29478  29476  0  80   0 - 10445 ep_pol ?        00:00:00 nginx
+#已经调整回来了
+```
+
+#### 2、使用renice命令调整优先级
+
+- `renice`命令用于在**进程运行时**更改进程的优先级。
+- 它可以通过指定进程ID（PID）或进程组ID（PGID）来调整进程的优先级。
+- **`renice`命令可以由任何拥有对目标进程的拥有者权限的用户使用。**
+- 较低的nice值表示较高的优先级。
+- **使用renice对正在运行的nginx进行调整**
+
+```sh
+#先要确认nginx的pid
+[root@localhost ~]# ps -ef|grep nginx
+root      29476      1  0 23:07 ?        00:00:00 nginx: master process nginx
+nginx     29477  29476  0 23:07 ?        00:00:00 nginx: worker process
+nginx     29478  29476  0 23:07 ?        00:00:00 nginx: worker process
+
+[root@localhost ~]# renice -n -20 29476
+29476 (进程 ID) 旧优先级为 0，新优先级为 -20
+
+#确认是否调整成功
+[root@localhost ~]# ps -eal|grep nginx
+F S   UID    PID   PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
+1 S     0  29476      1  0  60 -20 -  9827 sigsus ?        00:00:00 nginx
+5 S   987  29477  29476  0  80   0 - 10445 ep_pol ?        00:00:00 nginx
+5 S   987  29478  29476  0  80   0 - 10445 ep_pol ?        00:00:00 nginx
+#PRI已经变成60了，说明调整成功
+```
+
+### 4.3.3、总结
+
+![image-20231223231611626](assets/image-20231223231611626.png)
+
+
+
+# 五、进程前后台调用
+
+## 5.1、前后台进程介绍
+
+- **进程前后台调用也叫做linux的作业控制/作业管理**
+- 作业控制指的是控制正在运行的进程的行为。**比如，用户可以挂起一个进程或者放到后台去运行，等一会儿再继续执行该进程。**
+
+* 关键词介绍：
+  * Ctrl +Z：把占用shell的进程放在后台挂起（**暂停进程**）
+  * bg：**把挂起的进程放在后台运行起来**
+  * fg：把后台进程调回前台
+  * **&：运行进程在后台**
+  * jobs：查看当前shell中在后台的所有工作 
+  * **nohup：将一个程序放到后台运行，不依赖当前终端，执行该命令后，会在【当前目录】中产生一个nohup.out程序输出日志文件，通过该日志能看出程序是否正常运行，后续或者在公司用的非常多**
+    * **用法nohup [命令] &**
+
+| 命令                     | 功能                                                         |
+| ------------------------ | ------------------------------------------------------------ |
+| &                        | 用在一个命令的最后，可以把这个命令放到后台执行               |
+| ctrl + z                 | 将一个正在前台执行的命令放到后台，并且暂停                   |
+| jobs                     | 查看当前有多少在后台运行的进程.它是一个作业控制命令          |
+| fg （foregroundprocess） | 将后台中的命令调至前台继续运行, 如果后台中有多个命令，**可以用 fg %jobnumber 将选中的命令调出**，%jobnumber 是通过 jobs 命令查到的后台正在执行的命令的序号(从是 pid) |
+| bg(background process)   | 将一个在后台暂停的进程，变成继续执行；**如果后台中有多个命令，可以用bg %jobnumber 将选中的命令调出**，%jobnumber 是通过 jobs 命令查到的后台正在执行的命令的序号(不是 pid) |
+| nohup command &          | 将一个程序放到后台运行，不依赖当前终端                       |
+
+## 5.2、前后台进程调用实战
+
+### 1、fg恢复被挂起的进程
+
+```sh
+#使用vim编辑一个文本文件，并按下crtl z，将该程序放在后台并挂起/暂停
+[root@localhost ~]# vim a.txt
+aaa
+#写一行内容后，按下esc，再按下crtl z
+
+[1]+  已停止               vim a.txt
+
+#使用ps命令查看vim的状态
+[root@localhost ~]# ps aux|grep vim|grep -v grep
+root      29934  0.0  0.1 149832  5556 pts/4    T    10:03   0:00 vim a.txt
+#状态是T，也就是暂停了
+
+#使用jobs命令查看当前有多少在后台运行的进程
+[root@localhost ~]# jobs
+[1]+  已停止               vim a.txt
+
+#再使用fg命令将后台挂起的进程恢复到前台运行
+#格式：fg %jobsnumber，这里的jobsnumber也就是任务id，也就是[1]
+[root@localhost ~]# fg %1
+aaaa	#再次进入到vim的编辑页面了
+```
+
+### 2、bg将挂起的进程放入后台运行
+
+```sh
+#在前台，也就是当前终端中，执行一个sleep睡眠命令
+[root@localhost ~]# sleep 20		#睡眠20秒，20秒后再操作
+^Z		#按下crtl z按钮，将sleep程序挂起/暂停
+[1]+  已停止               sleep 20
+
+#使用jobs命令查看当前所有任务
+[root@localhost ~]# jobs
+[1]+  已停止               sleep 20
+
+#再使用bg命令将挂起的程序放在后台运行
+#格式跟fg一样的，bg %jobsnumber
+[root@localhost ~]# bg %1
+[1]+ sleep 20 &
+
+#再次查看jobs，就会发现睡眠完成了
+[root@localhost ~]# jobs
+[1]+  完成                  sleep 20
+
+[root@localhost ~]# jobs
+
+#再次查看就什么都没有了，因为完成了只会显示一次
+```
+
+## 5.3、总结
+
+![image-20231224103940658](assets/image-20231224103940658.png)
+
+# 六、kill关闭进程操作
+
+## 6.1、kill关闭进程
+
+- 若是某一个进程执行一半需要停止时，或是已消耗了很大的系统资源时，此时可以考虑停止该进程。
+- 使用kill命令来完成此项任务。
+- **关闭进程 3 个命令：kill killall pkill**
+  - kill 关闭进程：kill 进程号 关闭单个进程  
+  - **killall 和 pkill 命令用于杀死指定名字的进程**
+- **kill是通过信号的方式来控制进程的**
+
+* **kill -l列出所有支持的信号**
+
+![image-20231224104512053](assets/image-20231224104512053.png)
+
+- **常用信号如下：**
+- 信号编号 信号名
+  - **1） SIGHUP   重新加载配置**
+  - 2） SIGINT   键盘中断 相当于crtl+c
+  - 3)    SIGQUIT   退出
+  - **9） SIGKILL  强制终止程序，可用于杀死僵尸进程**
+  - **15） SIGTERM  优雅的终止程序（正常结束），缺省/默认信号，不指定信号时的默认信号**
+  - 18） SIGCONT   继续/重新激活进程
+  - 19） SIGSTOP   停止进程
+  - 20） SIGTSTP   暂停/挂起 相当于crtl+z
+
+* **实战，通过kill将nginx进程杀掉**
+
+```sh
+#要是没有nginx的，使用yum安装nginx，安装前可以更换一下yum源，更换yum源的操作在走进linux世界第一天课件中有
+[root@localhost ~]# yum -y install nginx
+[root@localhost ~]# systemctl restart nginx		#启动nginx
+[root@localhost ~]# ps aux|grep nginx		#查看nginx的pid
+root      30872  0.0  0.0  39308   936 ?        Ss   10:54   0:00 nginx: master process /usr/sbin/nginx
+nginx     30873  0.0  0.0  41780  1932 ?        S    10:54   0:00 nginx: worker process
+nginx     30874  0.0  0.0  41780  1932 ?        S    10:54   0:00 nginx: worker process
+
+#通过kill杀掉nginx
+[root@localhost ~]# kill 30872		#不加信号默认就是-15，优雅的关闭程序
+[root@localhost ~]# ps aux|grep nginx	#再次查看是否关掉了nginx
+```
+
+## 6.2、killall关闭进程（关闭一类进程）
+
+-  **killall：以进程名字方式来杀死进程**
+- **killall 发送一条信号给所有运行任意指定命令的进程。如果没有指定信号名，则发送 SIGTERM，也就是killall -15**
+
+* **实战：**
+
+```sh
+#重新将nginx启动
+[root@localhost ~]# systemctl restart nginx
+
+#使用killall命令将nginx杀掉
+[root@localhost ~]# killall nginx 
+[root@localhost ~]# ps -ef|grep nginx	#过滤一下看看有没有杀掉
+```
+
+## 6.3、pkill关闭进程（关闭一类进程）
+
+* **pkill和killall都是使用进程的名字来关闭进程，区别就是：pkill可以直接使用正则表达式匹配进程名，而killall需要加上-Z参数才能使用正则表达式**
+* **pkill：基于名称和其他属性的查找或信号处理，跟前面两者一样的，如果没有指定信号名，则发送 SIGTERM，也就是pkill -15**
+
+* **实战**
+
+```sh
+#还是一样的，使用pkill杀nginx进程
+#先将nginx进程重启
+[root@localhost ~]# systemctl restart nginx
+[root@localhost ~]# ps -ef|grep nginx|grep -v grep
+root      31241      1  0 11:14 ?        00:00:00 nginx: master process /usr/sbin/nginx
+nginx     31242  31241  0 11:14 ?        00:00:00 nginx: worker process
+nginx     31243  31241  0 11:14 ?        00:00:00 nginx: worker process
+
+#再使用pkill+正则表达式的方式将nginx进程杀掉
+[root@localhost ~]# pkill '^nginx'		#以nginx开头的进程，都会被干掉
+[root@localhost ~]# ps -ef|grep nginx|grep -v grep	#再次过滤，就没有nginx进程了
+```
+
+# 七、systemd系统守护进程
+
+- 守护进程：替内核分担程序控管的程序
+- systemd进程通常pid为1
+
+```sh
+[root@localhost ~]# ps aux|grep systemd
+root          1  0.0  0.1 191276  4348 ?        Ss   12月22   0:03 /usr/lib/systemd/systemd --switched-root --system --deserialize 22
+```
+
+**systemctl命令的用法：**
+
+- **start：开启**
+- **stop：关闭**
+- **status：查看状态**
+- **reload：重新加载**
+- **restart：重新启动服务**
+- **enable：设定服务开机启动**
+- **enable   --now：设定服务开机启动并当前开启服务**
+- **is-enabled：是否设置开机自启**
+
+```sh
+[root@localhost ~]# systemctl is-enabled sshd
+enabled
+```
+
+- disable：设定服务开启不启动
+- **disable --now：设定服务开机不启动并当前关闭服务**
+- mask：冻结服务
+- unmask：解锁
+
+# 八、lsof命令（了解）
+
+## 8.1、lsof介绍（看看是谁动了我的文件？）
+
+- lsof（list open files）是一个列出当前系统打开文件的工具。
+- 它主要用来获取被进程**打开**文件的信息。
+- 在 Linux 中，一切皆文件，lsof 命令可以查看所有**已经打开了**的文件，比如：**普通文件，目录，特殊的块文件，管道，socket 套接字，设备，Unix 域套接字**等等。同时，它还可以结合 grep 以及 ps 命令进行更多的高级搜索
+  - 打开的文件：
+    - 在Linux中，一切都是文件，当进程打开现有文件或创建新文件时，内核向进程返回一个**文件描述符FD**，**文件描述符就是内核为了高效管理已被打开的文件所创建的索引，用来指向被打开的文件**，所有执行 I/O 操作的系统调用都会通过文件描述符。因此，打开的文件指的是进程打开并使用的文件。
+
+## 8.2、常用参数
+
+lsof 命令有很多选项，下面是一些常用的选项（完整的字节看手册）：
+
+- -a：表示 AND，用于指定多个条件。  
+- -c <command>：列出指定命令所打开的文件。
+- -d <fd>：列出指定文件描述符所打开的文件。
+- -g <gid>：列出指定组 ID 所属的进程所打开的文件。
+- **-i：列出所有打开了网络套接字（TCP 和 UDP）的进程。**
+- -n：禁止解析 IP 地址和端口号。
+- **-p <pid>：列出指定进程 ID 所打开的文件。**
+- **-u <username>：列出指定用户所属的进程所打开的文件。**
+
+
+## 8.3、输出字段详解
+
+```sh
+[root@localhost ~]# lsof -i:22
+COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+sshd     1077 root    3u  IPv4  26454      0t0  TCP *:ssh (LISTEN)
+sshd     1077 root    4u  IPv6  26551      0t0  TCP *:ssh (LISTEN)
+sshd    33263 root    3u  IPv4 352404      0t0  TCP localhost.localdomain:ssh->192.168.17.1:14426 (ESTABLISHED)
+sshd    33265 root    3u  IPv4 352442      0t0  TCP localhost.localdomain:ssh->192.168.17.1:14427 (ESTABLISHED)
+sshd    33416 root    3u  IPv4 354538      0t0  TCP localhost.localdomain:ssh->192.168.17.1:radio-sm (ESTABLISHED)
+sshd    33418 root    3u  IPv4 355485      0t0  TCP localhost.localdomain:ssh->192.168.17.1:orbplus-iiop (ESTABLISHED)
+```
+
+**使用lsof命令后输出一般有9个字段（9列）：**
+
+```sh
+#COMMAND：进程的名称
+#PID：进程标识符
+#USER：进程所有者
+#FD：文件描述符。主要有：
+	cwd：应用程序当前工作目录，这是该应用程序启动的目录，除非它本身对这个目录进行更改
+	txt：该类型的文件是程序代码，如应用程序二进制文件本身或共享库，如上列表中显示的 /sbin/init 程序
+	lnn：库引用（AIX）
+	err：FD 信息错误
+	jld：监狱目录（FreeBSD）
+	ltx：共享库文本（代码和数据）
+	mxx：十六进制内存映射类型号 xx
+	m86：DOS合并映射文件
+	mem：内存映射文件
+	mmap：内存映射设备
+	pd：父目录
+	rtd：根目录
+	tr：内核跟踪文件（OpenBSD）
+	v86：VP/ix 映射文件
+	0：标准输出
+	1：标准输入
+	2：标准错误
+	
+	#文件描述符后一般还跟着文件状态模式：
+	r：只读模式
+	w：写入模式
+	u：读写模式
+	空格：文件的状态模式为 unknow，且没有锁定
+	-：文件的状态模式为 unknow，且被锁定
+	
+	#同时在文件状态模式后面，还跟着相关的锁：
+	N：对于未知类型的 Solaris NFS 锁
+	r：文件部分的读锁
+	R：整个文件的读锁
+	w：文件的部分写锁
+	W：整个文件的写锁
+	u：任何长度的读写锁
+	U：用于未知类型的锁
+	x：用于部分文件上的 SCO OpenServer Xenix 锁
+	X：用于整个文件上的 SCO OpenServer Xenix 锁
+	space：无锁
+
+#TYPE：文件类型。常见的文件类型有：
+	REG：普通文件
+	DIR：表示目录
+	CHR：表示字符类型
+	BLK：块设备类型
+	UNIX：UNIX 域套接字
+	FIFO：先进先出队列
+	IPv4（6）：IPv4（6） 套接字
+#DEVICE：磁盘名称
+#SIZE：文件的大小或文件偏移量（以字节为单位），例如：0t0，其中数字 0：表示文件的大小，以字节为单位。在这里，它表示该文件的大小为0字节。字母 t：表示文件大小的类型。在这里，t表示文件大小以字节（bytes）为单位。因此，0t0表示该打开文件的大小为0字节。这可能表示该文件是一个特殊文件（如设备文件）或空文件。
+#NODE：索引节点
+#NAME：打开文件的确切名称
+```
+
+## 8.4、实战
+
+### 1、查看某个文件的相关进程
+
+```sh
+[root@localhost ~]# lsof  /usr/sbin/nginx
+COMMAND   PID  USER  FD   TYPE DEVICE SIZE/OFF     NODE NAME
+nginx   33384  root txt    REG  253,0  1270744 33627474 /usr/sbin/nginx
+nginx   33385 nginx txt    REG  253,0  1270744 33627474 /usr/sbin/nginx
+nginx   33386 nginx txt    REG  253,0  1270744 33627474 /usr/sbin/nginx
+
+[root@localhost ~]# lsof /bin/bash
+COMMAND    PID USER  FD   TYPE DEVICE SIZE/OFF  NODE NAME
+ksmtuned   811 root txt    REG  253,0   964536 11507 /usr/bin/bash
+bash     12830 root txt    REG  253,0   964536 11507 /usr/bin/bash
+bash     33267 root txt    REG  253,0   964536 11507 /usr/bin/bash
+bash     33420 root txt    REG  253,0   964536 11507 /usr/bin/bash
+bash     33606 root txt    REG  253,0   964536 11507 /usr/bin/bash
+bash     33662 root txt    REG  253,0   964536 11507 /usr/bin/bash
+```
+
+### 2、网络相关参数：-i
+
+`-i` 选项用于列出所有打开了网络套接字（TCP 和 UDP）的进程。
+
+常用的用法：
+
+- -i：列出所有打开了网络套接字（TCP 和 UDP）的进程。
+- -i tcp：列出所有打开了 TCP 网络连接的进程。
+- **-i :<port>：列出某个端口被哪些进程打开了。**
+- -i @<ip_address>：列出某个 IP 地址被哪些进程打开了。
+- -u <username> -i：列出某个用户打开了哪些网络连接。
+
+```sh
+[root@localhost ~]# lsof -i:22
+COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+sshd     1077 root    3u  IPv4  26454      0t0  TCP *:ssh (LISTEN)
+sshd     1077 root    4u  IPv6  26551      0t0  TCP *:ssh (LISTEN)
+sshd    33263 root    3u  IPv4 352404      0t0  TCP localhost.localdomain:ssh->192.168.17.1:14426 (ESTABLISHED)
+sshd    33265 root    3u  IPv4 352442      0t0  TCP localhost.localdomain:ssh->192.168.17.1:14427 (ESTABLISHED)
+sshd    33416 root    3u  IPv4 354538      0t0  TCP localhost.localdomain:ssh->192.168.17.1:radio-sm (ESTABLISHED)
+sshd    33418 root    3u  IPv4 355485      0t0  TCP localhost.localdomain:ssh->192.168.17.1:orbplus-iiop (ESTABLISHED)
+sshd    33602 root    3u  IPv4 356435      0t0  TCP localhost.localdomain:ssh->192.168.17.1:ca-idms (ESTABLISHED)
+sshd    33604 root    3u  IPv4 356483      0t0  TCP localhost.localdomain:ssh->192.168.17.1:portgate-auth (ESTABLISHED)
+sshd    33658 root    3u  IPv4 356611      0t0  TCP localhost.localdomain:ssh->192.168.17.1:ufastro-instr (ESTABLISHED)
+sshd    33660 root    3u  IPv4 356650      0t0  TCP localhost.localdomain:ssh->192.168.17.1:xsync (ESTABLISHED)
+
+[root@localhost ~]# lsof -i:80
+COMMAND   PID  USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+nginx   33384  root    6u  IPv4 354189      0t0  TCP *:http (LISTEN)
+nginx   33384  root    7u  IPv6 354190      0t0  TCP *:http (LISTEN)
+nginx   33385 nginx    6u  IPv4 354189      0t0  TCP *:http (LISTEN)
+nginx   33385 nginx    7u  IPv6 354190      0t0  TCP *:http (LISTEN)
+nginx   33386 nginx    6u  IPv4 354189      0t0  TCP *:http (LISTEN)
+nginx   33386 nginx    7u  IPv6 354190      0t0  TCP *:http (LISTEN)
+```
+
+### 3、指定进程号打开的文件：-p
+
+`-p` 选项用于列出指定进程 ID 所打开的文件。
+
+```sh
+[root@localhost ~]# lsof -p 33384
+COMMAND   PID USER   FD   TYPE             DEVICE SIZE/OFF     NODE NAME
+nginx   33384 root  cwd    DIR              253,0      270       64 /
+nginx   33384 root  rtd    DIR              253,0      270       64 /
+nginx   33384 root  txt    REG              253,0  1270744 33627474 /usr/sbin/nginx
+nginx   33384 root  mem    REG              253,0    61560 33639599 /usr/lib64/libnss_files-2.17.so
+nginx   33384 root  mem    REG              253,0    88720 33554509 /usr/lib64/libgcc_s-4.8.5-20150702.so.1
+nginx   33384 root  mem    REG              253,0  1136944 33639589 /usr/lib64/libm-2.17.so
+nginx   33384 root  mem    REG              253,0   995840 33639912 /usr/lib64/libstdc++.so.6.0.19
+nginx   33384 root  mem    REG              253,0    11392 33635466 /usr/lib64/libfreebl3.so
+nginx   33384 root  mem    REG              253,0  2156272 33635837 /usr/lib64/libc-2.17.so
+nginx   33384 root  mem    REG              253,0    65904 33726380 /usr/lib64/libprofiler.so.0.4.14
+nginx   33384 root  mem    REG              253,0    90248 33725089 /usr/lib64/libz.so.1.2.7
+nginx   33384 root  mem    REG              253,0  3086752 33627469 /usr/lib64/libcrypto.so.1.1.1k
+nginx   33384 root  mem    REG              253,0   603568 33627471 /usr/lib64/libssl.so.1.1.1k
+nginx   33384 root  mem    REG              253,0   402384 33725076 /usr/lib64/libpcre.so.1.2.0
+nginx   33384 root  mem    REG              253,0    40600 33639585 /usr/lib64/libcrypt-2.17.so
+nginx   33384 root  mem    REG              253,0   142144 33639607 /usr/lib64/libpthread-2.17.so
+nginx   33384 root  mem    REG              253,0    19248 33639587 /usr/lib64/libdl-2.17.so
+nginx   33384 root  mem    REG              253,0   163312 33635830 /usr/lib64/ld-2.17.so
+nginx   33384 root  DEL    REG                0,4            354191 /dev/zero
+nginx   33384 root    0u   CHR                1,3      0t0     1028 /dev/null
+nginx   33384 root    1u   CHR                1,3      0t0     1028 /dev/null
+nginx   33384 root    2w   REG              253,0     1029 33627517 /var/log/nginx/error.log
+nginx   33384 root    3u  unix 0xffff9f3bf0532640      0t0   354368 socket
+nginx   33384 root    4w   REG              253,0     1029 33627517 /var/log/nginx/error.log
+nginx   33384 root    5w   REG              253,0        0 33627459 /var/log/nginx/access.log
+nginx   33384 root    6u  IPv4             354189      0t0      TCP *:http (LISTEN)
+nginx   33384 root    7u  IPv6             354190      0t0      TCP *:http (LISTEN)
+nginx   33384 root    8u  unix 0xffff9f3bf0532200      0t0   354369 socket
+nginx   33384 root    9u  unix 0xffff9f3bf05361c0      0t0   354370 socket
+nginx   33384 root   10u  unix 0xffff9f3bf0536a40      0t0   354371 socket
+```
+
+### 4、指定用户打开的文件：-u
+
+`-u` 选项用于列出指定用户所属的进程所打开的文件。
+
+```sh
+#使用第一个窗口：
+[root@localhost ~]# su - tang
+上一次登录：五 12月 22 16:24:56 CST 2023pts/0 上
+[tang@localhost ~]$ ls
+a.txt  b.txt  test
+
+#再复制一个窗口
+[root@localhost ~]# lsof -u  tang
+COMMAND   PID USER   FD   TYPE DEVICE  SIZE/OFF     NODE NAME
+bash    33820 tang  cwd    DIR  253,2       166 67155264 /home/tang
+bash    33820 tang  rtd    DIR  253,0       270       64 /
+bash    33820 tang  txt    REG  253,0    964536    11507 /usr/bin/bash
+bash    33820 tang  mem    REG  253,0 106172832    11498 /usr/lib/locale/locale-archive
+bash    33820 tang  mem    REG  253,0     61560 33639599 /usr/lib64/libnss_files-2.17.so
+bash    33820 tang  mem    REG  253,0   2156272 33635837 /usr/lib64/libc-2.17.so
+bash    33820 tang  mem    REG  253,0     19248 33639587 /usr/lib64/libdl-2.17.so
+bash    33820 tang  mem    REG  253,0    174576 33725061 /usr/lib64/libtinfo.so.5.9
+bash    33820 tang  mem    REG  253,0    163312 33635830 /usr/lib64/ld-2.17.so
+bash    33820 tang  mem    REG  253,0    123267 33725073 /usr/share/locale/zh_CN/LC_MESSAGES/bash.mo
+bash    33820 tang  mem    REG  253,0     26970 33639911 /usr/lib64/gconv/gconv-modules.cache
+bash    33820 tang    0u   CHR  136,4       0t0        7 /dev/pts/4
+bash    33820 tang    1u   CHR  136,4       0t0        7 /dev/pts/4
+bash    33820 tang    2u   CHR  136,4       0t0        7 /dev/pts/4
+bash    33820 tang  255u   CHR  136,4       0t0        7 /dev/pts/4
+```
+
+### 5、某进程打开的文件：-c
+
+-c 选项用于列出指定命令所打开的文件，**不需要进程的完整名称**，可以使用进程名的一部分。
+
+```sh
+[root@localhost ~]# lsof -c ngi
+COMMAND   PID  USER   FD      TYPE             DEVICE SIZE/OFF     NODE NAME
+nginx   33384  root  cwd       DIR              253,0      270       64 /
+nginx   33384  root  rtd       DIR              253,0      270       64 /
+nginx   33384  root  txt       REG              253,0  1270744 33627474 /usr/sbin/nginx
+nginx   33384  root  mem       REG              253,0    61560 33639599 /usr/lib64/libnss_files-2.17.so
+nginx   33384  root  mem       REG              253,0    88720 33554509 /usr/lib64/libgcc_s-4.8.5-20150702.so.1
+nginx   33384  root  mem       REG              253,0  1136944 33639589 /usr/lib64/libm-2.17.so
+nginx   33384  root  mem       REG              253,0   995840 33639912 /usr/lib64/libstdc++.so.6.0.19
+nginx   33384  root  mem       REG              253,0    11392 33635466 /usr/lib64/libfreebl3.so
+```
+
+# 九、文件虚拟系统（proc）
+
+**文件虚拟系统用于采集系统自身内核，进程运行状态信息**
+
+- 各种信息的保存位置如下：
+  - CPU
+    - 路径：/proc/cpuinfo
+    - cat /proc/cpuinfo # 查看cpu信息
+  - 内存
+    - 路径：/proc/meminfo
+    - cat /proc/meminfo # 查看内存信息
+  - 内核
+    - 路径：/proc/cmdline
+    - cat /proc/cmdline
+
+# 十、一些其他查看系统状态的命令
+
+## 10.1、free查看内存命令（重要）
+
+### 1、概述和参数
+
+- **free命令是一个用于查看系统内存使用情况的工具。**
+- 通过free命令，我们可以获取有关系统内存的详细信息，包括**总内存、已使用内存、剩余内存、缓存和缓冲区**的使用情况等。
+- 这使得我们能够实时了解系统内存的分配和使用情况，以便及时采取措施优化系统性能。
+
+**参数：**
+
+- -b   以 `Byte `为单位显示
+- -k   以 `KB `为单位显示
+- -m 以 `MB `为单位显示
+- -g   以`GB`为单位显示
+- **-h   自动计算单位，人性化展示（最大保留三位数）**
+- -s<间隔秒数>   持续观察（间隔多少秒查看一次内存）
+- -t   显示总和列
+- -V   显示版本
+
+### 2、实战和字段解释
+
+```sh
+[root@localhost ~]# free -h		#人性化展示，自动换算单位
+              total        used        free      shared  buff/cache   available
+Mem:           3.7G        896M        553M         30M        2.3G        2.5G
+Swap:          3.9G          0B        3.9G
+
+#以MB为单位展示
+[root@localhost ~]# free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3770         896         553          30        2320        2580
+Swap:          3967           0        3967
+
+[root@localhost ~]# free
+              total        used        free      shared  buff/cache   available
+Mem:        3861300      918160      567084       31372     2376056     2642280
+Swap:       4063228           0     4063228	
+#不加参数时，默认以KB为单位显示内存大小。	
+```
+
+**6个字段列的意思分别是：**
+
+- total：系统内存总大小
+- used：已使用内存
+- **free：可用内存（剩余多少内存）**
+- shared：多个进程共享的内存
+- buff/cache：系统缓存大小
+- **available：还可以被使用的内存**
+
+**左侧两个字段行的意思分别是：**
+
+- Mem：物理内存空间使用情况，通常意义上的物理内存分区
+- **Swap：**交换空间使用情况（交换分区），物理内存不够用时，临时存放数据。
+
+### 3、free和available的区别？
+
+**free 和 available 这两个字段都有“剩余内存”的意思，很多同学可能会对此产生疑惑，这里给大家简单解释一下这两个字段的区别：**
+
+- **free是未被使用的内存**
+- **available是程序“认为”还可以被使用的内存**
+
+Linux为了提高读写性能，会拿出一部分内存来临时存储数据（也就是系统缓存），当剩余的内存（free）不够的时候，就会释放一部分缓存（buff/cache）来满足程序的使用需求。
+
+**即：available = free + buff/chche（部分可以被释放的缓存）**
+
+### 4、交换分区的作用
+
+- free 命令有 Mem 和 Swap 两行查询结果，其中 Swap 就是交换分区的意思。
+- 交换分区也叫交换空间（Swap space），本质上是**磁盘**上的一个区域，可以是一个分区，也可以是一个文件。
+- **当系统的物理内存不够用时，就会把一部分【不常用的数据】临时放到交换分区（Swap），等到程序要使用这些数据时，再把它们从交换分区加载到物理内存中。**
+- **这就意味着，系统总是在内存不够用的情况下，才会使用交换分区。**
+- 如果交换分区没被使用或者使用的很少，则内存够用（使用情况良好）；反之，就说明内存不够用了，可能会影响到系统的使用。
+- 交换分区可以在一定程度上解决内存不足的问题，但它会读取磁盘的数据，所以读写速度不快，因此，只有在内存不够用时，才会选择把数据放到交换分区。
+- 那么，系统什么时候才会把物理内存的数据放到交换分区呢？
+  - `/etc/sysctl.conf `文件中可以通过调整一个 vm.swappiness 参数，用来控制交换数据的优先级，它的取值范围是0~100，**0表示尽可能不把数据放到交换分区；100表示尽可能多的把数据放到交换分区。**
+  - **我们可以通过修改 swappiness 参数的值，来改变系统把内存的数据放到交换分区的迫切程度。**
+
+![image-20231224164835968](assets/image-20231224164835968.png)
+
+### 5、如何判断内存正常和异常？
+
+- 平时用的最多的就是，使用 `free -m `查看系统还剩多少内存可以使用（**重点是 free 那一列**）。
+- 比如下图中，内存还剩2508MB可用（总共3725MB，已使用253MB，缓存用了964MB），就处于一个比较健康的状态。
+
+![image-20231224165022105](assets/image-20231224165022105.png)
+
+* 再看下面这张图，服务器的内存还剩809MB（总共257415MB，已使用66759MB，缓存用了189847MB），就属于不正常的情况；
+
+![image-20231224165058285](assets/image-20231224165058285.png)
+
+* 因为缓存占了太多的内存，服务器上的应用可能就会出现功能无法正常使用的问题，**如果需要紧急恢复使用，可以重启服务，释放缓存**
+
+### 6、内存数据来源
+
+* free命令实际上是在查询 `/proc/meminfo `这个文件，我们查看这个文件，会发现里面有很多字段，单位是KB，所以free不加参数时，默认单位就是KB。
+
+![image-20231224165214250](assets/image-20231224165214250.png)
+
+## 10.2、uptime查看平均负载
+
+**uptime指令是Linux系统中的一个实用工具，用于显示系统的运行时间、平均负载以及当前活动用户数等信息。通过使用uptime指令，我们可以快速了解系统的稳定性和负载情况。**
+
+```sh
+[root@localhost ~]# uptime
+ 16:53:46 up 1 day, 20:05,  6 users,  load average: 0.01, 0.02, 0.05
+
+#思考：你能从uptime中看到什么信息？
+```
+
+## 10.3、系统中的登录审计命令
+
+```sh
+w      ##显示正在登陆系统的账号
+[root@localhost ~]# w
+ 17:03:52 up 1 day, 20:15,  6 users,  load average: 0.00, 0.01, 0.05
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+root     pts/0    192.168.17.1     14:28    2:26m  0.04s  0.01s vim a.txt
+root     pts/1    192.168.17.1     14:37    2:24m  0.02s  0.02s -bash
+root     :0       :0               五09   ?xdm?  10:24   0.32s /usr/libexec/gnome-session-binary --session gnome-
+root     pts/2    :0               五09    2days  0.02s  0.02s bash
+root     pts/3    192.168.17.1     16:27    0.00s  0.10s  0.00s w
+root     pts/4    192.168.17.1     16:27   30:56   0.05s  0.02s -bash
+
+last     ##登陆成功现在已经退出
+         ##日志：/var/log/wtmp
+[root@localhost ~]# last
+root     pts/4        192.168.17.1     Sun Dec 24 16:27   still logged in
+root     pts/3        192.168.17.1     Sun Dec 24 16:27   still logged in
+root     pts/1        192.168.17.1     Sun Dec 24 14:37   still logged in
+root     pts/0        192.168.17.1     Sun Dec 24 14:28   still logged in
+root     pts/1        192.168.17.1     Sun Dec 24 14:28 - 14:28  (00:00)
+root     pts/0        192.168.17.1     Sun Dec 24 14:28 - 14:28  (00:00)
+root     pts/4        192.168.17.1     Sun Dec 24 09:43 - 14:28  (04:44)
+
+
+lastb   ##试图登陆但未成功
+        ##日志：/var/log/btmp
+[root@localhost ~]# lastb
+tang     ssh:notty    192.168.17.1     Thu Dec 21 11:05 - 11:05  (00:00)
+tom      ssh:notty    192.168.17.1     Thu Dec 21 10:50 - 10:50  (00:00)
+tom      ssh:notty    192.168.17.1     Thu Dec 21 10:49 - 10:49  (00:00)
+tom      ssh:notty    192.168.17.1     Thu Dec 21 10:49 - 10:49  (00:00)
+tom      ssh:notty    192.168.17.1     Thu Dec 21 10:45 - 10:45  (00:00)
+tom      ssh:notty    192.168.17.1     Thu Dec 21 10:45 - 10:45  (00:00)
+tom      ssh:notty    192.168.17.1     Thu Dec 21 10:43 - 10:43  (00:00)
+zhangwuj ssh:notty    192.168.17.1     Wed Dec 20 17:03 - 17:03  (00:00)
+zhangwuj ssh:notty    192.168.17.1     Wed Dec 20 17:03 - 17:03  (00:00)
+zhangwuj ssh:notty    192.168.17.1     Wed Dec 20 17:03 - 17:03  (00:00)
+zhangwuj ssh:notty    192.168.17.1     Wed Dec 20 17:03 - 17:03  (00:00)
+tang     ssh:notty    192.168.17.1     Wed Dec 20 10:17 - 10:17  (00:00)
+tang     pts/0                         Tue Dec 19 14:30 - 14:30  (00:00)        
+```
+
+**Linux 中常见日志以及位置**
+
+| 位置              | 名称                             |
+| ----------------- | -------------------------------- |
+| /var/log/cron     | 记录了系统定时任务相关的日志     |
+| /var/log/auth.log | 记录验证和授权方面的信息         |
+| /var/log/secure   | 同上，只是系统不同               |
+| /var/log/btmp     | 登录失败记录 使用lastb命令查看   |
+| /var/log/wtmp     | 登录失成功记录 使用last命令查看  |
+| /var/log/lastlog  | 最后一次登录 使用lastlog命令查看 |
+| /var/run/utmp     | 使用 w、who、users 命令查看      |
+
+## 10.4、netstat和ss查看端口命令
+
+### 1、netstat
+
+* **netstat 是一个告诉我们系统中所有 tcp/udp/unix socket 连接状态的命令行工具。它会列出所有已经连接或者等待连接状态的连接。 该工具在识别某个应用监听哪个端口时特别有用，我们也能用它来判断某个应用是否正常的在监听某个端口。**
+* 在 CentOS 7 操作系统中，此命令默认是未安装的，所以我们可以使用如下命令进行网络工具包的安装。
+
+```sh
+yum install -y net-tools
+```
+
+* **下面介绍几个常用的选项：**
+  * **-a，–all：显示所有 socket 连接，默认显示已连接的。**
+  * **-t，–tcp：仅显示 TCP 相关。**
+  * -u，–udp：仅显示 UDP 相关。
+  * **-p，–programs：显示建立 socket 连接的进程 ID 和程序名。**
+  * **-n，–numeric：不解析别名，能显示数字的全部转为数字，例如 IP 和 Port。**
+  * **-l，–listening：仅显示在监听（Listening）的 socket 服务。**
+  * -r，–toute：显示路由表。
+  * -e，–extend：显示更多扩展信息。
+  * -s，–statistics：按各个协议展示网络统计信息。
+  * -c，–continuous：继续监听，即每隔一段时间执行一次 netstat 命令。
+
+* **实战：**
+
+```sh
+[root@localhost ~]# netstat -nltp		#用的最多
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      723/rpcbind
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      33384/nginx: master
+tcp        0      0 192.168.122.1:53        0.0.0.0:*               LISTEN      1431/dnsmasq
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      1077/sshd
+tcp6       0      0 :::111                  :::*                    LISTEN      723/rpcbind
+tcp6       0      0 :::80                   :::*                    LISTEN      33384/nginx: master
+tcp6       0      0 :::22                   :::*                    LISTEN     
+
+#还可以加上grep过滤想要的端口
+[root@localhost ~]# netstat -ntlp|grep 80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      33384/nginx: master
+tcp6       0      0 :::80                   :::*                    LISTEN      33384/nginx: master
+
+
+#查看路由
+[root@localhost ~]# netstat -r
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
+default         gateway         0.0.0.0         UG        0 0          0 ens33
+192.168.17.0    0.0.0.0         255.255.255.0   U         0 0          0 ens33
+192.168.122.0   0.0.0.0         255.255.255.0   U         0 0          0 virbr0
+
+[root@localhost ~]# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+0.0.0.0         192.168.17.2    0.0.0.0         UG    100    0        0 ens33
+192.168.17.0    0.0.0.0         255.255.255.0   U     100    0        0 ens33
+192.168.122.0   0.0.0.0         255.255.255.0   U     0      0        0 virbr0
+#这条命令也可以查看路由
+```
+
+### 2、ss
+
+- ss是Socket Statistics的缩写。顾名思义，ss命令可以用来获取socket统计信息，它可以显示和netstat类似的内容。但ss的优势在于它能够显示更多更详细的有关TCP和连接状态的信息，而且比netstat更快速更高效。
+
+- **当服务器的socket连接数量变得非常大时，使用netstat命令还是直接cat /proc/net/tcp，执行速度都会很慢。可能你不会有切身的感受，但请相信我，当服务器维持的连接达到上万个的时候，使用netstat等于浪费 生命，而用ss才是节省时间。**
+- **天下武功唯快不破。**ss快的秘诀在于，它利用到了TCP协议栈中tcp_diag。tcp_diag是一个用于分析统计的模块，可以获得Linux 内核中第一手的信息，这就确保了ss的快捷高效。当然，如果你的系统中没有tcp_diag，ss也可以正常运行，只是效率会变得稍慢。（但仍然比 netstat要快。）
+
+* ss语法格式：**ss [参数]**
+
+* ss常用参数
+
+  * | 参数   | 说明                               |
+    | ------ | ---------------------------------- |
+    | -a     | 显示所有套接字                     |
+    | **-l** | **显示处于监听状态的套接字**       |
+    | **-n** | **不解析服务名称，以数字形式显示** |
+    | **-p** | **显示使用套接字的进程**           |
+    | **-t** | **只显示TCP协议的套接字**          |
+    | -u     | 只显示UDP协议的套接字              |
+
+* **实战：**
+
+```sh
+[root@localhost ~]# ss -ntlp
+State       Recv-Q Send-Q            Local Address:Port                           Peer Address:Port
+LISTEN      0      128                           *:111                                       *:*                   users:(("rpcbind",pid=723,fd=8))
+LISTEN      0      128                           *:80                                        *:*                   users:(("nginx",pid=33386,fd=6),("nginx",pid=33385,fd=6),("nginx",pid=33384,fd=6))
+LISTEN      0      5                 192.168.122.1:53                                        *:*                   users:(("dnsmasq",pid=1431,fd=6))
+LISTEN      0      128                           *:22                                        *:*                   users:(("sshd",pid=1077,fd=3))
+LISTEN      0      128                   127.0.0.1:631                                       *:*                   users:(("cupsd",pid=1081,fd=11))
+LISTEN      0      100                   127.0.0.1:25                                        *:*                   users:(("master",pid=1437,fd=13))
+LISTEN      0      128                   127.0.0.1:6010                                      *:*                   users:(("sshd",pid=33263,fd=9))
 ```
 
 
-
-##### d.查看进程树
-
-```shell
-[root@tianyun ~]# pstree
-```
-
-随堂练习：
-
-1、查看进程，以内存使用从大到小排序
-
-```
-ps aux   --sort -%mem
-```
-
-2、查看管理sleep命令的进程，只查看该进程的USER PID COMMAND
-
-```
-ps axo user,pid,command | grep slee[p]
-```
-
-3、查看Network服务的进程ID
-
-```
-pgrep -l Network
-ps aux | grep Network
-```
-
-
-
-### 二 .动态查看进程top
-
-##### 2.1.top
-
-第一部分：系统整体统计信息
-
- top - 14:15:04 up 47 min,  2 users,  load average: 0.25, 0.18, 0.12 Tasks: 235 total,   1 running, 234 sleeping,   0 stopped,   0 zombie Cpu(s):  8.9%us,  1.0%sy,  0.0%ni, 90.1%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st Mem:   7944064k total,   746164k used,  7197900k free,    35724k buffers Swap:  1048568k total,        0k used,  1048568k free,   261492k cached 
-
- load average: 0.86, 0.56, 0.78	  CPU最近 1分钟，5分钟，15分钟平均负载
-
-![](image\6.png)
-
-```
-第一行：top - 06:18:40 up 3:15, 1 user, load average: 0.06, 0.02, 0.00
-
-含义分别是：系统时间、运行时间、登录终端数、系统负载（三个数值分别为 1 分钟、5 分钟、15 分钟内的平均值，数值越小意味着负载越低）
-
-第二行：Tasks: 365 total, 1 running, 364 sleeping, 0 stopped, 0 zombie
-
-含义分别是：进程总数、运行中的进程数、睡眠中的进程数、停止的进程数、僵尸的进程数。
-
-
-第三行：%Cpu(s): 0.4 us, 0.5 sy, 0.0 ni, 98.8 id, 0.0 wa, 0.3 hi, 0.0 si, 0.0 st
-
-含义分别是：用户占用资源百分比、系统内核占用资源百分比、改变过优先级的进程资源百分比、空闲的资源百分比、等待输入输出的cpu时间百分比、硬中断占用的cpu百分比、软中断占用的cpu百分比和用于虚拟cpu的情况。
-
-第四行：MiB Mem：7790.6 total, 4309.7 free,2571.4 used, 909.5buff/cache
-
-含义分别是：物理内存总量、内存使用量、内存空闲量、作为内核缓存的内存量。
-
-第五行：MiB Swap: 2095.0 total, 2095.0 free, 0.0 used. 4882.7 avail Mem
-
-含义分别是：虚拟内存总量、虚拟内存空闲量、虚拟内存使用量、已被提前加载的内存量。
-
-第二部分：
-第六行：PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ COMMAND
-
-从第六行开始，就是具体的系统进程的资源使用的详细情况，依次分别表示：进程ID、进程所有者的用户名、优先级、nice值（负值表示搞优先级，正值表示低优先级）、进程使用的虚拟内存总量（KB）、进程使用的未被换出的物理内存大小(KB)、共享内存大小（KB）、进程状态、进程上次更新到现在的CPU时间占用百分比、物理内存占比、进程使用的CPU时间总计（单位1/100秒）、命令名。默认各进程是按照CPU的占用量来排序的。
-```
-
-
-
-第二部分：进程信息 
-
-命令
-
- h|?帮助
-
- M	按内存的使用排序
-
- P	按CPU使用排序 
-
-N	以PID的大小排序
-
- R	对排序进行反转(从小到大)
-
- f	自定义显示字段
-
-​			按空格键选中是否显示
-
-​			按 → ，选中要调整的位置，上下方向键调整位置，按 ← 进行停止调整
-
- 1	显示所有CPU的负载 
-
- <	向前
-
-\>	向后 
-
-z	彩色 
-
-W 保存top环境设置 ~/.toprc 
-
-##### 2.2 htop
-
-```
-# htop   // top命令增强版 ‘带皮肤’
-
-该命令默认是没有安装的，得手动安装一下
-# wget -O /etc/yum.repos.d/epel.repo https://mirrors.aliyun.com/repo/epel-7.repo      //添加epel源
-# yum install htop -y	//安装htop命令
-
-【跟top命令使用基本相同，了解即可】
-```
-
-======================================================
-
-### 三 .信号控制进程
-
-##### 3.1.kill pkill
-
-kill,killall,pgrep,pkill,top
-
-![](image\7.png)
-
-
-
-给进程发送信号
-
-```shell
- [root@tianyun ~]# kill -l	
-```
-
-​        //列出所有支持的信号 编号 信号名
-
--1 	SIGHUP 		重新加载配置  PID不变
-
--2 	SIGINT		键盘中断   ctrl + C 
-
--3	SIGQUIT       键盘退出，中断一次，在继续
-
--9 	SIGKILL		强制终止
-
--15   SIGTERM	    终止（正常结束），缺省信号（优雅的退出）
-
--18	SIGCONT	    继续，将停止的进程继续在后台运行
-
--19	SIGSTOP	    停止
-
- -20	SIGTSTP      暂停^Z
-
-作业1： 给vsftpd进程发送信号1,15 vsftpd信号测试
-
-```shell
- [root@tianyun ~]# yum -y install vsftpd
-
- [root@tianyun ~]# systemctl start vsftpd
-
- [root@tianyun ~]# ps aux |grep vsftpd 
- root      9160  0.0  0.0  52580   904 ?        Ss   21:54   0:00 /usr/sbin/vsftpd /etc/vsftpd/vsftpd.conf
-
-[root@tianyun ~]# kill -1 9160			//发送重启信号，例如vsftpd的配置文件发生改变，希望重新加载
-```
-
-```shell
- root      9160  0.0  0.0  52580   904 ?        Ss   21:54   0:00 /usr/sbin/vsftpd /etc/vsftpd/vsftpd.conf 
-
- [root@tianyun ~]# kill 9160	    //发送停止信号，vsftpd服务有停止的脚本 systemctl stop vsftpd
-
- [root@tianyun ~]# ps aux |grep vsftpd 
-
-crond信号测试
-
-[root@tianyun ~]# ps aux |grep vim
-
-root      4362  0.0  0.2  11104  2888 pts/1    S+   23:02   0:00 vim file1
-root      4363  0.1  0.2  11068  2948 pts/2    S+   23:02   0:00 vim file2
-
-[root@tianyun ~]# kill 4362
-[root@tianyun ~]# kill -9 4363
-
-[root@tianyun ~]# killall vim				//给所有vim进程发送信号
-[root@tianyun ~]# killall httpd
-
-作业3：信号测试18,19
-```
-
-```shell
-[root@tianyun ~]# ps aux |grep sshd
-root      5571  0.0  0.0  64064  1164 ?        		Ss   09:35   0:00 /usr/sbin/sshd
-
-[root@tianyun ~]# kill -STOP 5571
-[root@tianyun ~]# ps aux |grep sshd
-root      5571  0.0  0.0  64064  1164 ?        		Ts   09:35   0:00 /usr/sbin/sshd
-
-[root@tianyun ~]# kill -cont 5571
-[root@tianyun ~]# ps aux |grep sshd
-root      5571  0.0  0.0  64064  1164 ?        		Ss   09:35   0:00 /usr/sbin/sshd
-```
-
-
-
-```shell
-[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ ps aux |grep crond
-root      22319  0.0  0.1 124140  1568 ?         Ss   14:54   0:00 /usr/sbin/crond -n
-yang     22427  0.0  0.0 112648   964 pts/2    R+   15:07   0:00 grep --color=auto crond
-[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ 
-[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ sudo kill -19 22319
-[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ ps aux |grep crond
-root     22319  0.0  0.1 124140  1568 ?        Ts   14:54   0:00 /usr/sbin/crond -n
-yang     22431  0.0  0.0 112648   964 pts/2    R+   15:07   0:00 grep --color=auto crond
-[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ 
-[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ sudo kill -cont 22319
-[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ ps aux |grep crond
-root     22319  0.0  0.1 124140  1568 ?        Ss   14:54   0:00 /usr/sbin/crond -n
-yang     22436  0.0  0.0 112648   960 pts/2    R+   15:08   0:00 grep --color=auto crond
-```
-
-作业4：踢出一个从远程登录到本机的用户 
-
-```shell
-[root@tianyun ~]# pkill --help 
-pkill: invalid option -- '-' Usage: pkill [-SIGNAL][-fvx] [-n|-o][-P PPIDLIST] [-g PGRPLIST][-s SIDLIST] 	[-u EUIDLIST] [-U UIDLIST][-G GIDLIST] [-t TERMLIST][PATTERN]
-
- [root@tianyun ~]# pkill -u alice 
-
-[root@tianyun ~]# w  
-15:46:44 up  2:19,  4 users,  load average: 0.17, 0.12, 0.08 
-
-USER     TTY      FROM              LOGIN@   IDLE   JCPU   PCPU WHAT 
-
-root     tty1     :0               21:32     ?     4:22   4:22  /usr/bin/Xorg :
-
- root     pts/0    :0.0             15:46    0.00s  0.00s  0.00s w
-
- root     pts/3    172.16.8.100     15:46    2.00s  0.01s  0.00s sleep 50000
-
-[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ w  
-
-15:17:25 up  5:42,  3 users,  load average: 0.00, 0.01, 0.05 
-
-USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT yang     pts/0    123.120.22.32    15:00   21.00s  0.00s  0.00s -bash yang     pts/1    123.120.22.32    15:00    5.00s  0.00s  0.00s w 
-
-yang     pts/2    123.120.22.32    12:04   13.00s  0.12s  0.02s vim file1 [yang@iZm5eiwihahzq6ds23gbf6Z ~]$ pkill -t pts/2                //终止pts/2上所有进程 [yang@iZm5eiwihahzq6ds23gbf6Z ~]$ pkill -9 -t pts/2            //终止pts/2上所有进程  并结束该pts/2
-
-[yang@iZm5eiwihahzq6ds23gbf6Z ~]$ w
-
-  15:20:59 up  5:45,  3 users,  load average: 0.00, 0.01, 0.05 USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
-
- yang     pts/0    123.120.22.32    15:00    3:55   0.00s  0.00s -bash yang     pts/1    123.120.22.32    15:00    3.00s  0.01s  0.00s w 
-
-yang     pts/2    123.120.22.32    15:20    3.00s  0.00s  0.00s -bash [yang@iZm5eiwihahzq6ds23gbf6Z ~]$ sudo pkill -u yang 
-```
-
-【查  杀】
-
-1、查找关于 sleep 命令的进程pid
-
-```
-ps aux | grep sleep
-```
-
-2、正常退出sleep的进程
-
-```
-kill 进程PID
-```
-
-3、先生成一个ping www.baidu.com 的进程，然后查看该进程的PID，进行强制退出
-
-```
-先打开一个终端：
-# ping www.baidu.com
-
-在重新打开一个终端去查看
-# ps aux | grep pin[g]
-# kill -9 进程PID
-```
-
-
-
-### 四.进程优先级 nice  【扩展】
-
-Linux 进程调度及多任务
-
- 相对优先级nice
-
- 查看进程的nice级别
-
- 启动具有不同nice级别的进程
-
- 更改现有进程的nice级别
-
-Linux 进程调度及多任务 每个CPU（或CPU核心）在一个时间点上只能处理一个进程，通过时间片技术，Linux实际能够运行的进程（和线程数）可以超 出实际可用的CPU及核心数量。Linux内核**进程调度程序**将多个进程在CPU核心上快速切换，从而给用户多个进程在同时运行的假象
-
-##### 4.1.相对优先级 nice
-
- 由于不是每个进程都与其他进程同样重要，可告知**进程调度程序**为不同的进程使用不同的**调度策略**。常规系统上运行的大多 数进程所使用的调度策略为 **SCHED_OTHER** (也称为**SCHED_NORMAL**)，但还有其它一些调度策略用于不同的目的。  
-
-**SCHED_OTHER** 调度策略运行的进程的**相对****优先级**称为进程的 nice 值，可以有40种不同级别的nice值
-
-![](image\8.png)
-
-
-
-优先级 PR
-
-PR=nice+20
-
-nice 值越高：   表示优先级越低，例如+19，该进程容易将CPU 使用量让给其他进程。
-
- nice 值越低：   表示优先级越高，例如-20，该进程更不倾向于让出CPU。
-
-查看进程的nice级别
-
-使用top查看nice级别 
-
-NI: 实际nice级别
-
- PR: 将nice级别显示为映射到更大优先级队列，-20映射到0，+19映射到39
-
-3.使用ps查看nice级别
-
- [root@tianyun ~]# ps axo pid,command,nice  --sort=-nice
-
- [root@tianyun ~]# ps axo pid,command,nice,cls  --sort=-nice **TS** 表示该进程使用的调度策略为**SCHED_OTHER**
-
-启动具有不同nice级别的进程
-
-启动进程时，通常会继承父进程的 nice级别，默认为0。
-
-```shell
-[root@tianyun ~]# nice -n -5 sleep 6000 & 
-[root@tianyun ~]# ps axo command,pid,nice |grep sleep
-
-[root@tianyun ~]# nice -n -20 /usr/sbin/httpd
-[root@tianyun ~]# ps axo pid,command,nice,cls |grep httpd
-```
-
-11116 /usr/sbin/httpd             -20  TS
-11119 /usr/sbin/httpd             -20  TS
-11120 /usr/sbin/httpd             -20  TS
-11121 /usr/sbin/httpd             -20  TS
-11122 /usr/sbin/httpd             -20  TS
-11123 /usr/sbin/httpd             -20  TS
-11124 /usr/sbin/httpd             -20  TS
-11125 /usr/sbin/httpd             -20  TS
-11126 /usr/sbin/httpd             -20  TS
-
-更改现有进程的nice级别
-
-1.使用top更改nice级别
-
- r	调整进程的优先级（Nice Level） （-20高）  －－－0－－－ （19低） 
-
-2.使用shell更改nice级别
-
- 
-
-```shell
-[root@tianyun ~]# sleep 7000
-```
-
- & [3] 10089
-
-```shell
- [root@tianyun ~]# renice -20 10089 
- 10089: old priority 0, new priority -20 
- 
- [root@tianyun ~]# htop
-  F3 查找到具体的进程
-  F7  减
-  F8  加
-```
-
-### 五. **作业控制 jobs** [扩展]
-
-作业控制是一个命令行功能，允许一个shell 实例来运行和管理多个命令。
-如果没有作业控制，父进程fork()一个子进程后，将sleeping，直到子进程退出。
-使用作业控制，可以选择性暂停，恢复，以及异步运行命令，让 shell 可以在子进程运行期间返回接受其他命令。
-
-![file://C:\Users\ADMINI~1\AppData\Local\Temp\ct_tmp/1.png](image\9)
-
-
-
-
-foreground, background, and controlling terminal
-
-**foreground:**     前台进程是在终端中运行的命令，该终端为进程的控制终端。前台进程接收键盘产生的输入和信号，并允许从终端读取或写入到终端。
-**background:**    后台进程没有控制终端，它不需要终端的交互。
-
-```
-示例1:
-ctrl + c	//结束前台的进程
-ctrl + z	//把前台的进程放到后台，但是会停止进程
-[root@tianyun ~]# sleep 3000 &		                //运行程序（时），让其在后台执行
-[root@tianyun ~]# sleep 4000			            //ctrl+ Z,将前台的程序挂起（暂停）到后台
-[2]+  Stopped             sleep 4000
-
-[root@tianyun ~]# ps aux |grep sleep
-root      8895  0.0  0.0 100900   556 pts/0    S    12:13   0:00 sleep 3000
-root      8896  0.0  0.0 100900   556 pts/0    T    12:13   0:00 sleep 4000
-
-[root@tianyun ~]# jobs 						            //查看后台作业
-[1]-  Running                sleep 3000 &
-[2]+ Stopped                sleep 4000
-
-[root@tianyun ~]# bg %2					            //让作业2在后台继续运行
-[root@tianyun ~]# fg %1					            //把后台正在运行的作业1调到前台运行
-
-[root@tianyun ~]# kill %1					            //kill 1，终止作业为1的进程
-```
-
-**nohup** 英文全称 no hang up（不挂起），用于在系统后台不挂断地运行命令，退出终端不会影响程序的运行。
-
-**nohup** 命令，在默认情况下（非重定向时），会输出一个名叫 nohup.out 的文件到当前目录下，如果当前目录的 nohup.out 文件不可写，输出重定向到 **$HOME/nohup.out** 文件中。
-
-```
-实例
-以下命令在后台执行 root 目录下的 runoob.sh 脚本：
-
-# nohup /root/runoob.sh &
-在终端如果看到以下输出说明运行成功：
-
-appending output to nohup.out
-这时我们打开 root 目录 可以看到生成了 nohup.out 文件。
-
-如果要停止运行，你需要使用以下命令查找到 nohup 运行脚本到 PID，然后使用 kill 命令来删除：
-
-# ps -aux | grep "runoob.sh" 
-参数说明：
-a : 显示所有程序
-u : 以用户为主的格式来显示
-x : 显示所有程序，不区分终端机
-
-找到 PID 后，就可以使用 kill PID 来删除。
-
-# kill -9  进程号PID
-```
-
-随堂作业：
-
-1、生成一个 ping www.baidu.com 的进程，将其放到后台运行，该怎么操作
-
-```
-方法1：ping www.baidu.com &
-
-方法2： ping www.baidu.com
-       ctrl + z
-       jobs
-       bg %x
-```
-
-2、删除该进程，最少写出两种方法
-
-```
-方法1：关闭终端
-方法2：重新开一个终端
-      ps aux | grep ping 	//找出关于后台运行的ping 的 pid
-      kill -9  pid
-
-方法3： 重新开一个终端
-       killall ping
-```
-
-3、生成一个sleep 3600的进程，先将其放到后台停止运行，在将其设置后台运行，
-
-```
-sleep 3600
-按 ctrl + z
-jobs	//任务编号
-bg %任务编号
-```
-
-4、现有一个命令  java -jar java-demo.war , 现要求任何情况都让其不中断运行，该怎么做？
-
-```
-nohup java -jar java-demo.war &
-```
