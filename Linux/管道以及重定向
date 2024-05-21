@@ -1,0 +1,832 @@
+### 一 .管道及重定向
+
+```
+标准输出
+echo
+	选项：
+	-n		//不换行
+	-e		//支持转义符； \n   换行  \t  制表符
+案例：
+[root@localhost ~]# echo -n "hello"
+hello[root@localhost ~]#		//不换行
+
+[root@localhost ~]# echo -e "hello\nworld"
+hello
+world
+
+[root@localhost ~]# echo
+				//打印空行
+				
+
+【扩展】
+格式化输出 printf
+```
+
+
+
+#### I/O重定向
+
+I/O Redirection
+
+标准输入、标准输出、标准错误 
+
+输出重定向及综合案例 
+
+输入重定向及结合案例
+
+标准输入、标准输出、标准错误
+
+file descriptors （FD，文件描述符 或  Process I/O channels）： 进程使用文件描述符来管理打开的文件
+
+```shell
+ [root@tianyun ~]# ls /proc/$$/fd 
+ 0  1  2  3  4
+```
+
+  0, 1, and 2, known as standard input, standard output, and standard error
+
+![](image\2.png)
+
+输出重定向 (覆盖，追加) 
+
+正确输出： 1> 1>> 等价于 > >> 
+
+错误输出： 2> 2>> 
+
+```
+>		覆盖追加
+>>      追加
+```
+
+
+
+##### 1.1. 案例1：输出重定向（先覆盖在追加）
+
+```shell
+ [root@tianyun ~]# date 1> date.txt
+
+ [root@tianyun ~]# > date.txt			//单独清空文件的内容
+
+```
+
+![](image\3.png)
+
+##### 1.2.案例2：输出重定向（追加）
+
+```shell
+root@tianyun ~]# date >> date.txt 
+```
+
+![](image\4.png)
+
+
+
+```shell
+ [root@tianyun ~]# ls /home/  /aaaaaaaaa >>list.txt 
+```
+
+ls: 无法访问/aaaaaaaaa: 没有那个文件或目录
+
+![](image\4.png)
+
+
+
+1.3. 案例3：错误输出重定向
+
+```shell
+ [root@tianyun ~]# ls /home/  /aaaaaaaaa  2>error.txt	  
+```
+
+  //重定向到不同的位置
+
+![](image\5.png)
+
+##### 1.4.正确和错误都输入到相同位置
+
+```shell
+ [root@tianyun ~]# ls /home/  /aaaaaaaaa &>list.txt					    //混合输出，不管是正确还是错误都收集
+```
+
+![](image\6.png)
+
+##### 1.5. 正确和错误都输入到相同位置
+
+```shell
+ [root@tianyun ~]# ls /home/  /aaaaaaaaa >list.txt 2>&1			    //重定向到相同的位置
+
+ 等于
+ [root@tianyun ~]# ls /home/  /aaaaaaaaa  &>list.txt			//收集所有的输出到list.txt 文件中
+```
+
+![](image\7.png)
+
+##### 1.6. 正确和错误都输入到对应位置
+
+```shelll
+ [root@tianyun ~]# ls /home/  /aaaaaaaaa >list.txt 2>/dev/null   //空设备，即将产生的输出丢掉
+
+
+```
+
+![](image\8.png)
+
+思考题：
+
+ cp /etc/passwd /dev/null ??? 
+
+cp /etc/passwd /etc/passwd1 2>/dev/null ???
+
+ 如果/dev/null设备被删除 rm -f /dev/null
+
+1 手动创建 mknod -m 666 /dev/null c 1 3  
+
+2 重启自动创建
+
+ ![](image\9.png)
+
+
+
+ 主设备号  从设备号                                                              MAJOR    MINOR 
+
+主设备号相同： 表示为同一种设备类型，也可以认为kernel使用的是相同的驱动 
+
+从设备号：在同一类型设备中的一个序号 
+
+普通文件和设备文件：
+
+```shell
+[root@tianyun ~]# ll /dev/null /dev/sda1 /etc/hosts
+```
+
+  crw-rw-rw-  1 root root 1, 3 8月   1 06:36 /dev/null 
+
+brw-rw----  1 root disk 8, 1 8月   1 06:36 /dev/sda1
+
+ -rw-r--r--.  1 root root  158 6月   7 2013 /etc/host
+
+##### 1.7.脚本中使用重定向
+
+```shell
+[root@tianyun ~]# vim ping1.sh 
+#!/usr/bin/env bash
+
+ping -c1 10.3.138.2
+
+if [ $? -eq 0 ];then       
+
+  echo "10.3.138.2 is up."
+
+ else        
+
+ echo "10.3.138.2 is down!" 
+
+fi
+
+[root@tianyun ~]# chmod +x ping1.sh
+
+[root@tianyun ~]# ./ping1.sh 
+```
+
+
+
+##### 1.8.脚本中使用重定向
+
+```shell
+ [root@tianyun ~]# vim ping1.sh
+
+ ping -c1 10.18.40.100 &>/dev/null
+
+ if [ $? -eq 0 ];then      
+
+   echo "10.18.40.100 is up." 
+
+else        
+
+ echo "10.18.40.100 is down!"
+
+ fi
+```
+
+案例8：脚本中使用重定向 
+
+```shell
+[root@tianyun ~]# vim ping2.sh 
+
+ ping -c1 10.18.40.100 &>/dev/null
+
+ if [ $? -eq 0 ];then    
+
+     echo "10.18.40.100 is up." >>up.txt
+
+ else       
+
+  echo "10.18.40.100 is down!" >>down.txt
+
+fi
+
+[root@tianyun ~]# vim ping2.sh 
+
+[root@tianyun ~]# chmod +x ping1.sh  
+
+[root@tianyun ~]# ./ping2.sh 
+```
+
+课堂练习：
+
+1、创建文件a.txt，内容为两行，内容如下
+
+hello
+
+world
+
+```
+# echo -e "hello\nworld" > a.txt
+```
+
+2、将a.txt文件的内容带行号输出到b.txt
+
+```
+# cat -n a.txt > b.txt
+```
+
+3、ls /home /abc    执行该命令，将正确的输出进行收集，也将错误的输出收集
+
+```
+# ls /home /abc 1>zhengque.txt 2>cuowu.txt
+```
+
+4、怎么样执行命令，才能永远只看到正确的输出？
+
+```
+# 命令  2> /dev/null
+```
+
+
+
+### 二.输入重定向
+
+标准输入：   <   等价 0< 
+
+a.案例1：
+
+```shell
+ yum -y install mailx 
+ [root@tianyun ~]# mail alice                       //没有改变输入的方向，默认键盘
+
+ Subject: hello
+
+ 1111
+
+ 2222
+
+ 3333
+
+ .
+
+ EOT     [^d] ctrl +d 结束输入
+
+
+
+[root@tianyun ~]# su - alice
+[alice@tianyun ~]$ mail
+Heirloom Mail version 12.5 7/5/10.  Type ? for help.
+"/var/spool/mail/alice": 1 message 1 new
+
+ N  1 root                  Mon Jul 31 15:16  20/617   "hello"
+
+[root@tianyun ~]# mail -s "test01" alice < /etc/hosts	//输入重定向，来自于文件
+-s 指定邮件标题  < 文件（邮件内容）  
+```
+
+b.案例2：
+
+```shell
+ [root@tianyun ~]# grep 'root'						           //没有改变输入的方向，默认键盘，此时等待输入... 
+
+yang sss sssrootssss..
+
+ sssrootssss..  
+
+[root@tianyun ~]# grep 'root' < /etc/passwd 
+root:x:0:0:root:/root:/bin/bash 
+operator:x:11:0:operator:/root:/sbin/nologin
+
+
+```
+
+案例3 
+
+```shell
+[root@tianyun ~]# dd if=/dev/zero of=/file1.txt bs=1M count=2 
+dd if（input file）=/dev/zero  of（output file）=/file1.txt   bs（block size）=1M  count=20
+[root@tianyun ~]# dd </dev/zero >/file2.txt bs=1M count=20
+```
+
+案例4：mysql表结构导入
+
+```shell
+[root@tianyun ~]# yum -y install mariadb-server mariadb
+[root@tianyun ~]# systemctl start mariadb
+[root@tianyun ~]# vim bbs.sql
+create database bbs;
+create table bbs.t1 (id int);
+insert into bbs.t1 values(1);
+
+[root@tianyun ~]# mysql <bbs.sql
+[root@tianyun ~]# mysql 
+MariaDB [(none)]> show databases;
+MariaDB [(none)]> \q
+```
+
+c 案例5：at
+
+```shell
+yum -y install at
+systemctl start atd
+[root@tianyun ~]# at now +5 min
+
+ at> useradd yang99 
+
+at> <EOT>    ^d快捷键 
+
+job 1 at Mon Jul 31 15:29:00 2017 
+
+ [root@tianyun ~]# vim at.txt  
+ useradd yang100 
+ useradd yang102
+
+ [root@tianyun ~]# at now +2 min <a.txt  
+ job 2 at Mon Jul 31 15:27:00 2017
+```
+
+综合案例1: 利用重定向建立多行的文件
+
+```shell
+[root@tianyun ~]# echo "111" > file1.txt
+
+[root@tianyun ~]# cat file1.txt  
+111
+
+[root@tianyun ~]# cat >file2.txt 
+
+111 
+
+222
+
+333 
+
+444 
+
+^D
+
+[root@tianyun ~]# cat file2.txt
+```
+
+请问：file2.txt有几行？
+
+```shell
+[root@tianyun ~]# cat >>file3.txt 
+aaa 
+bbb 
+ccc 
+7ddd 
+^D
+
+[root@tianyun ~]# cat file3.txt 
+```
+
+请问：file3.txt有几行？
+
+ 
+
+```shell
+ [root@tianyun ~]# cat >file4 <<EOF
+111
+222
+333
+EOF
+[root@tianyun ~]# cat file4
+111
+222
+333
+
+综合案例2: 利用重定向建立多行的文件
+```
+
+```shell
+[root@tianyun ~]# vim create_file.sh
+
+cat >file200.txt <<EOF 
+
+111
+
+222 
+
+333 
+
+yyy 
+
+ccc
+
+EOF
+
+[root@tianyun ~]# bash create_file.sh
+
+ [root@tianyun ~]# cat file200.txt
+
+111 
+
+222
+
+333
+
+yyy
+
+ccc
+```
+
+综合案例3: 脚本中利用重定向打印消息
+
+```shell
+[root@tianyun ~]# cat create_file.sh
+
+cat <<-EOF
+
+111
+
+222
+
+333
+
+yyy
+
+ccc 
+
+EOF
+
+ [root@tianyun ~]# bash create_file.sh 
+
+ 111 
+
+222
+
+ 333 
+
+yyy
+
+ ccc
+
+[root@tianyun ~]# vim yang.sh 
+
+cat <<-EOF
++---------------------------------------+             
+|                 虚拟机基本管理 v4.0   |
+|                                       |
+|               by tianyun              | 
+|       1. 安装KVM                      |       
+|       2. 安装或重置CentOS-6.8         |
+|       3. 安装或重置CentOS-7.3         |
+|       4. 安装或重置RHEL-6.4           |
+|       5. 安装或重置Windows-7          |
+|       6. 删除所有虚拟机               |
+|       q. 退出管理程序                 |
+|                                       |
+|                                       |
++---------------------------------------+
+
+EOF
+```
+
+
+
+综合案例4
+
+```shell
+[root@tianyun ~]# ls; date &>/dev/null                   //希望两条命令输出都重定向 ??
+
+[root@tianyun ~]# ls &>/dev/null; date &>/dev/null
+
+[root@tianyun ~]# (while :; do date; sleep 2; done) &      //在后台运行，但输出依然在前台终端
+```
+
+```shell
+[root@tianyun ~]# 2017年 08月 01日 星期二 10:12:42 CST 
+```
+
+2017年 08月 01日 星期二 10:12:44 CST 
+
+2017年 08月 01日 星期二 10:12:46 CST 
+
+2017年 08月 01日 星期二 10:12:48 CST 
+
+2017年 08月 01日 星期二 10:12:50 CST
+
+```shell
+[root@tianyun ~]# (while :; do date; sleep 2; done) &>date.txt &
+
+ [root@tianyun ~]# tailf /date.txt 
+```
+
+2017年 08月 01日 星期二 10:15:29 CST
+
+ 2017年 08月 01日 星期二 10:15:31 CST 
+
+2017年 08月 01日 星期二 10:15:33 CST
+
+ 2017年 08月 01日 星期二 10:15:35 CST
+
+ 2017年 08月 01日 星期二 10:15:37 CST
+
+ 2017年 08月 01日 星期二 10:15:39 CST
+
+ 2017年 08月 01日 星期二 10:15:41 CST
+
+
+
+  
+
+  
+
+```shell
+[root@tianyun ~]# jobs
+[1]+  运行中               ( while :; do
+    date; sleep 2;
+done ) &>/date.txt &
+
+[root@tianyun ~]# kill %1
+[root@tianyun ~]# jobs
+
+
+后面课程学习安装源码软件时：
+
+ [root@tianyun ~]# (./configure && make && make install) &>/dev/null
+```
+
+随堂题目：
+
+1、要求创建文件a.txt  内容为     【用两种方法】
+
+hello 
+
+world   
+
+```
+1、
+# echo -e "hello\nworld" > a.txt
+
+2、
+# cat > a.txt <<EOF
+hello
+world
+EOF
+
+3、
+# cat > a.txt
+hello
+world
+^d	//按ctrl + d 结束输入
+```
+
+2、将上面写的a.txt的内容作为邮件内容发送给tom用户
+
+mailx -s  标题  接受的用户/邮箱地址
+
+```
+mail -s test tom < a.txt
+```
+
+
+
+### 三. 进程管道Piping
+
+•   Use redirection characters to control output to files.    
+
+•   Use piping to control output to other programs.  
+
+files:   > 2> file1.txt  /dev/pts/2  /dev/tty1  /dev/null  /dev/sda programs: | 
+
+ 进程管道 
+
+用法：command1 | command2 |command3 |
+
+将前面命令的标准输出交给后面的命令作为标准输入
+
+![](image\10.png)
+
+```shell
+[root@tianyun ~]# ll /dev/ |less
+
+[root@tianyun ~]# ps aux |grep 'sshd'
+[root@tianyun ~]# rpm -qa  |grep 'httpd' 					    //查询所有安装的软件包，过滤包含httpd的包
+[root@tianyun ~]# yum list  |grep 'httpd'
+```
+
+案例1：将/etc/passwd中的用户按UID大小排序
+
+ 
+
+```shell
+[root@tianyun ~]# sort -t":" -k3 -n /etc/passwd		        //以: 分隔，将第三列按字数升序
+
+[root@tianyun ~]# sort -t":" -k3 -n /etc/passwd -r   	        //逆序 
+[root@tianyun ~]# sort -t":" -k3 -n /etc/passwd |head -n 	指定字段分隔符--field-separator -k 指定列 -n 按数值
+```
+
+案例2：统计出最占CPU的5个进程
+
+```shell
+ [root@tianyun ~]# ps aux --sort=-%cpu |head -6 
+```
+
+案例3：统计当前/etc/passwd中用户使用的shell类型
+
+思路：取出第七列（shell） | 排序（把相同归类）| 去重
+
+```shell
+[root@tianyun ~]# awk -F: '{print $7}' /etc/passwd
+[root@tianyun ~]# awk -F: '{print $7}' /etc/passwd |sort
+[root@tianyun ~]# awk -F: '{print $7}' /etc/passwd |sort |uniq 
+[root@tianyun ~]# awk -F: '{print $7}' /etc/passwd |sort |uniq -c
+```
+
+131 	/bin/bash       
+
+1 	/bin/sync       
+
+1 	/sbin/halt      
+
+63 	/sbin/nologin     
+
+  1 	/sbin/shutdown
+
+ -F: 	指定字段分隔符
+
+ $7 	第七个字段
+
+案例4： 统计网站的访问情况 top 20 思路： 打印所有访问的连接 | 过滤访问网站的连接 | 打印用户的IP | 排序 | 去重
+
+```shell
+[root@tianyun ~]# yum -y install httpd 
+
+[root@tianyun ~]# systemctl start httpd
+
+ [root@tianyun ~]# systemctl stop firewalld
+
+[root@tianyun ~]# ss -an |grep :80 |awk -F":" '{print $8}' |sort |uniq -c 
+```
+
+4334 192.168.0.66 	
+
+1338 192.168.10.11 	
+
+1482 192.168.10.125      
+
+44 192.168.10.183    
+
+3035 192.168.10.213    
+
+ 375 192.168.10.35     
+
+362 192.168.10.39
+
+```shell
+[root@tianyun ~]# ss -an |grep :80 |awk -F":" '{print $8}' |sort |uniq -c |sort -k1 -rn |head -n 20
+```
+
+案例5： 打印当前所有IP 
+
+```shell
+[root@tianyun ~]# ip addr |grep 'inet ' |awk '{print $2}' |awk -F"/" '{print $1}' 
+127.0.0.1 
+192.168.2.115
+
+ifconfig ens33 |grep 'inet ' |awk '{ print $2 }'
+hostname -I
+```
+
+案例6：打印根分区已用空间的百分比（仅打印数字）
+
+```shell
+[root@tianyun ~]# df -P |grep '/$' |awk '{print $5}' |awk -F"%" '{print $1}'
+```
+
+![](image\11.png)
+
+```shell
+[root@tianyun ~]# ip addr |grep 'inet ' |tee ip.txt |awk -F"/" '{print $1}' |awk '{print $2}' 
+
+127.0.0.1
+
+172.16.60.1 
+
+[root@tianyun ~]# cat ip.txt    
+
+inet 127.0.0.1/8 scope host lo 
+
+inet 172.16.60.1/24 brd 172.16.60.255 scope global eth0
+
+[root@tianyun ~]# ip addr |grep 'inet ' |tee -a ip.txt |awk -F"/" '{print $1}' |awk '{print $2}' 
+
+127.0.0.1 
+
+172.16.60.1
+
+[root@tianyun ~]# date >date.txt
+
+ [root@tianyun ~]# date |tee date.txt
+
+[root@tianyun ~]# top -d 1 -b -n 1 > top.txt
+
+ [root@tianyun ~]# top -d 1 -b -n 1 |tee top.txt
+```
+
+作业
+
+1. 了解匿名管道和命名管道的区别？ 
+
+2. 如何创建命名管道？
+
+### 四.参数传递 Xargs
+
+```shell
+定义
+ xargs命令是给其他命令传递参数的一个过滤器，也是组合多个命令的一个工具。它擅长将标准输入数据转换成命令行参数，xargs能够处理管道或者 stdin 并将其转换成特定命令的命令参数。
+ xargs也可以将单行或多行文本输入转换为其他格式，例如多行变单行，单行变多行。xargs的默认命令是 echo，空格是默认定界符。这意味着通过管道传递给 xargs的输入将会包含换行和空白，不过通过 xargs 的处理，换行和空白将被空格取代。xargs是构建单行命令的重要组件之一。
+
+```
+
+
+
+| 常用参数 | 说明                                           |
+| -------- | ---------------------------------------------- |
+| -n       | 多行输出，以几个参数输出  //参数都在一行       |
+| -d       | 自定义一个定界符                               |
+| -I       | 指定一个替换字符串{}    //参数是以每一行为单位 |
+| -t       | 打印出 xargs 执行的命令                        |
+| -p       | 执行每一个命令时弹出确认                       |
+
+
+
+```
+功能:将从标准输入中接收到的内容(以空格分隔)传递给后面的命令作为其参数
+案例：
+参数以空格隔开
+# echo "tom jerry"
+tom jerry
+# echo "tom jerry" | xargs -n1 id
+uid=8889(tom) gid=8892(tom) 组=8892(tom),8890(WEB)
+uid=1001(jerry) gid=8890(WEB) 组=8890(WEB),10(wheel)
+
+指定固定参数为分隔符
+# echo -n "tom;jerry" | xargs -d";" -n1 id
+uid=9996(tom) gid=9999(admin) 组=9999(admin),10015(it)
+uid=10005(jerry) gid=10005(jerry) 组=10005(jerry),8898(IT)
+
+-p 执行每个命令弹出确认
+[root@localhost ~]# echo -n "tom;jerry" | xargs -p -d";" -n1 id
+id tom ?...y
+uid=9996(tom) gid=9999(admin) 组=9999(admin),10015(it)
+id jerry ?...y
+uid=10005(jerry) gid=10005(jerry) 组=10005(jerry),8898(IT)
+
+参数以换行隔开
+# cat a.txt
+123.txt
+123.html
+123.py
+
+# cat a.txt | xargs -I {} touch {}
+# ls
+123.html  123.py  123.txt
+
+实战案例：
+同时创建用户tom jerry jack，并且显示创建的过程 [用两种方法]
+
+```
+
+
+
+### grep - 过滤
+
+```
+功能：打印出匹配到"关键字"的行
+写法：grep [选项] 关键字  文件
+
+关键字：  
+root 	//含有root的行
+^root	//以root开头的行
+root$	//以root结尾的行
+^$		//空行
+【加上"" 引起来】
+选项：
+-i		//忽略大小写
+-v		//取反
+-n		//带行号打印
+-q		//不输出
+-c		//统计匹配到的行的数量
+-w		//只过滤匹配的关键字 “整体”
+-r		//递归目录查找关键字
+-E		//支持扩展正则->  [0-9] [a-z] [A-Z]  \<\> 词首词尾
+
+```
+
