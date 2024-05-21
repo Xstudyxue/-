@@ -1,0 +1,312 @@
+# 软件包管理
+
+在Linux中,不同的发行版软件管理的方式可能不一样,具体来说,主要分为两大派:
+
+![image-20220516163553071](.\img\image-20220516163553071.png)
+
+```
+1. dpkg		.deb	apt-get
+代表发行版:ubuntu,Debian,Mint
+2. rpm   	.rpm    rpm，yum
+代表发行版: Redhat,centos ,Fedora
+
+```
+
+RPM： Rpm Package Manager
+
+CentOS系统软件安装三种方式
+
+```
+rpm:安装简单,可定制性差,一台机器上不能装多个相同的软件,稳定性高源码包
+编译安装:安装复杂,可定制性好,一台机器上可安装多个相同的软件
+二进制包:安装简单,可定制性差,一台机器可安装多个相同的软件,稳定性较高
+```
+
+## 怎样获取rpm包
+
+```
+在网络上下载rpm包: http://rpmfind.net/    //下载不常见的rpm包
+网络yum源中获取	阿里云镜像源 https://developer.aliyun.com/mirror/   
+				清华大学镜像源	na.tsinghua.edu.cn/
+				//base基础源CentOS，扩展源epel
+镜像中获取：在光盘镜像sr0中的Packages目录下
+```
+
+怎样查看光盘的内容
+
+```
+1.将光盘连接上
+2.将光盘挂载到相应的挂载点
+# mount /dev/sr0 /mnt
+3.通过挂载点访问光盘内容
+# ls /mnt
+```
+
+rpm包介绍
+
+```
+zsh-5.8.2-25.el7.x86_64.rpm		包全名
+  zsh	包名
+  5.8.2:主版本号.次版本号.源程序的发行号
+  25: rpm发行号
+  el7:平台一般来说,不同平台的包不兼容
+  x86_64:架构
+  		x86_64: 64位
+  		i686: 32位
+  		noarch:通用
+```
+
+RPM包管理
+
+## RPM工具
+
+```shell
+安装
+# rpm -ivh 包全名		//安装软件包 i install 安装 v 显示安装的过程  h 以人类视角显示
+						--force	强制重新安装
+# rpm -Uvh 包全名		//升级安装包，如果本来没有安装，则安装
+
+卸载
+# rpm -e 包名				//检查依赖关系，卸载的包被其他的包依赖，无法卸载
+	--nodeps			//只卸载当前软件，不检查依赖关系，强制卸载
+	
+查询
+【查询已安装的】:
+查询指定软件包有没有安装:	# rpm -q 包名
+查询所有已安装的软件包:	# rpm -qa     //可以配合grep命令
+查询已安装的软件包安装的所有文件:	# rpm -ql 包名
+查询已安装的软件包安装的配置文件:	# rpm -qc 包名
+通过文件名反查文件是由哪个包安装的:	# rpm -qf 文件的绝对路径
+
+【查询未安装的】:
+查询未安装的软件包将会安装的所有文件:	# rpm -qpl 包全名
+查询未安装的软件包将会安装的配置文件:	# rpm -qpc 包全名
+查询未安装的软件包详细信息: # rpm -qpi 包全名
+
+扩展：
+``反引:等价于$(),引用命令的输出结果,``内部一定是命令
+例:
+#rpm -qf `which useradd`
+shadow-utils-4.1.5.1-24.el7.x86_64
+# rpm -qf $(which useradd)
+shadow-utils-4.1.5.1-24.el7.x86_64
+
+随堂案例：
+1、查询一下vim命令是由哪个包安装的(两个命令)
+
+
+2、查询一下vim软件包在系统里面安装了哪些配置文件
+
+3、现在有一个配置文件 /etc/httpd/conf/httpd.conf,请问这个配置文件是来自哪个包？
+
+4、请通过rpm安装httpd的服务，httpd  httpd-tools
+
+5、卸载httpd软件包，不卸载其它的依赖包？
+
+6、请问，如果我先卸载httpd-tools 软件包，httpd会卸载吗？
+本身不能卸载，因为httpd是依赖httpd-tools
+
+7、请问能不能强行卸载httpd-tools
+
+```
+
+```shell
+rpm包无法自动解决依赖性问题,需要手动解决,非常麻烦..
+yum可以解决软件包之间的依赖问题
+```
+
+## YUM工具
+
+yum仓库
+
+```
+1.多个rpm包
+2.记录这些包及包之间的依赖关系- repodata目录
+```
+
+配置yum源
+
+本地源
+
+```shell
+默认仓库  /etc/yum.repos.d/
+
+要使用yum仓库,需要先进行配置
+主配置文件:/etc/yum.conf
+
+[root@localhost mnt]# tail -2 /etc/yum.conf
+# PUT YOUR REPOS HERE OR IN separate files named file.repo
+# in /etc/yum.repos.d//仓库可以定义在这里或/etc/yum.repos.d目录下以.repo结尾的单独的文件中
+
+```
+
+```shell
+实验：配置本地yum仓库
+配置过程：
+1、将系统光盘sr0挂载到/mnt
+2、关闭或者备份其他仓库
+# cd /etc/yum.repos.d/
+# mkdir repo
+# mv *.repo repo/
+
+3、创建yum配置文件
+# vim local.repo
+[local]					//仓库ID
+name=local disk 		//仓库名称(描述)
+baseurl=file://mnt		//仓库的URl 或者来源
+enabled=1				//开关，0为关 1为开
+gpgcheck=0				//秘钥是否检查
+
+4、检验
+# yum repolist
+
+【注意编写yum源文件】
+1、一定要写在/etc/yum.repos.d/目录下一级
+2、一定要以.repo 结尾，否则不生效
+```
+
+```shell
+实验： 自建本地yum源
+模拟实验
+1、先拷贝部分rpm包
+# mkdir /opt/package
+# cp /mnt/cdrom/Package/a* /opt/package
+# cp /mnt/cdrom/Package/b* /opt/package
+# cp /mnt/cdrom/Package/c* /opt/package
+
+2、建立依赖关系文件
+# createrepo /opt/package
+
+3、编写yum源文件
+# vim /etc/yum.repos.d/test.repo
+[test]
+name=test
+baseurl=file:///opt/package
+enabled=1
+gpgcheck=0
+
+4、测试
+# yum repolist
+```
+
+网络源
+
+常用的网络源：centos官方源(BASE基础源)，epel源
+
+国外源下载比较慢,建议使用国内镜像源:如阿里云,清华大学,网易... 直接搜索xxx开源镜像站
+
+```shell
+备份系统自带的yum源
+# mkdir /etc/yum.repos.d/repo
+# mv /etc/yum.repos.d/*.repo /etc/yum.repos.d/repo
+
+
+例如：
+# cat /etcyum.repos.d/base.repo
+[base]
+name=centos http base
+baseurl=https://mirrors.aliyun.com/centos/7/os/x86_64/
+enabled=1
+gpgcheck=0
+
+# cat /etc/yum.repos.d/epel.repo
+[epel]
+name=centos http epel
+baseurl=https://mirrors.aliyun.com/epel/7/x86_64/
+enabled=1
+gpgcheck=0
+
+或者通过阿里云镜像站给的命令：
+# wget -O /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.repo
+# wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
+
+
+题目：
+1、配置清华大学镜像站，base源和epel源
+
+2、安装xorg-x11-apps 软件包
+
+
+```
+
+YUM命令的使用
+
+```shell
+【yum仓库有关的】：
+清理yum源缓存:
+	# yum clean all
+
+缓存软件包信息:    
+    提高搜索/安装软件的速度
+    # yum makecache
+    
+    查询yum源信息【查看当前有哪些可用的仓库】:   
+    # yum repolist     
+    
+【软件有关的】：    
+查找软件:
+	# yum search  mysql    替换 yum list  | grep 包名
+	此命令会搜索到系统已经安装和yum源里没有安装的软件信息,可以用他简单测试yum是否好用
+
+查看软件依赖性关系:                 
+    # yum  deplist  httpd
+
+查看文件反查属于哪个软件
+    # yum provides rz    
+    //可通过命令去查。也能通过文件的绝对路径去查
+
+查看系统已经安装好的软件和没有安装的软件（源里存在即可查到）:
+	# yum list	
+//最后一列
+installed    该包就是rpm 手动安装的
+含有 @		该包已经被安装过了
+
+查看系统已经安装好的软件组和没有安装的软件组（源里存在即可查到）:
+	# yum grouplist
+
+查看软件组包含的具体软件：
+    # yum  groupinfo    
+    
+安装软件组:
+	# yum groupinstall  ‘软件组名称’   
+	如果软件或者软件组名称内有空格，要给空格转义或者加单引号
+
+安装软件:
+	# yum install 软件名称
+	# yum install mysql mysql-server -y			//-y跳过确认提示直接安装
+	# yum  localinstall  包全名 -y		//单独安装本地的rpm包，等于  rpm -ivh
+
+重装：
+    # yum  reinstall    软件名        	//一定是已经安装了，才能重装
+    								//不小心删除某个文件，通过重装进行恢复
+    
+卸载软件:
+	# yum erase  mysql-server 
+	# yum remove mysql-server 		//remove 卸载，会卸载被该包所依赖的会卸载
+	# yum -y remove mysql-server
+
+更新软件
+	# yum update 软件名		//更新版本主要看你的yum源有没有新的版本
+	# yum update				//更新所有软件，更新系统；慎用
+
+打开Yum缓存功能:安装完软件之后,软件不会被删除(默认安装完之后，不会保留安装包)
+    # vim /etc/yum.conf  修改下面参数的值为1,软件会被保存到cachedir指定的目录下
+    keepcache=1
+
+随堂案例：
+1、打印出当前有哪些可用的仓库
+	
+2、现发现没有命令netstat，解决步骤？
+
+3、安装mariadb-server服务
+	
+4、请问mariadb 和 mariadb-server的关系
+
+5、如果卸载mariadb-server，mariadb包还在吗？
+
+6、如果不小心删除了 /etc/ssh/sshd_config 该文件，如何恢复，写出详细步骤？
+	
+7、配置nginx yum源，安装nginx 1.16版本 【提示去nginx官网找url地址，nginx.org】
+	
+```
+
