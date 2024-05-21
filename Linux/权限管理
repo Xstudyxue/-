@@ -1,46 +1,27 @@
 ## 权限管理
-
 ---
-
 - 基本权限UGO
-
 - umask掩码计算
-
 - ACL权限
-
 - 高级权限 SUID SGID SKITY
-
 - 特殊权限 chattr
-
 - sudo提权
-
-  
-
+---
 #### **基本权限 UGO**
-
 文件权限设置： 可以赋于某个用户或组  能够以何种方式  访问某个文件
-
-![](.\\img\image-20220510162413561.png)
-
 权限对象
-
 ```
 属主 		-  U  (user)
 属组 		-  G  (group)
 其他人    -  O	  (other)
 ```
-
 基本权限类型
-
 ```
 r  -  可读	(4)
 w  -  可写	(2)
 x  -  可执行	(1)
 ```
-
 怎么去查看文件或者目录对应的属主和属组的权限？
-
-```
 # ls -l a.txt
 -rw-r--r--. 1 root root 0 5月   9 22:32 a.txt
 分析：
@@ -49,11 +30,8 @@ x  -  可执行	(1)
 其他人	   ->	r--
 
 # ls -ld  /tmp		//查看目录本身的详细信息
-```
 
 ##### 怎么去设置权限？
-
-```
 # chmod 选项 文件/目录
 选项
 -R	 	//递归修改-对目录生效
@@ -78,11 +56,8 @@ chmod u+x a.txt
 案例
 1、修改a.txt的权限为 rwx rw- --x
 chmod 761 a.txt
-```
 
 ##### 怎么去设置文件或者目录的属主和属组？
-
-```
 # chown 选项 文件/目录     //属主和属组  真实存在的
 选项
 -R	 	//递归修改-对目录生效
@@ -94,17 +69,12 @@ chown rng:IT a.txt
 3、要求修改a.txt文件的属组为WEB ？
 chown :WEB a.txt
 
-```
-
 ##### rwx权限对于文件或者目录的作用？
-
-```shell
-[root@server ~]# ls -l a.txt 
+# ls -l a.txt 
 -rw-r--r-- 1 www gz 0 Apr 26 19:29 a.txt
 
 //a.txt 文件的属主是www，继承的权限是rw-
 //a.txt 文件的属组是gz，gz组里的成员继承的权限是r--
-
 
 rwx权限对于文件而言
 r	是否能查看文件-》 cat  tail head 
@@ -116,41 +86,25 @@ r   是否能查看目录里的内容   -》 ls
 w   是否能在目录创建删除修改文件  -》 touch mkdir cp mv rm
 x	是否能进入该目录	-》 cd (目录如果没有x权限，其他权限都是虚的)
 
-
 //注意： ugo基本权限对于超级管理用户root无效
-
-```
-
-<img src="img/image-20230426193057226.png" style="zoom: 67%;" />
-
 【如果要分析用户对文件拥有哪些权限，一定要先考虑用户是否对文件所在的目录拥有x权限】
 
-![](.\img\image-20220510154656747.png)
-
 #### umask权限掩码计算
-
-```
 默认的UMASK 022
 计算过程
 文件权限 666	rw-  rw-  rw-
-umask  022     ---  -w-  -w-
-			   rw-  r--  r--
+umask  022      ---  -w-  -w-
+		rw-  r--  r--
 最后创建的文件   644
-
 目录权限 777     rwx  rwx   rwx
 umask  022      ---  -w-   -w-
-				rwx	 r-x   r-x
+		rwx	 r-x   r-x
 最后创建的文件   755			
-
 设置umask
 # umask 055   
-
 //计算口诀：先算目录，一一对减；文件在目录的基础上奇数减1，偶数不变
-```
 
 #### **ACL权限**
-
-```
 设置单独用户和组对于单个文件的具体rwx基础权限
 # setfacl
 选项
@@ -168,7 +122,6 @@ setfacl -x tom a.txt
 4、删除a.txt文件上的所有acl权限
 setfacl -b a.txt
 
-
 # getfacl /zabbix/         //查看文件或者目录的acl权限
 getfacl: Removing leading '/' from absolute path names
 # file: zabbix/         #文件名称
@@ -180,7 +133,6 @@ group::r-x				#属组权限
 mask::r-x				
 other::---				#其他人权限
 
-
 问题：不小心操作  chmod  a-x  /usr/bin/chmod  ?  怎么恢复 ?
 方法1：
 mv /usr/bin/chmod /tmp
@@ -189,11 +141,9 @@ cp /tmp/chmod /usr/bin/chmod
 方法2：
 setfacl -m u:root:rwx /usr/bin/chmod 
 chmod 777 /usr/bin/chmod
-```
 
 #### **高级权限SUID  SGID  skity** [了解]
 
-```
 SUID
 给可执行文件设置suid权限，“类似给单个命令进行提权”
 字母
@@ -235,36 +185,25 @@ SKITY
 # chmod o=	/data
 # chown :IT /data
 # chmod g+s /data
-```
 
 #### 特殊权限chattr      [隐藏权限]   
-
-```
 对root用户生效
 # chattr +a file100     #只能给文件添加内容，但是不能删除内容  //日志文件
 # chattr +i file200     #文件不能更改，不能删除，不能移动
 
 +a和+i 作用在目录上？
-
 # lsattr file300       #查看特殊权限
-```
 
 #### sudo提权[☆]
-
-```
 管理员授权普通用户可以在指定主机上以指定用户的身份(root)来运行指定的命令
 不用输入root密码,为验证是否本人操作,输入的是用户自己的密码
 //给普通用户提权
-```
-
 1. 通过修改/etc/sudoers文件进行提权
-
-   ```shell
-   # vim /etc/sudoers
-   或
-   # visudo
-   授权的格式：
-   user MACHINE=(user) CONMANDS
+# vim /etc/sudoers
+或
+# visudo
+授权的格式：
+user MACHINE=(user) CONMANDS
    	user:所授权的帐户
    	MACHINE:在哪台主机上
    	(user):以谁的身份,可以省略
@@ -290,13 +229,5 @@ SKITY
        #3) 权力越大，责任越大。
    
    [sudo] tom 的密码：		//输入tom用户的密码
-   
-   ```
-
-   
-
 2.  通过将普通用户加入到wheel组进行提权
-
-   ```
    # useradd -aG wheel 用户名			//将用户加入到wheel组
-   ```
