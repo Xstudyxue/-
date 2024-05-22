@@ -1,0 +1,18 @@
+通过mysql_config_editor命令创建免密码登录凭证
+使用mysql_config_editor命令一个凭证标签(以test为例)
+# mysql_config_editor set -G client -S /usr/local/mysql/data/mysql.sock -uroot -p
+Enter password: [此处输入root账户密码]
+执行如上步骤后生成了隐藏文件~/.mylogin.cnf，文件类型为data，是一个二进制文件
+
+#file ~/.mylogin.cnf
+/root/.mylogin.cnf: data
+
+查看标签
+# mysql_config_editor print --all
+[client]
+user = root
+password = *****
+socket = /usr/local/mysql/data/mysql.sock
+
+登录使用
+mysql 或者 mysql --login-path=client
