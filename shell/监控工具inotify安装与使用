@@ -1,0 +1,93 @@
+系统监控工具----Inotify-Tools
+Inotify，它是在内核 2.6.13 版本中引入的一个新功能，它为用户态监视文件系统的变化提供了强大的支持，允许监控程序打开一个独立文件描述符，并针对事件集监控一个或者多个文件，例如打开、关闭、移动/重命名、删除、创建或者改变属性
+安装inotify-tools
+yum install epel-release -y
+yum install  inotify-tools  -y
+
+内核优化
+cat >/etc/sysctl.d/inotify.conf<<EOF
+fs.inotify.max_queued_events=99999999
+fs.inotify.max_user_watches=99999999
+fs.inotify.max_user_instances=65535
+EOF
+sysctl  -p /etc/sysctl.d/inotify.conf 
+
+/proc/sys/fs/inotify/max_queued_events
+默认值: 16384
+该文件中的值为调用inotify_init时分配给inotify instance中可排队的event的数目的最大值，超出这个值得事件被丢弃，但会触发IN_Q_OVERFLOW事件
+/proc/sys/fs/inotify/max_user_instances
+默认值: 128
+指定了每一个real user ID可创建的inotify instatnces的数量上限
+/proc/sys/fs/inotify/max_user_watches
+默认值: 8192
+指定了每个inotify instance相关联的watches的上限，也就是每一个inotify实例可监控的最大目录数。如果监控的文件数目巨大，需要根据实际情况适当增加此值得大小。
+
+注意: 
+max_queued_events 是 Inotify 管理的队列的最大长度，文件系统变化越频繁，这个值就应该越大！如果你在日志中看到Event Queue Overflow，说明max_queued_events太小需要调整参数后再次使用
+
+示范命令
+inotifywait -mrq  -e 'close_write' --timefmt "%Y-%m-%d_%H:%M:%S.%s" --format "%T %w%f %e" --exclude "${EXCLUDE_LIST}" "${DIRNAME}" 
+
+inotifywait参数说明:
+-m,–monitor    # 接收到一个事情而不退出，无限期地执行。默认行为是接收到一个事情后立即退出
+-r,–recursive  # 监视一个目录下的所有子目录。
+-q,–quiet      #输出精简信息
+-e             #监控指定的事件
+access
+文件读取
+modify
+文件更改。
+attrib
+文件属性更改，如权限，时间戳等。
+close_write
+以可写模式打开的文件被关闭，不代表此文件一定已经写入数据。
+close_nowrite
+以只读模式打开的文件被关闭。
+close
+文件被关闭，不管它是如何打开的。
+open
+文件打开。
+moved_to
+一个文件或目录移动到监听的目录，即使是在同一目录内移动，此事件也触发。
+moved_from
+一个文件或目录移出监听的目录，即使是在同一目录内移动，此事件也触发。
+move
+包括moved_to和 moved_from
+move_self
+文件或目录被移除，之后不再监听此文件或目录。
+create
+文件或目录创建
+delete
+文件或目录删除
+delete_self
+文件或目录移除，之后不再监听此文件或目录
+unmount
+文件系统取消挂载，之后不再监听此文件系统。
+
+--exclude
+# 正则匹配需要排除的文件，大小写敏感。
+--excludei
+# 正则匹配需要排除的文件，忽略大小写。
+--timefmt
+# 指定时间格式，用于–format选项中的%T格式。
+
+-- format
+# 指定输出格式。
+%T 使用由–timefmt定义的时间格式
+%w 表示发生事件的目录
+%f 表示发生事件的文件
+%e 表示发生的事件
+%Xe 事件以“X”分隔
+
+
+示范脚本
+#!/bin/bash
+##监控扫描目录
+DIRNAME='/data/'
+#排除监控项
+EXCLUDE_LIST='.swp$|.swx$'
+inotifywait -mrq  -e 'close_write' --timefmt "%Y-%m-%d_%H:%M:%S.%s" --format "%T %w%f %e" --exclude "${EXCLUDE_LIST}" "${DIRNAME}" | while read line
+do
+##事件触发执行
+echo "${line}" >>/var/log/info.log
+done
