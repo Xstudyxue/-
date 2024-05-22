@@ -1,0 +1,52 @@
+#!/bin/bash
+#统计ssh用户登录次数
+export LANG=en_US.UTF-8
+#日志文件
+WORKDIR=''
+#成功登录信息
+SSH_LOGIN_INFO='/tmp/ssh_login.log'
+#异常登录信息
+SSH_LOGIN_ERR='/tmp/ssh_error.log'
+#服务名称
+SERVICES='sshd'
+#截取时间
+TIME=$(date +%b" "%d)
+#成功关键词
+ACCEPTED='Accepted'
+#异常关键词
+#ERROR='error|Failed'
+#
+pull_wx () {
+cat >/tmp/msg.log<<eof
+时间:$(date)
+本机地址:$(hostname -I)
+累计登录成功次数:$(cat ${SSH_LOGIN_INFO} | wc -l)
+累计异常登录次数:$(cat ${SSH_LOGIN_ERR} | wc -l)
+ssh登录成功详细日志: 
+----------------------
+$(cat ${SSH_LOGIN_INFO})
+----------------------
+ssh登录异常详细日志: 
+----------------------
+$(cat ${SSH_LOGIN_ERR})
+----------------------
+eof
+##生成json消息体文件
+cat >/tmp/info.log<<eof
+{
+"msgtype": "text",
+"text": {
+"content": "$(cat /tmp/msg.log)"}}
+eof
+ROBOT='https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=fe0e067c-451b-4e49-9c6a-9728a8e02db4'
+TYPE='Content-Type: application/json'
+##消息推送
+curl -s  ${ROBOT} -H "${TYPE}" -d "$(cat /tmp/info.log)" >/dev/null  2>/tmp/cu_error.log
+}
+##过滤出ssh密码密钥链接正常登录
+grep -E "${TIME}" /var/log/secure | grep "${SERVICES}" | grep "${ACCEPTED}" | awk '{print $1,$2,$3,$9,$11}' > ${SSH_LOGIN_INFO}
+##过滤出ssh密钥错误登录
+grep -E "${TIME}" /var/log/secure | grep "${SERVICES}" | grep "error" | awk '{print $1,$2,$3,$12,$14}' > ${SSH_LOGIN_ERR}
+##过滤出ssh密码错误登录
+grep -E "${TIME}" /var/log/secure | grep "${SERVICES}" | grep "Failed" | awk '{print $1,$2,$3,$9,$11}' >> ${SSH_LOGIN_ERR}
+pull_wx
