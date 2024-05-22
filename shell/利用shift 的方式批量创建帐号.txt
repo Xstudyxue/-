@@ -1,0 +1,22 @@
+利用shift的方式批量创建账号
+cat adduser.sh
+
+#!/bin/bash
+if [ $# -eq 0 ];
+then
+        echo "请输入需要创建的用户"
+        exit
+fi
+while [ -n "$1" ] ;
+do
+        if id $1 &> /dev/null; then
+                echo "$1 is exist"
+        else
+                useradd $1
+                echo "$1 is create"
+        fi
+        shift
+done
+echo "all user is create "
+
+./adduser.sh t1 t2 t3

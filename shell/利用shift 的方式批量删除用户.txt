@@ -1,0 +1,20 @@
+﻿利用shift的方式批量删除账号
+cat deluser.sh
+
+#!/bin/bash
+if [ $# -eq 0 ];
+then
+        echo "请输入需删除的用户"
+        exit
+fi
+while [ -n "$1" ] ;
+do
+        if id $1 &> /dev/null; then
+                userdel $1
+                echo "$1 is delete"
+        fi
+        shift
+done
+echo "all user is delete "
+
+./deluser.sh t1 t2 t3
