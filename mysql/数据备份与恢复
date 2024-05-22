@@ -1,0 +1,730 @@
+十、数据备份与恢复(重点)
+
+##  1、为什么要备份 
+
+- 备份：能够防止由于机械故障以及人为误操作带来的数据丢失，例如将数据库文件保存在了其它地方。
+
+- 冗余： 数据有多份冗余，但不等备份，只能防止机械故障带来的数据丢失，例如主备模式、数据库集群。
+
+## 2.**MySQL数据备份需要重视的内容**
+
+```shell
+备份内容  databases　Binlog   my.conf
+所有备份数据都应放在非数据库本地，而且建议有多份副本。
+测试环境中做日常恢复演练，恢复较备份更为重要。
+```
+
+**备份过程中必须考虑因素：**
+
+```shell
+1. 数据的一致性
+2. 服务的可用性
+```
+
+## 3、MySQL 备份类型  
+
+```
+1.物理备份： 直接复制数据库文件，适用于大型数据库环境，不受存储引擎的限制，但不能恢复到不同的MySQL版本。
+####1、热备(hot backup)
+在线备份，数据库处于运行状态，这种备份方法依赖于数据库的日志文件
+- 对应用基本无影响(但是性能还是会有下降,所以尽量不要在主上做备份,在从库上做)
+####2、冷备(cold backup)
+备份数据文件,需要停机，是在关闭数据库的时候进行的
+- 备份 datadir 目录下的所有文件
+2.逻辑备份： 备份的是建表、建库、插入等操作所执行SQL语句（DDL DML DCL），适用于中小型数据库，效率相对较低。
+
+3.物理和逻辑备份的区别
+| -          | 逻辑备份                         | 物理备份                 
+| ---------- | ------------------------------  | ----------------------
+| 备份方式    | 备份数据库建表、建库、插入sql语句     | 备份数据库物理文件           
+| 优点       | 备份文件相对较小,只备份表中的数据与结构 | 恢复速度比较快
+| 缺点       | 恢复速度较慢(需要重建索引,存储过程等)  | 备份文件相对较大(备份表空间,包含数据与索引)
+| 对业务影响 | I/O负载加大                         | I/O负载加大                   
+| 代表工具   | mysqldump                         | ibbackup、xtrabackup，mysqlbackup  
+```
+
+## 4、MySQL 备份工具
+
+```
+1、ibbackup
+- 官方备份工具
+- 收费
+- 物理备份
+2、xtrabackup
+- 开源社区备份工具
+- 开源免费,上面的免费版本(老版本有问题,备份出来的数据可能有问题)
+- 物理备份 
+3、mysqldump
+- 官方自带备份工具 开源免费
+- 逻辑备份(速度慢)
+4、mysqlbackup
+- mysql 官方备份工具
+- innodb 引擎的表mysqlbackup可以进行热备
+- 非innodb表mysqlbackup就只能温备
+- 物理备份，备份还原速度快
+- 适合大规模数据使用
+```
+
+## 5.物理备份的方式
+
+### 1.完全备份
+
+```
+每次对数据进行完整的备份，即对整个数据库的备份、数据库结构和文件结构的备份，保存的是备份完成时刻的数据库，是差异备份与增量备份的基础。
+优点：备份与恢复操作简单方便，恢复时一次恢复到位，恢复速度快
+缺点：占用空间大，备份速度慢
+```
+
+### 2.增量备份  
+
+```she
+每次备份上一次备份到现在产生的新数据
+只有那些在上次完全备份或者增量备份后被修改的文件才会被备份。以上次完整备份或上次的增量备份的时间为时间点，仅备份这之间的数据变化.
+特点：因而备份的数据量小，占用空间小，备份速度快。但恢复时，需要从上一次的完整备份起按备份时间顺序，逐个备份版本进行恢复，恢复时间长，如中间某次的备份数据损坏，将导致数据的丢失。
+```
+
+![](assets/1566269843796.png)
+
+### 3.差异备份
+
+```
+只备份跟完整备份不一样的
+备份那些自从第一次次完全备份之后被修改过的所有文件，备份的时间起点是从第一次次完整备份起，且以后每次备份都是和第一次完整备份进行比较（注意是第一次，不是上一次），备份自第一次完整备份以来所有的修改过的文件。备份数据量会越来越大。
+特点：占用空间比增量备份大，比完整备份小，恢复时仅需要恢复第一个完整版本和最后一次的差异版本，恢复速度介于完整备份和增量备份之间。
+```
+
+![](assets/1566269915833.png)
+
+### 4.区别
+
+```
+简单的讲，完整备份就是不管三七二十一，每次都把指定的备份目录完整的复制一遍，不管目录下的文件有没有变化；
+增量备份就是每次将之前（第一次、第二次、直到前一次）做过备份之后有变化的文件进行备份；
+差异备份就是每次都将第一次完整备份以来有变化的文件进行备份。
+```
+
+## 6.**percona-xtrabackup 物理备份 **
+
+Xtrabackup是开源免费的支持MySQL 数据库热备份的软件，在 Xtrabackup 包中主要有 Xtrabackup 和 innobackupex 两个工具。其中 Xtrabackup 只能备份 InnoDB 和 XtraDB 两种引擎; innobackupex则是封装了Xtrabackup，同时增加了备份MyISAM引擎的功能。它不暂停服务创建Innodb**热备份**；
+
+![](assets/1566914979584.png)
+
+### 1.安装xtrabackup
+
+```
+安装xtrabackup
+5.7版本：https://www.percona.com/downloads/Percona-XtraBackup-2.4/
+下载地址：
+# wget https://downloads.percona.com/downloads/Percona-XtraBackup-2.4/Percona-XtraBackup-2.4.26/binary/redhat/7/x86_64/percona-xtrabackup-24-2.4.26-1.el7.x86_64.rpm
+# yum install percona-xtrabackup-24-2.4.26-1.el7.x86_64.rpm 
+查看安装情况
+[root@base-c7 soft]# rpm -qa | grep xtrabackup
+percona-xtrabackup-24-2.4.26-1.el7.x86_64
+查看版本：
+[root@base-c7 soft]#xtrabackup --version
+xtrabackup version 2.4.26 based on MySQL server 5.7.35 Linux (x86_64) (revision id: 19de43b)
+```
+
+```
+注意：
+my.cnf需要确认配置文件内有数据库目录指定
+# cat /etc/my.cnf
+[mysqld]
+datadir = /usr/local/mysql/data
+恢复时数据库目录必须为空，MySQL服务不能启动
+```
+
+### 2.完全备份流程:
+
+```
+完整备份语法：
+innobackupex --user=root --password='口令' /备份目录
+案例：
+innobackupex --user=root --password='qf123' /xtrabackup/full
+```
+
+```
+创建备份目录：
+[root@mysql-server ~]# mkdir /xtrabackup/full -p
+备份：
+[root@mysql-server ~]# innobackupex --user=root --password='qf123' /xtrabackup/full
+```
+
+![](assets/1566272897500.png)
+
+```
+完全备份恢复流程
+1. 停止数据库
+2. 清理环境
+3. 重演回滚－－> 恢复数据
+4. 修改权限
+5. 启动数据库
+```
+
+```
+3.重演回滚 恢复数据:
+语法
+innobackupex --apply-log /备份目录/完整备份目录(年月日时分秒)
+案例：
+innobackupex --apply-log /xtrabackup/full/2019-08-20_11-47-49
+恢复数据：
+语法：
+innobackupex --copy-back /备份目录/完整备份目录(年月日时分秒)
+案例：
+innobackupex --copy-back /xtrabackup/full/2019-08-20_11-47-49
+```
+
+```
+完整备份恢复案例:
+备份以后，在/xtrabackup/full/产生备份时间的文件夹:
+[root@mysql-server ~]# cd /xtrabackup/full/
+[root@mysql-server full]# ls
+2019-08-20_11-47-49
+======================================================
+1.关闭数据库：
+[root@mysql-server ~]# systemctl stop mysqld
+注意：数据库目录必须为空，MySQL服务不能启动
+[root@mysql-server ~]# rm -rf /usr/local/mysql/data/*
+2.重演回滚:
+[root@mysql-server ~]# innobackupex --apply-log /xtrabackup/full/2019-08-20_11-47-49
+3.确认数据库目录：
+恢复之前需要确认配置文件内有数据库目录指定，不然xtrabackup不知道恢复到哪里
+# cat /etc/my.cnf
+[mysqld]
+datadir = /usr/local/mysql/data
+4.恢复数据：
+[root@mysql-server ~]# innobackupex --copy-back /xtrabackup/full/2019-08-20_11-47-49
+5.修改权限：
+[root@mysql-server ~]# chown -R mysql:mysql chown -R mysql:mysql /usr/local/mysql/data
+启动数据库:
+[root@mysql-server ~]# systemctl start mysqld
+```
+
+### 3.增量备份流程
+
+原理：每次备份上一次备份到现在产生的新数据
+
+1.在数据库上面创建一个测试的库
+
+![](assets/1566283686794.png)
+
+增量备份流程（重要)
+
+```
+1.进行完整备份
+完整备份语法：
+innobackupex --user=root --password='口令' /备份目录
+案例：
+innobackupex --user=root --password='qf123' /xtrabackup
+2.添加数据以后增量备份(1)
+增量备份语法：
+innobackupex --user=root --password='口令' --incremental /备份目录/ --incremental-basedir=/xtrabackup/上一备份目录
+案例：
+innobackupex --user=root --password='qf123' --incremental /xtrabackup/ --incremental-basedir=/xtrabackup/上一备份目录(基于前一天)
+3.添加数据以后增量备份(2)
+innobackupex --user=root --password='qf123' --incremental /xtrabackup/ --incremental-basedir=/xtrabackup/上一备份目录(基于前一天)
+```
+
+1.完整备份:周一
+
+```
+[root@mysql-server ~]# rm -rf /xtrabackup/*
+[root@mysql-server ~]# innobackupex --user=root --password='qf123' /xtrabackup
+完整备份
+innobackupex --user=root --password='qf123' /xtrabackup
+[root@mysql-server ~]# cd /xtrabackup/
+[root@mysql-server xtrabackup]# ls
+2019-08-20_14-51-35
+[root@mysql-server xtrabackup]# cd 2019-08-20_14-51-35/
+[root@mysql-server 2019-08-20_14-51-35]# ls
+backup-my.cnf  ib_buffer_pool  mysql               sys   testdb                  xtrabackup_info
+company        ibdata1         performance_schema  test  xtrabackup_checkpoints  xtrabackup_logfile
+```
+
+2、增量备份：周二　——　周三
+
+```
+在数据库中插入周二的数据:
+mysql> insert into testdb.t1 values(2);    #模拟周二
+[root@mysql-server ~]# innobackupex --user=root --password='qf123' --incremental /xtrabackup/ --incremental-basedir=/xtrabackup/2019-08-20_14-51-35/
+--incremental-basedir:基于哪个增量
+[root@mysql-server ~]# cd /xtrabackup/
+[root@mysql-server xtrabackup]# ls
+2019-08-20_14-51-35  2019-08-20_15-04-29    ---相当于周二的增量备份
+```
+
+```
+在数据库中插入周三的数据:
+mysql> insert into testdb.t1 values(3);   #模拟周三
+[root@mysql-server ~]# innobackupex --user=root --password='qf123' --incremental /xtrabackup/ --incremental-basedir=/xtrabackup/2019-08-20_15-04-29/      #基于前一天的备份为目录
+[root@mysql-server ~]# cd /xtrabackup/
+[root@mysql-server xtrabackup]# ls
+2019-08-20_14-51-35  2019-08-20_15-04-29  2019-08-20_15-10-56   ---相当于周三的增量备份
+```
+
+```
+查看一下备份目录:
+[root@mysql-server ~]# ls /xtrabackup/
+2019-08-20_14-51-35  2019-08-20_15-04-29  2019-08-20_15-10-56
+    全备周一             增量周二               增量周三
+```
+
+增量备份恢复流程(重要)
+
+```
+1. 停止数据库
+2. 清理环境
+3. 依次重演回滚redo log－－> 恢复数据
+4. 修改权限
+5. 启动数据库
+```
+
+```shell
+3.增量恢复重演回滚redolog 恢复数据
+语法：
+innobackupex --apply-log --redo-only /xtrabackup/全量目录
+innobackupex --apply-log --redo-only /xtrabackup/全量目录 --incremental-dir=/xtrabackup/增量1目录
+innobackupex --apply-log --redo-only /xtrabackup/全量目录 --incremental-dir=/xtrabackup/增量2目录
+恢复数据
+innobackupex --copy-back /xtrabackup/全量目录
+```
+
+```
+停止服务，并清理数据目录
+[root@mysql-server ~]# systemctl stop mysqld
+[root@mysql-server ~]# rm -rf /usr/local/mysql/data/*
+依次重演回滚redo log:
+案例：
+[root@mysql-server ~]# innobackupex --apply-log --redo-only /xtrabackup/2019-08-20_14-51-35
+周二 ---  周三
+[root@mysql-server ~]# innobackupex --apply-log --redo-only /xtrabackup/2019-08-20_14-51-35 --incremental-dir=/xtrabackup/2019-08-20_15-04-29
+/xtrabackup/2019-08-20_14-51-35：全量目录
+--incremental-dir=/xtrabackup/2019-08-20_15-04-29：增量1目录
+[root@mysql-server ~]# innobackupex --apply-log --redo-only /xtrabackup/2019-08-20_14-51-35 --incremental-dir=/xtrabackup/2019-08-20_15-10-56/
+/xtrabackup/2019-08-20_14-51-35：全量目录
+--incremental-dir=/xtrabackup/2019-08-20_15-10-56：增量2目录
+恢复数据:
+[root@mysql-server ~]# innobackupex --copy-back /xtrabackup/2019-08-20_14-51-35/
+/xtrabackup/2019-08-20_14-51-35/：全量目录
+修改权限
+[root@mysql-server ~]#chown -R mysql:mysql /usr/local/mysql/data
+[root@mysql-server ~]# systemctl start mysqld
+登陆上去看一下:
+```
+
+![](assets/1566286264017.png)
+
+### 4.差异备份流程
+
+差异备份流程（重要)
+
+```
+1.完整备份
+完整备份语法：
+innobackupex --user=root --password='口令' /备份目录
+案例：
+innobackupex --user=root --password='qf123' /xtrabackup
+2.增加数据后进行差异备份：
+语法: 
+innobackupex --user=root --password='口令' --incremental /备份目录  --incremental-basedir=/xtrabackup/第一次完全备份目录
+案例：
+语法: # innobackupex --user=root --password=888 --incremental /xtrabackup --incremental-basedir=/xtrabackup/完全备份目录
+```
+
+清理备份的环境:
+
+```
+[root@mysql-server ~]# rm -rf /xtrabackup/*
+登陆数据库，准备环境
+mysql> delete from testdb.t1;
+mysql> insert into testdb.t1 values(1);    #插入数据1，模拟周一
+mysql> select * from testdb.t1;
++------+
+| id   |
++------+
+|    1 |
++------+
+mysql> \q
+查看时间:
+[root@mysql-server ~]# date
+Tue Aug 20 15:39:59 CST 2019
+1、完整备份：周一
+[root@mysql-server ~]# innobackupex --user=root --password='qf123' /xtrabackup
+2、差异备份：周二　——　周三
+语法: # innobackupex --user=root --password=888 --incremental /xtrabackup --incremental-basedir=/xtrabackup/完全备份目录（周一）
+3.修改时间：
+[root@mysql-server ~]# date 08211543
+Wed Aug 21 15:43:00 CST 2019
+4.在登陆mysql：
+mysql> insert into testdb.t1 values(2);  #插入数据2，模拟周二
+差异备份周二的
+[root@mysql-server ~]# innobackupex --user=root --password='qf123' --incremental /xtrabackup --incremental-basedir=/xtrabackup/2019-08-20_15-42-02/  #备份目录基于周一的备份
+5.再次登陆mysql
+mysql> insert into testdb.t1 values(3);  #插入数据，模拟周三
+6.在次差异备份
+[root@mysql-server ~]# innobackupex --user=root --password='qf123' --incremental /xtrabackup --incremental-basedir=/xtrabackup/2019-08-20_15-42-02/  #还是基于周一的备份
+8.延申到周四
+mysql> insert into testdb.t1 values(4);
+9..差异备份周四
+[root@mysql-server ~]# innobackupex --user=root --password='qf123' --incremental /xtrabackup --incremental-basedir=/xtrabackup/2019-08-20_15-42-02/   #还是基于周一的备份
+10.查看一下备份目录
+[root@mysql-server ~]# ls /xtrabackup/
+2019-08-20_15-42-02  2019-08-21_15-46-53  2019-08-22_15-51-15  2019-08-23_15-53-28
+   周一                   周二                   周三               周四
+```
+
+差异备份恢复流程(重要)
+
+```
+1. 停止数据库
+2. 清理环境
+3. 重演回滚redo log（周一，某次差异）－－> 恢复数据
+4. 修改权限
+5. 启动数据库
+```
+
+```
+差异恢复重演回滚redo log恢复数据(重要)
+1.恢复全量的redo log
+语法: 
+innobackupex --apply-log --redo-only /xtrabackup/全量目录
+2.恢复差异的redo log(任意差异点)
+语法：
+innobackupex --apply-log --redo-only /xtrabackup/全量目录 --incremental-dir=/xtrabacku/某个差异备份目录
+3.恢复数据
+语法:
+innobackupex --copy-back /xtrabackup/完全备份目录
+```
+
+```
+停止数据库
+[root@mysql-server ~]# systemctl stop mysqld
+[root@mysql-server ~]# rm -rf /usr/local/mysql/data/*
+1.恢复全量的redo log
+语法: # innobackupex --apply-log --redo-only /xtrabackup/完全备份目录（周一）
+[root@mysql-server ~]# innobackupex --apply-log --redo-only /xtrabackup/2019-08-20_15-42-02/
+2.恢复差异的redo log
+语法:# innobackupex --apply-log --redo-only /xtrabackup/完全备份目录（周一）--incremental-dir=/xtrabacku/某个差异备份
+这里我们恢复周三的差异备份
+[root@mysql-server ~]# innobackupex --apply-log --redo-only /xtrabackup/2019-08-20_15-42-02/ --incremental-dir=/xtrabackup/2019-08-22_15-51-15/   #我们恢复周三的差异备份
+3.恢复数据
+语法:# innobackupex --copy-back /xtrabackup/完全备份目录（周一）
+[root@mysql-server ~]# innobackupex --copy-back /xtrabackup/2019-08-20_15-42-02/
+修改权限：
+[root@mysql-server ~]# chown -R mysql:mysql /usr/local/mysql/data/
+[root@mysql-server ~]# systemctl start mysqld
+```
+
+登陆mysql查看一下:
+
+![](assets/1566288766112.png)
+
+只有123.因为我们恢复的是周三的差异备份。
+
+### 5.总结
+
+优先使用：完整，差异
+
+```
+完全备份流程:
+完整备份语法：
+innobackupex --user=root --password='口令' /备份目录
+案例：
+innobackupex --user=root --password='qf123' /xtrabackup/full
+
+完全备份恢复流程
+1. 停止数据库
+2. 清理环境
+3. 重演回滚－－> 恢复数据
+3.重演回滚 恢复数据:
+语法
+innobackupex --apply-log /备份目录/完整备份目录(年月日时分秒)
+案例：
+innobackupex --apply-log /xtrabackup/full/2019-08-20_11-47-49
+恢复数据：
+语法：
+innobackupex --copy-back /备份目录/完整备份目录(年月日时分秒)
+案例：
+innobackupex --copy-back /xtrabackup/full/2019-08-20_11-47-49
+4. 修改权限
+5. 启动数据库
+
+增量备份流程
+1.进行完整备份
+完整备份语法：
+innobackupex --user=root --password='口令' /备份目录
+案例：
+innobackupex --user=root --password='qf123' /xtrabackup
+2.添加数据以后增量备份(1)
+增量备份语法：
+innobackupex --user=root --password='口令' --incremental /备份目录/ --incremental-basedir=/xtrabackup/上一备份目录
+案例：
+innobackupex --user=root --password='qf123' --incremental /xtrabackup/ --incremental-basedir=/xtrabackup/上一备份目录(基于前一天)
+3.添加数据以后增量备份(2)
+innobackupex --user=root --password='qf123' --incremental /xtrabackup/ --incremental-basedir=/xtrabackup/上一备份目录(基于前一天)
+
+增量恢复流程
+1. 停止数据库
+2. 清理环境
+3.增量重演回滚redolog 恢复数据
+语法：
+innobackupex --apply-log --redo-only /xtrabackup/全量目录
+innobackupex --apply-log --redo-only /xtrabackup/全量目录 --incremental-dir=/xtrabackup/增量1目录
+innobackupex --apply-log --redo-only /xtrabackup/全量目录 --incremental-dir=/xtrabackup/增量2目录
+恢复数据
+innobackupex --copy-back /xtrabackup/全量目录
+4. 修改权限
+5. 启动数据库
+
+差异备份流程（重要)
+1.完整备份
+完整备份语法：
+innobackupex --user=root --password='口令' /备份目录
+案例：
+innobackupex --user=root --password='qf123' /xtrabackup
+2.增加数据后进行差异备份：
+语法: 
+innobackupex --user=root --password='口令' --incremental /备份目录  --incremental-basedir=/xtrabackup/第一次完全备份目录
+案例：
+语法: # innobackupex --user=root --password=888 --incremental /xtrabackup --incremental-basedir=/xtrabackup/完全备份目录
+
+差异恢复流程
+1. 停止数据库
+2. 清理环境
+差异重演回滚redo log恢复数据(重要)
+1.恢复全量的redo log
+语法: 
+innobackupex --apply-log --redo-only /xtrabackup/完全备份目录
+2.恢复差异的redo log(任意差异点)
+语法：
+innobackupex --apply-log --redo-only /xtrabackup/完全备份目录 --incremental-dir=/xtrabacku/某个差异备份目录
+3.恢复数据
+语法:
+innobackupex --copy-back /xtrabackup/完全备份目录
+
+4. 修改权限
+5. 启动数据库
+```
+
+## 7.mysqldump逻辑备份---- 推荐优先使用(重点)
+
+mysqldump 是 MySQL 自带的逻辑备份工具。可以保证数据的一致性和服务的可用性。
+
+```
+产生测试库与表
+测试表:company.employee5
+mysql> create database company;
+mysql> CREATE TABLE company.employee5(
+     id int primary key AUTO_INCREMENT not null,
+    name varchar(30) not null,
+    sex enum('male','female') default 'male' not null,
+     hire_date date not null,
+     post varchar(50) not null,
+     job_description varchar(100),
+     salary double(15,2) not null,
+     office int,
+     dep_id int
+     );
+mysql> insert into company.employee5(name,sex,hire_date,post,job_description,salary,office,dep_id) values 
+	('jack','male','20180202','instructor','teach',5000,501,100),
+	('tom','male','20180203','instructor','teach',5500,501,100),
+	('robin','male','20180202','instructor','teach',8000,501,100),
+	('alice','female','20180202','instructor','teach',7200,501,100),
+	('tianyun','male','20180202','hr','hrcc',600,502,101),
+	('harry','male','20180202','hr',NULL,6000,502,101),
+	('emma','female','20180206','sale','salecc',20000,503,102),
+	('christine','female','20180205','sale','salecc',2200,503,102),
+    ('zhuzhu','male','20180205','sale',NULL,2200,503,102),
+    ('gougou','male','20180205','sale','',2200,503,102);
+```
+
+如何保证数据一致?在备份的时候进行锁表会自动锁表。锁住之后在备份。
+
+```shell
+本身为客户端工具:
+远程备份语法: # mysqldump  -h 服务器  -u用户名  -p密码   数据库名  > 备份文件.sql
+本地备份语法: # mysqldump  -u用户名  -p密码   数据库名  > 备份文件.sql
+```
+
+### **1.常用备份选项**
+
+```
+-A, --all-databases #备份所有库
+
+-B, --databases  #备份多个数据库
+
+-F, --flush-logs #备份之前刷新binlog日志
+
+--default-character-set #指定导出数据时采用何种字符集，如果数据表不是采用默认的latin1字符集的话，那么导出时必须指定该选项，否则再次导入数据后将产生乱码问题。
+
+--no-data，-d #不导出任何数据，只导出数据库表结构。
+
+--lock-tables #备份前，锁定所有数据库表
+
+--single-transaction #保证数据的一致性和服务的可用性
+
+-f, --force #即使在一个表导出期间得到一个SQL错误，继续。
+```
+
+**注意**
+
+```shell
+使用 mysqldump 备份数据库时避免锁表:
+对一个正在运行的数据库进行备份请慎重！！ 如果一定要 在服务运行期间备份，可以选择添加 --single-transaction选项，
+
+类似执行： mysqldump --single-transaction -u root -p123456 dbname > mysql.sql
+```
+
+### 2.备份表
+
+备份整个表结构与数据
+
+```shell
+语法: # mysqldump -u root -p'口令 库名  表名 > /db1.t1.bak
+[root@mysql-server ~]# mkdir /home/back  #创建备份目录
+[root@mysql-server ~]# mysqldump -uroot -p'qf123' company employee5 > /home/back/company.employee5.bak
+备份多个表：
+语法: # mysqldump -u root -p'口令 库名  表名1 表名2 > /db1.t1_t2.bak
+```
+
+### 3.备份库(重点)
+
+```shell
+备份一个库：相当于将这个库里面的所有表全部备份。
+语法: # mysqldump -u root -p'口令' 库名 > /备份名.bak
+[root@mysql-server ~]# mysqldump -uroot -p'qf123' company > /home/back/company.bak
+备份多个库：
+语法: # mysqldump -u root -p'口令' -B 库名1 库名2 > /备份名.bak
+备份所有的库：
+语法: # mysqldump -u root -p'口令 -A > /alldb.bak
+[root@mysql-server ~]# mysqldump -uroot -p'qf123' -A > /home/back/allbase.bak
+```
+
+到目录下面查看一下：
+
+![1566293795577](assets/1566293795577.png)
+
+### 4.恢复数据库和表
+
+  ```shell
+为保证数据一致性，应在恢复数据之前停止数据库对外的服务,停止binlog日志 因为binlog使用binlog日志恢复数据时也会产生binlog日志。
+  ```
+
+为实验效果先将刚才备份的数据库和表删除了。登陆数据库：
+
+```shell
+[root@mysql-server ~]# mysql -uroot -pqf123
+mysql> show databases;
+```
+
+![1566294122629](assets/1566294122629.png)
+
+```
+mysql> drop database company;
+mysql> \q
+```
+
+### 5.恢复全库
+
+```shell
+登陆mysql创建一个库
+mysql> create database company;
+恢复：
+[root@mysql-server ~]# mysql -uroot -p'qf123' company < /home/back/company.bak
+```
+
+### 6.单独恢复表
+
+```shell
+登陆到刚才恢复的库中将其中的一个表删除掉
+mysql> show databases;
+mysql> use company;
+mysql> show tables;
++-------------------+
+| Tables_in_company |
++-------------------+
+| employee5         |
++-------------------+
+mysql> drop table employee5;
+开始恢复:
+查看binlog状态是否开启，如果开启则需停止
+mysql>show variables like 'sql_log_bin';
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| sql_log_bin   | ON    |
++---------------+-------+
+#表示开启状态
+mysql> set sql_log_bin=0;   #停止binlog日志
+Query OK, 0 rows affected (0.00 sec)
+mysql> source /home/back/company.employee5.bak;  -------加路径和备份的文件
+##注意文件的路径与其他人有X权限
+恢复方式二：
+# mysql -u root -p1  db1  < db1.t1.bak
+                     库名    备份的文件路径
+```
+
+### 7.备份及恢复表结构
+
+备份时不包含表内数据
+
+```shell
+1.备份表结构：
+语法：mysqldump  -uroot -p'口令 -d database table > dump.sql
+[root@mysql-server ~]# mysqldump -uroot -p'qf123' -d company employee5 > /home/back/emp.bak
+恢复表结构：
+登陆数据库创建一个库
+mysql> create database t1;
+语法：# mysql -u root -p'口令' -D 库名  < 备份文件名
+[root@mysql-server ~]# mysql -uroot -p'qf123' -D t1 < /home/back/emp.bak
+```
+
+登陆数据查看：
+
+![1566295893236](assets/1566295893236.png)
+
+### 8.数据的导入导出,没有表结构。
+
+ ```shell
+表的导出和导入只备份表内记录，不会备份表结构，需要通过mysqldump备份表结构，恢复时先恢复表结构，再导入数据。
+ ```
+
+```shell
+mysql> show variables like "secure_file_priv";  ----查询导入导出的目录。
++------------------+-------+
+| Variable_name    | Value |
++------------------+-------+
+| secure_file_priv | NULL  |
++------------------+-------+
+```
+
+```shell
+修改安全文件目录：
+1.创建一个目录：mkdir  路径目录
+[root@mysql-server ~]# mkdir /sql
+2.修改权限
+[root@mysql-server ~]# chown mysql:mysql /sql
+3.编辑配置文件：
+vim /etc/my.cnf
+在[mysqld]里追加
+secure_file_priv=/sql
+4.重新启动mysql.
+```
+
+```shell
+1.导出数据
+登陆数据查看数据
+mysql> show databases; 
+mysql>use company;
+mysql>show tables;
+mysql> select * from employee5 into outfile '/sql/out-employee5.bak';
+```
+
+```shell
+2.数据的导入
+先将原来表里面的数据清除掉，只保留表结构
+mysql> use company;
+mysql> delete from employee5;
+mysql> load data infile '/sql/out-employee5.bak' into table employee5;
+如果将数据导入别的表，需要创建这个表并创建相应的表结构。
+```
