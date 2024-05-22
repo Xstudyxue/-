@@ -185,3 +185,80 @@ mysql> use mysql
 mysql> SET PASSWORD FOR user3@'localhost'='new_password'
                                 用户     =  新密码
 ```
+## 8.删除用户
+
+```shell
+方法一：DROP USER语句删除
+mysql> DROP USER 'user3'@'localhost';
+
+方法二：DELETE语句删除
+mysql> DELETE FROM mysql.user  WHERE user='tom' AND host='localhost';
+
+更新授权表：
+mysql> FLUSH PRIVILEGES;
+```
+
+## 9.查看密码复杂度
+
+MySQL 默认启用了密码复杂度设置，插件名字叫做 validate_password，初始化之后默认是安装的如果没有安装执行下面的命令会返回空或者没有值，这时需要安装该插件
+
+```shell
+安装插件
+mysql> INSTALL PLUGIN validate_password SONAME 'validate_password.so';
+```
+
+```shell
+1.查看密码复杂度
+mysql> show variables like 'validate%';
++--------------------------------------+--------+
+| Variable_name                        | Value  |
++--------------------------------------+--------+
+| validate_password_check_user_name    | OFF    |
+| validate_password_dictionary_file    |        |
+| validate_password_length             | 8      |
+| validate_password_mixed_case_count   | 1      |
+| validate_password_number_count       | 1      |
+| validate_password_policy             | MEDIUM |
+| validate_password_special_char_count | 1      |
++--------------------------------------+--------+
+
+参数解释：
+validate_password_length ：#密码最少长度，默认值是8最少是0
+validate_password_dictionary_file：#用于配置密码的字典文件，字典文件中存在的密码不得使用。
+validate_password_policy： #代表的密码策略，默认是MEDIUM
+validate_password_number_count ：#最少数字字符数，默认1最小是0
+validate_password_mixed_case_count ：#最少大写和小写字符数(同时有大写和小写)，默认为1最少是0
+validate_password_special_char_count ：#最少特殊字符数，默认1最小是0
+
+2.查看密码策略
+mysql> select @@validate_password_policy;
++----------------------------+
+| @@validate_password_policy |
++----------------------------+
+| MEDIUM                     |
++----------------------------+
+1 row in set (0.00 sec)
+
+策略：
+- 0 or LOW 设置密码长度（由参数validate_password_length指定）
+- 1 or MEDIUM 满足LOW策略，同时还需满足至少有1个数字，小写字母，大写字母和特殊字符
+- 2 or STRONG 满足MEDIUM策略，同时密码不能存在字典文件（dictionary file）中
+
+3.查看密码的长度
+mysql> select @@validate_password_length; 
++----------------------------+
+| @@validate_password_length |
++----------------------------+
+|                          8 |
++----------------------------+
+1 row in set (0.00 sec)
+
+4.设置密码复杂度
+mysql> set global validate_password_length=1; #设置密码长度为1个
+mysql> set global validate_password_number_count=2; #设置密码数字最少为2个
+
+5.设置密码复杂性策略
+mysql> set global validate_password_policy=LOW; 也可以是数字表示。#设置密码策略
+
+mysql> flush privileges; #刷新授权
+```
