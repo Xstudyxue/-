@@ -1,0 +1,23 @@
+#!/bin/bash
+#测试存活主机
+for6.108.$i is alive"
+    else
+    echo "10.36.108.$i is dead"
+    fi
+done
+
+##抢占ip
+#!/bin/sh
+while true; i in {1..254}
+do
+    ping -c1 10.36.108.$i  &>/dev/null
+    if [ $? -eq 0 ]; then
+    echo "10.3
+do
+ifconfig ens33 10.36.108.90/24 up
+route add default gw 10.36.108.1
+sleep 1
+done
+#arping-Ua-s192.168.5.5-leth0192.168.5.1&
+
+ssh -o "stricthostkeychecking=no"root@192.168.241.25
