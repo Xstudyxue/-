@@ -1,0 +1,50 @@
+上传镜像CentOS-7-x86_64-Minimal-2009.iso至系统
+挂载
+mount -o loop CentOS-7-x86_64-Minimal-2009.iso  /media/
+
+创建目录
+mkdir  -p /opt/centos7-autoinstall-ISO
+
+同步镜像
+rsync -avz /media/.  /opt/centos7-autoinstall-ISO/
+
+安装iso镜像生成工具软件
+yum install  genisoimage
+
+引导菜单
+修改 /opt/centos7-autoinstall-ISO/isolinux/isolinux.cfg
+修改项最终如下所示
+
+timeout 100
+
+label linux
+  menu label ^Install CentOS 7
+  menu default
+  kernel vmlinuz
+  append initrd=initrd.img inst.stage2=hd:LABEL=CENTOS7   inst.ks=cdrom:/isolinux/ks_mini.cfg   quiet
+
+label check
+  menu label Test this ^media & install CentOS 7
+  kernel vmlinuz
+  append initrd=initrd.img inst.stage2=hd:LABEL=CentOS\x207\x20x86_64 rd.live.check quiet
+
+
+timeout 100
+菜单时间
+menu default
+菜单默认项
+
+添加引导无人值守应答文件为cdcom下isolinux/目录下的ks_mini.cfg文件
+inst.ks=cdrom:/isolinux/ks_mini.cfg
+
+上传应答文件ks_mini.cfg至isolinux目录下
+
+重建iso文件
+cd   /opt/centos7-autoinstall-ISO/
+
+genisoimage -v -cache-inodes -joliet-long -R -J -T -V CENTOS7 -o /opt/centos-7.9-Minimal-autoinstall.iso \
+-c isolinux/boot.cat -bisolinux/isolinux.bin -no-emul-boot -boot-load-size 4 -boot-info-table \
+-eltorito-alt-boot -b images/efiboot.img -no-emul-boot /opt/centos7-autoinstall-ISO/
+
+参数说明:
+-o /opt/centos-7.9-Minimal-autoinstall.iso输出路径
