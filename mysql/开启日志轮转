@@ -1,0 +1,30 @@
+mysql通用查询日志开启
+mkdir -p /usr/local/mysql/logs/
+touch /usr/local/mysql/logs/general.log
+chown -R mysql:mysql /usr/local/mysql/logs
+
+vim /etc/my.cnf
+[mysqld]
+......
+general_log = 1
+log_output = FILE
+general_log_file=/usr/local/mysql/logs/general.log
+
+
+启用日志轮转
+PIDFILE=$(find /usr/local/mysql/ -name *.pid)
+cat >/etc/logrotate.d/mysql<<eof
+/usr/local/mysql/logs/general.log {
+    create 660 mysql mysql
+    notifempty
+    dateext
+    daily
+    rotate 7
+    missingok
+    compress
+    sharedscripts
+    postrotate
+        /bin/kill -HUP \$(cat ${PIDFILE} 2> /dev/null) 2> /dev/null || true
+    endscript
+}
+eof
