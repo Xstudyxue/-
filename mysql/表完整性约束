@@ -1,0 +1,238 @@
+表完整性约束
+
+作用：用于保证数据的完整性和一致性
+
+```shell
+约束条件						说明
+PRIMARY KEY (PK)		标识该字段为该表的主键，可以唯一的标识记录，不可以为空  UNIQUE + NOT NULL
+FOREIGN KEY (FK)		标识该字段为该表的外键，实现表与表之间的关联
+NULL                    标识是否允许为空，默认为NULL。
+NOT NULL			    标识该字段不能为空，可以修改。
+UNIQUE KEY  (UK)		标识该字段的值是唯一的，可以为空，一个表中可以有多个UNIQUE KEY
+AUTO_INCREMENT		    标识该字段的值自动增长（整数类型，而且为主键）
+DEFAULT				    为该字段设置默认值
+UNSIGNED                无符号，正数
+```
+
+```shell
+1.主键
+每张表里只能有一个主键，不能为空，而且唯一，主键保证记录的唯一性，主键自动为NOT NULL。
+一个UNIQUE KEY 又是一个NOT NULL的时候，那么它被当做PRIMARY KEY主键。
+
+定义两种方式：
+#表存在，添加约束
+mysql> alter table t7 add primary key (hostname);
+
+创建表并指定约束
+mysql> create table t9(hostname char(20),ip char(150),primary key(hostname));
+```
+
+![1566197904818](assets/1566197904818.png)
+
+```shell
+mysql> insert into t9(hostname,ip) values('qfedu.com', '10.10.10.11');
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into t9(hostname,ip) values('qfedu.com', '10.10.10.12');
+ERROR 1062 (23000): Duplicate entry 'qfedu.com' for key 'PRIMARY'
+
+mysql> insert into t9(hostname,ip) values('qfedu', '10.10.10.11');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from t9;
++-----------+-------------+
+| hostname  | ip          |
++-----------+-------------+
+| qfedu     | 10.10.10.11 |
+| qfedu.com | 10.10.10.11 |
++-----------+-------------+
+2 rows in set (0.00 sec)
+
+mysql> insert into t9(hostname,ip) values('qfjy', '10.10.10.12');
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from t9;
++-----------+-------------+
+| hostname  | ip          |
++-----------+-------------+
+| qfedu     | 10.10.10.11 |
+| qfedu.com | 10.10.10.11 |
+| qfjy      | 10.10.10.12 |
++-----------+-------------+
+3 rows in set (0.00 sec)
+
+删除主键
+mysql> alter table tab_name  drop  primary key;
+```
+
+```shell
+2.auto_increment自增--------自动编号，且必须与主键组合使用默认情况下，起始值为1，每次的增量为1。当插入记录时，如果为AUTO_INCREMENT数据列明确指定了一个数值，则会出现两种情况：
+- 如果插入的值与已有的编号重复，则会出现出错信息，因为AUTO_INCREMENT数据列的值必须是唯一的；
+- 如果插入的值大于已编号的值，则会把该插入到数据列中，并使在下一个编号将从这个新值开始递增。也就是说，可以跳过一些编号。如果自增序列的最大值被删除了，则在插入新记录时，该值被重用。
+（每张表只能有一个字段为自曾） （成了key才可以自动增长）
+mysql> CREATE TABLE department3 (
+    dept_id INT PRIMARY KEY AUTO_INCREMENT,
+    dept_name VARCHAR(30),
+    comment VARCHAR(50)
+    );
+```
+
+![1566200736746](assets/1566200736746.png)
+
+```shell
+mysql> select * from department3;
+Empty set (0.00 sec)
+
+插入值
+mysql> insert into department3(dept_name, comment) values('tom','test'), ('jack', 'test2');
+Query OK, 2 rows affected (0.00 sec)
+
+mysql> select * from department3;
++---------+-----------+---------+
+| dept_id | dept_name | comment |
++---------+-----------+---------+
+|       1 | tom       | test    |
+|       2 | jack      | test2   |
++---------+-----------+---------+
+2 rows in set (0.00 sec)
+
+删除自动增长
+mysql> ALTER TABLE department3 CHANGE dept_id  dept_id INT NOT NULL;
+Query OK, 2 rows affected (0.01 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql> desc department3;
++-----------+-------------+------+-----+---------+-------+
+| Field     | Type        | Null | Key | Default | Extra |
++-----------+-------------+------+-----+---------+-------+
+| dept_id   | int(11)     | NO   | PRI | NULL    |       |
+| dept_name | varchar(30) | YES  |     | NULL    |       |
+| comment   | varchar(50) | YES  |     | NULL    |       |
++-----------+-------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+```
+
+```shell
+3.设置唯一约束 UNIQUE，字段添加唯一约束之后，该字段的值不能重复，也就是说在一列当中不能出现一样的值。
+mysql> CREATE TABLE department2 (
+     dept_id INT,
+     dept_name VARCHAR(30) UNIQUE,
+     comment VARCHAR(50)
+     );
+```
+
+![1566201134895](assets/1566201134895.png)
+
+![1566201535604](assets/1566201535604.png)
+
+插入数据的时候id和comment字段相同可以插入数据，如果有相同的名字不唯一。所以插入数据失败。
+
+```shell
+4.null与not null
+1. 是否允许为空，默认NULL，可设置NOT NULL，字段不允许为空，必须赋值
+2. 字段是否有默认值，缺省的默认值是NULL，如果插入记录时不给字段赋值，此字段使用默认值
+sex enum('male','female') not null default 'male'  #只能选择maie和female，不允许为空，默认是male
+```
+
+```shell
+mysql> create table t4(id int(5),name varchar(10),sex enum('male','female') not null default 'male');
+Query OK, 0 rows affected (0.00 sec)
+mysql> insert into t4(id,name) values(1,'tom');
+mysql> select * from t4;
++------+------+------+
+| id   | name | sex  |
++------+------+------+
+|    1 | tom  | male |
++------+------+------+
+1 row in set (0.00 sec)
+```
+
+```shell
+允许为null
+mysql> create table t1(id int(5),name varchar(10),age int(5));
+Query OK, 0 rows affected (0.00 sec)
+mysql> desc t1;
++-------+-------------+------+-----+---------+-------+
+| Field | Type        | Null | Key | Default | Extra |
++-------+-------------+------+-----+---------+-------+
+| id    | int(5)      | YES  |     | NULL    |       |
+| name  | varchar(10) | YES  |     | NULL    |       |
+| age   | int(5)      | YES  |     | NULL    |       |
++-------+-------------+------+-----+---------+-------+
+3 rows in set (0.01 sec)
+
+mysql> insert into t1(id,name) values(1,'tom');
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from t1;
++------+------+------+
+| id   | name | age  |
++------+------+------+
+|    1 | tom  | NULL |
++------+------+------+
+1 row in set (0.00 sec)
+```
+
+指定字符集:
+
+```shell
+修改字符集 ：在创建表的最后面指定一下： default charset=utf8  #可以指定中文
+```
+
+```shell
+5.默认约束
+添加/删除默认约束
+
+1.创建一个表
+mysql> create table user(id int not null, name varchar(20), number int, primary key(id));
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> describe user;
++--------+-------------+------+-----+---------+-------+
+| Field  | Type        | Null | Key | Default | Extra |
++--------+-------------+------+-----+---------+-------+
+| id     | int(11)     | NO   | PRI | NULL    |       |
+| name   | varchar(20) | YES  |     | NULL    |       |
+| number | int(11)     | YES  |     | NULL    |       |
++--------+-------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+2、设置默认值
+mysql> ALTER TABLE user ALTER number SET DEFAULT 0;
+Query OK, 0 rows affected (0.00 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> DESCRIBE user;
++--------+-------------+------+-----+---------+-------+
+| Field  | Type        | Null | Key | Default | Extra |
++--------+-------------+------+-----+---------+-------+
+| id     | int(11)     | NO   | PRI | NULL    |       |
+| name   | varchar(20) | YES  |     | NULL    |       |
+| number | int(11)     | YES  |     | 0       |       |
++--------+-------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+
+3、插入值
+mysql> ALTER TABLE user CHANGE id id INT NOT NULL AUTO_INCREMENT;
+Query OK, 2 rows affected (0.01 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO user(name) VALUES('rock'); 
+Query OK, 1 row affected (0.00 sec)
+
+mysql> INSERT INTO user(name) VALUES('rock');
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from user;
++----+------+--------+
+| id | name | number |
++----+------+--------+
+|  1 | rock |      0 |
+|  2 | rock |      0 |
++----+------+--------+
+2 rows in set (0.00 sec)
+
+删除默认值
+mysql> ALTER TABLE user ALTER number drop DEFAULT;
+```
