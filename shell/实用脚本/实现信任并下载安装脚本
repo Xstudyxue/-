@@ -1,0 +1,43 @@
+#!/bin/bash
+WORKDIR='/data/soft'
+html_dir='/data/soft/nginx/html'
+ssh_user='root'
+ADDRESS='10.36.108.0'
+cat >>ip.txt<<eof
+10.36.108.80
+10.36.108.81
+10.36.108.90
+10.36.108.39
+eof
+nginx_dir () {
+for i in $(cat ip.txt)
+do
+#创建放公私钥的目录
+mkdir -p ${html_dir}/${ADDRESS}/${i}
+#生成公私钥文件
+ssh-keygen -t rsa -P "" -f ${html_dir}/${ADDRESS}/${i}/id_rsa
+#复制服务器公钥到网站上
+cp /${ssh_user}/.ssh/id_rsa.pub ${html_dir}/id_rsa.pub
+#创建受控方脚本目录
+mkdir -p ${html_dir}/script
+done
+}
+cat >${html_dir}/script/nginx_ssh<<eof
+nginx_sh () {
+localhost='10.36.108.'
+[ -d /root/.ssh ] || mkdir /root/.ssh
+wget -P /root/.ssh/ http://10.36.108.80/10.36.108.0/${localhost}/{id_rsa,id_rsa.pub}
+wget -P /opt/server.pub http://10.36.108.80/id_rsa.pub
+get -P /opt/nginx.ssh http://10.36.108.80/script/nginx_ssh
+chmod 644 /root/.ssh/{id_rsa,id_rsa.pub}
+cat /root/.ssh/id_rsa.pub >> /root/authorized_keys
+cat /opt/server.pub >> /root/authorized_keys
+chmod 600 /root/.ssh/authorized_keys
+chown -R root:root /root/.ssh/
+sed -ri '/#PubkeyAuthentication yes/c PubkeyAuthentication yes' /etc/ssh/sshd_config
+systemctl restart sshd
+}
+nginx_sh
+eof
+nginx_dir
+chmod 744 -R /data/soft/nginx/html/
