@@ -1,0 +1,187 @@
+七、权限管理(重点)
+
+## 1.用户登录管理
+
+```shell
+1. 登录和退出MySQL
+本地登录客户端命令：
+# mysql -uroot -pqf123
+
+远程登陆：
+客户端语法：mysql  -u  用户名  -p  密码  -h  ip地址   -P端口号:如果没有改端口号就不用-P指定端口
+# mysql -h192.168.246.253 -P 3306 -uroot -p'qf123'
+```
+
+```shell
+如果报错进入server端服务器登陆mysql执行:
+mysql> use mysql;
+mysql> update user set host = '%' where user = 'root';
+mysql> flush privileges;
+```
+
+```shell
+# mysql -h192.168.246.253 -P 3306 -uroot -p'qf123' -e 'show databases;'
+-h	指定主机名            【默认为localhost】
+-大P	MySQL服务器端口       【默认3306】
+-u	指定用户名             【默认root】
+-p	指定登录密码           【默认为空密码】
+-e	接SQL语句，可以写多条拿;隔开
+# mysql -h192.168.246.253 -P 3306 -uroot -p'qf123' -D mysql -e 'select * from user;'
+此处 -D mysql为指定登录的数据库
+修改端口rpm安装：vim /etc/my.cnf
+在到【mysql】标签下面添加port=指定端口。重启服务
+```
+
+## 2.创建用户及授权(常用)
+
+```shell
+方法一：CREATE USER语句创建
+mysql> create user tom@'localhost' identified by 'qf@123'; #创建用户为tom，并设置密码。
+mysql> FLUSH PRIVILEGES; #更新授权表
+注:
+identified by ：设置密码
+在用户tom@'  ' 这里 选择:
+%：允许所有主机远程登陆包括localhost。也可以指定某个ip，允许某个ip登陆。也可以是一个网段。
+localhost:只允许本地用户登录
+==客户端主机	    %				     所有主机远程登录
+			192.168.246.%		    192.168.246.0网段的所有主机
+			192.168.246.252		    指定主机
+			localhost               只允许本地用户登录
+```
+
+```shell
+方法二：GRANT  ---创建用户并同时授权(mysql8.0必须是先创建用户再授权)。
+语法：
+grant 权限列表  on 库名.表名 to '用户名'@'客户端主机' IDENTIFIED BY '口令'；
+案例:
+mysql>grant all privileges on *.* to 'test'@'localhost' IDENTIFIED BY 'ABcabc123.com@';
+mysql>grant all privileges on *.* to 'test'@'%' IDENTIFIED BY 'ABcabc123.com@';
+mysql> flush privileges;
+备注：
+1.无用户时可以创建用户并指定口令
+2.口令有密码复杂性要求
+3.%表示任意主机
+口令复杂性要求出错提示：
+ERROR 1819 (HY000): Your password does not satisfy the current policy requirements
+需要执行两个参数来把mysql默认的密码强度的取消
+mysql>set global validate_password_policy=0; 
+mysql>set global validate_password_mixed_case_count=2;
+
+使用create user创建用户并设置密码后授权
+mysql> GRANT ALL ON *.* TO 'user3'@'localhost' ;
+            #权限 库名.表名  账户名                
+mysql> FLUSH PRIVILEGES;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+```shell
+修改远程登陆:
+将原来的localhost修改为%或者ip地址
+mysql> use mysql
+mysql> update user set host = '192.168.246.%' where user = 'user3';
+mysql> FLUSH PRIVILEGES;
+```
+
+## 3.刷新权限
+
+```shell
+修改表之后需要刷新权限
+方式1：
+ mysql > flush privileges;
+```
+
+```shell
+方式二：使用命令创建用户并授权：grant   
+也可创建新账户(不过后面的版本会移除这个功能，建议使用create user) 
+语法格式：
+grant 权限列表  on 库名.表名 to '用户名'@'客户端主机' IDENTIFIED BY 'Qf@123'；
+ ==权限列表		all	 		所有权限（不包括授权权限）
+			select,update	
+			select, insert
+#注意：root用授权时候grant授权权限不要给予
+								
+ ==数据库.表名	*.*			所有库下的所有表
+			   web.*		web库下的所有表
+			web.stu_info	web库下的stu_info表
+
+#单独授权
+给刚才创建的用户tom授权：
+mysql> grant select,insert on *.* to 'tom'@'localhost';
+mysql> FLUSH PRIVILEGES;
+```
+
+## 4.权限简介
+
+```shell
+权限简介
+
+| 权限                   | 权限级别                 | 权限说明                    
+| :--------------------- | :--------------------- | :------------------------------------
+| CREATE                 | 数据库、表或索引          | 创建数据库、表或索引权限                 
+| DROP                   | 数据库或表               | 删除数据库或表权限                       
+| GRANT OPTION           | 数据库、表或保存的程序     | 赋予权限选项 #小心给予                 
+| ALTER                  | 表                     | 更改表，比如添加字段、索引等               
+| DELETE                 | 表                     | 删除数据权限                             
+| INDEX                  | 表                     | 索引权限                               
+| INSERT                 | 表                     | 插入权限                               
+| SELECT                 | 表                     | 查询权限                               
+| UPDATE                 | 表                     | 更新权限                               
+| LOCK TABLES            | 服务器管理              | 锁表权限                               
+| CREATE USER            | 服务器管理             | 创建用户权限                             
+| REPLICATION SLAVE      | 服务器管理             | 复制权限                                 
+| SHOW DATABASES         | 服务器管理             | 查看数据库权限                           
+```
+
+## 5.查看权限
+
+```shell
+查看权限
+1.看自己的权限：
+mysql> SHOW GRANTS\G
+*************************** 1. row ***************************
+Grants for root@%: GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION
+    
+2.看别人的权限：
+mysql> SHOW GRANTS FOR tom@'localhost'\G
+*************************** 1. row ***************************
+Grants for tom@localhost: GRANT SELECT, INSERT ON *.* TO 'tom'@'localhost'  
+```
+
+## 6.移除权限
+
+```shell
+移除用户权限
+语法：REVOKE 权限 ON 数据库.数据表 FROM '用户'@'IP地址';
+- 被回收的权限必须存在，否则会出错
+- 整个数据库，使用 ON datebase.*；
+- 特定的表：使用 ON datebase.table；
+
+mysql> revoke select,delete on *.* from jack@'%';   #回收指定权限
+mysql> revoke all privileges on *.* from jack@'%';  #回收所有权限
+mysql> flush privileges;
+```
+
+## 7.修改密码
+
+```shell
+＝＝＝root修改自己密码
+方法一:
+语法： mysqladmin -uroot -p'123' password 'new_password'	    #123为旧密码
+案例:
+# mysqladmin -uroot -p'qf123' password 'qf@123';
+方法二:
+mysql>SET PASSWORD='new_password';
+
+备注：
+ERROR 1819 (HY000): Your password does not satisfy the current policy requirements
+你需要执行两个参数来把mysql默认的密码强度的取消了才行
+mysql>set global validate_password_policy=0; 
+mysql>set global validate_password_mixed_case_count=2;
+这时你再执行
+SET PASSWORD = PASSWORD('123456');
+
+==root修改其他用户密码
+mysql> use mysql
+mysql> SET PASSWORD FOR user3@'localhost'='new_password'
+                                用户     =  新密码
+```
