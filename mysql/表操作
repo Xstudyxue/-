@@ -1,0 +1,227 @@
+六、表操作
+
+## 1.添加字段
+
+```shell
+1.添加新字段
+alter table 表名 add 字段 类型;
+mysql> alter table t3  add math int(10);-------添加的字段
+mysql> alter table t3  add (chinese int(10),english int(10));------添加多个字段,中间用逗号隔开。
+alter table 表名 add 添加的字段(和类型) after name; -------把添加的字段放到name后面
+alter table 表名 add 添加的字段(和类型) first; ----------把添加的字段放在第一个
+```
+
+## 2.修改字段和类型
+
+```shell
+1.修改名称、数据类型、类型 
+alter table 表名 change 旧字段 新字段 类型; #change修改字段名称，类型，约束，顺序 
+mysql> alter table t3 change max maxs int(15) after id;  #修改字段名称与修饰并更换了位置
+2.修改字段类型，约束，顺序
+alter table 表名 modify 字段 类型； #modify 不能修改字段名称
+mysql> alter table t3 modify maxs int(20) after math;    #修改类型并更换位置
+3.删除字段
+mysql> alter table t3 drop maxs;  #drop 丢弃的字段。
+```
+
+## 3.插入数据(添加纪录)
+
+```shell
+mysql> create table t3(id int, name varchar(20), sex enum('m','f'), age int);
+字符串必须引号引起来
+记录与表头相对应，表头与字段用逗号隔开。
+
+1.添加一条记录
+insert into 表名(字段1,字段2,字段3,字段4) values(1,"tom","m",90);
+mysql> insert into t3(id,name,sex,age) values(1,"tom","m",18);
+Query OK, 1 row affected (0.00 sec)
+注:添加的记录与表头要对应，
+
+2.添加多条记录
+mysql> insert into t3(id,name,sex,age) values(2,"jack","m",19),(3,"xiaoli","f",20);
+Query OK, 2 rows affected (0.34 sec)
+
+3.用set添加记录
+mysql> insert into t3 set id=4,name="zhangsan",sex="m",age=21;
+Query OK, 1 row affected (0.00 sec)
+
+4.更新记录
+update 表名 set  修改的字段  where  给谁修改;
+mysql> update t3 set id=6 where name="xiaoli";
+
+5.删除记录
+1.删除单条记录
+mysql> delete from t3 where id=6;   #删除那个记录，等于几会删除那个整条记录
+Query OK, 1 row affected (0.35 sec)
+2.删除所有记录
+mysql> delete from t3;
+```
+
+## 4.查询
+
+```shell
+测试表:company.employee5
+mysql> create database company;   #创建一个库；
+创建一个测试表:
+mysql> CREATE TABLE company.employee5(
+     id int primary key AUTO_INCREMENT not null,
+    name varchar(30) not null,
+    sex enum('male','female') default 'male' not null,
+     hire_date date not null,
+     post varchar(50) not null,
+     job_description varchar(100),
+     salary double(15,2) not null,
+     office int,
+     dep_id int
+     );
+插入数据:
+mysql> insert into company.employee5(name,sex,hire_date,post,job_description,salary,office,dep_id) values 
+	('jack','male','20180202','instructor','teach',5000,501,100),
+	('tom','male','20180203','instructor','teach',5500,501,100),
+	('robin','male','20180202','instructor','teach',8000,501,100),
+	('alice','female','20180202','instructor','teach',7200,501,100),
+	('tianyun','male','20180202','hr','hrcc',600,502,101),
+	('harry','male','20180202','hr',NULL,6000,502,101),
+	('emma','female','20180206','sale','salecc',20000,503,102),
+	('christine','female','20180205','sale','salecc',2200,503,102),
+    ('zhuzhu','male','20180205','sale',NULL,2200,503,102),
+    ('gougou','male','20180205','sale','',2200,503,102);
+mysql> use company
+
+语法：
+select   字段名称,字段名称2    from  表名   条件
+
+简单查询
+mysql> select * from employee5;
+
+多字段查询：
+mysql> select id,name,sex from employee5;
+
+有条件查询：where
+mysql> select id,name from employee5 where id<=3;
+mysql> select id,name,salary from employee5 where salary>2000;
+
+设置别名：as
+mysql> select id,name,salary as "salry_num" from employee5 where salary>5000;
+给 salary 的值起个别名，显示值的表头会是设置的别名
+
+统计记录数量：count()
+mysql> select count(*) from employee5;
+
+统计字段得到数量:
+mysql> select count(id) from employee5;
+
+避免重复DISTINCT:表里面的数据有相同的
+mysql> select distinct post from employee5;
+                       #字段      表名
+```
+
+```shell
+表复制：key不会被复制: 主键、外键和索引
+复制表
+1.复制表结构＋记录 （key不会复制: 主键、外键和索引）
+语法:create table 新表 select * from 旧表;
+mysql>use company;
+mysql> create table new_t1 select * from employee5;
+mysql> show tables;
+mysql>select * from new_t1;
+
+2.复制单个字段和记录:
+mysql> create table new_t2(select id,name from employee5);
+
+3.多条件查询:  and   ----和
+语法: select   字段，字段2 from   表名   where   条件 and where 条件；
+mysql> SELECT name,salary from employee5 where post='hr' AND salary>1000;
+mysql> SELECT name,salary from employee5 where post='instructor' AND salary>1000;
+
+4.多条件查询:  or   ----或者
+语法：       select   字段，字段2 from   表名   where   条件   or   条件；
+mysql> select name from employee5 where salary>5000 and salary<10000 or dep_id=102;
+mysql> select name from employee5 where salary>2000 and salary<6000 or dep_id=100;
+
+5.关键字 BETWEEN AND  什么和什么之间。
+mysql> SELECT name,salary FROM employee5 WHERE salary BETWEEN 5000 AND 15000;
+mysql> SELECT name,salary FROM employee5 WHERE salary NOT BETWEEN 5000 AND 15000;
+mysql> select name,dep_id,salary from employee5 where  not salary>5000;
+注:not  给条件取反
+
+6.关键字IS NULL   空的
+mysql> SELECT name,job_description FROM employee5 WHERE job_description IS NULL;
+mysql> SELECT name,job_description FROM employee5  WHERE job_description IS NOT NULL;  #-取反 不是null
+mysql> SELECT name,job_description FROM employee5 WHERE job_description=''; #什么都没有==空
+NULL说明：
+        1、等价于没有任何值、是未知数。
+        2、NULL与0、空字符串、空格都不同,NULL没有分配存储空间。
+        3、对空值做加、减、乘、除等运算操作，结果仍为空。
+        4、比较时使用关键字用“is null”和“is not null”。
+        5、排序时比其他数据都小（索引默认是降序排列，小→大），所以NULL值总是排在最前。
+
+7.排序查询    order by  ：指令，在mysql是排序的意思。
+mysql> select name,salary from employee5 order by salary; #-默认从小到大排序。
+mysql> select name,salary from employee5 order by salary desc; #降序，从大到小
+
+8.limit 限制
+mysql> select * from employee5 limit 5;  #只显示前5行
+mysql> select name,salary from employee5 order by salary desc limit 0,1; #从第几行开始，打印一行
+查找什么内容从那张表里面降序排序只打印第二行。
+注意：
+0-------默认第一行
+1------第二行  依次类推...
+mysql> SELECT * FROM employee5 ORDER BY salary DESC LIMIT 0,5;  #降序，打印5行
+mysql> SELECT * FROM employee5 ORDER BY salary DESC LIMIT 4,5;  #从第5条开始，共显示5条
+mysql> SELECT * FROM employee5 ORDER BY salary  LIMIT 4,3;  #默认从第5条开始显示3条。
+
+9.分组查询 ：group  by
+mysql> select count(name),post from employee5 group by post;
++-------------+------------+
+| count(name) | post       |
++-------------+------------+
+|           2 | hr         |
+|           4 | instructor |
+|           4 | sale       |
++-------------+------------+
+ count可以计算字段里面有多少条记录，如果分组会分组做计算
+ mysql> select count(name),group_concat(name) from employee5 where salary>5000;
+ 查找 统计（条件：工资大于5000）的有几个人（count(name)），分别是谁（group_concat(name)）
++-------------+----------------------------+
+| count(name) | group_concat(name)         |
++-------------+----------------------------+
+|           5 | tom,robin,alice,harry,emma |
++-------------+----------------------------+
+
+11.GROUP BY和GROUP_CONCAT()函数一起使用
+GROUP_CONCAT()-------组连接
+mysql> SELECT dep_id,GROUP_CONCAT(name) FROM employee5 GROUP BY dep_id; #以dep_id分的组，dep_id这个组里面都有谁
+mysql> SELECT dep_id,GROUP_CONCAT(name) as emp_members FROM employee5 GROUP BY dep_id; #给组连接设置了一个别名
+
+12.函数
+max() 最大值
+mysql> select max(salary) from employee5;
+查询薪水最高的人的详细信息：
+mysql> select name,sex,hire_date,post,salary,dep_id from employee5 where salary = (SELECT MAX(salary) from employee5);
+min()最小值
+mysql>select min(salary) from employee5;
+avg()平均值
+mysql>select avg(salary) from employee5;
+sum()  计算和
+mysql>select sum(salary) from employee5 where post='sale';
+```
+
+## 5.重置root账户密码
+
+```
+修改配置文件vim /etc/my.cnf，在[mysqld]下添加
+skip-grant-tables
+```
+
+关闭Mysql使用下面方式进入Mysql直接修改表权限                       
+  5.6/5.7版本：
+
+    #mysql -uroot
+    mysql>use mysql;
+    mysql> UPDATE mysql.user SET authentication_string=password('QianFeng@123') WHERE user='root';
+    mysql> flush privileges;;
+
+编辑配置文件将skip-grant-tables参数前加#注释或删除skip-grant-tables此行
+
+重启mysql
