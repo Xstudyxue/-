@@ -1,0 +1,173 @@
+数据类型
+**1、数据类型**
+
+在MySQL数据库管理系统中，可以通过存储引擎来决定表的类型。同时，MySQL数据库管理系统也
+提供了数据类型决定表存储数据的类型。
+
+------
+
+```shell
+1.整型
+作用：用于存储用户的年龄、游戏的Level、经验值等。
+分类：tinyint  smallint  mediumint  int  bigint
+常用的是int
+显示宽度：类型后面小括号内的数字是显示宽度，不能限制插入数值的大小    
+比如：bigint(2)    2是显示宽度
+取值范围：
+| MySQL数据类型   |       最小值                |  最大值              |
+| ------------- | -------------------------- | -------------------- |
+| tinyint(n)    |  0                         |  255                 |
+| smallint(n)   |  -32,768                   |  32,767              |
+| mediumint(n)  |  -8388608                  |  8388607             |
+| int(n)        |  -2,147,483,648            |  2,147,483,647       |
+| bigint(n)     |  -9,223,372,036,854,775,808|  9,223,372,036,854,7 |
+---------------------------------------------------------------------
+结论：
+- 当整数值超过 int 数据类型支持的范围时，就可以采用 bigint。
+- 在 MySQL 中，int 数据类型是主要的整数数据类型。
+- int(n)里的n是表示SELECT查询结果集中的显示宽度，并不影响实际的取值范围，没有影响到显示的宽度
+
+#整形的宽度仅为显示宽度，不是限制。因此建议整形无须指定宽度。
+=====================================================
+2.浮点数类型	     FLOAT DOUBLE
+作用：用于存储用户的身高、体重、薪水等
+float(5.3)      #一共5位，小数占3位.做了限制
+mysql> create table test4(float_test float(5,2));  #案例   宽度不算小数点
+mysql> desc test4;
++------------+------------+------+-----+---------+-------+
+| Field      | Type       | Null | Key | Default | Extra |
++------------+------------+------+-----+---------+-------+
+| float_test | float(5,2) | YES  |     | NULL    |       |
++------------+------------+------+-----+---------+-------+
+1 row in set (0.00 sec)
+
+mysql> insert into test4(float_test) values(123.345534354);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into test4(float_test) values(34.39567);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into test4(float_test) values(678.99993);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into test4(float_test) values(6784.9);
+ERROR 1264 (22003): Out of range value for column 'float_test' at row 1
+
+mysql> select * from test4;
++------------+
+| float_test |
++------------+
+|     123.35 |
+|      34.40 |
+|     679.00 |
++------------+
+4 rows in set (0.00 sec)
+==================================================================================
+定点数类型   	 DEC
+定点数在MySQL内部以字符串形式存储，比浮点数更精确，适合用来表示货币等精度高的数据。
+
+3.字符串类型  
+作用：用于存储用户的姓名、爱好、电话，邮箱地址，发布的文章等 
+字符类型 char varchar  --存字符串
+
+- char表示定长字符串，长度是固定的；如果插入数据的长度小于char的固定长度时，则用空格填充；因为长度固定，所以存取速度要比varchar快很多，甚至能快50%，但正因为其长度固定，所以会占据多余的空间。
+- varchar表示可变长字符串，长度是可变的；插入的数据是多长，就按照多长来存储；varchar在存取方面与char相反，它存取慢，因为长度不固定，但正因如此，不占据多余的空间。
+- 结合性能角度（char更快），节省磁盘空间角度（varchar更小），具体情况还需具体来设计数据库才是妥当的做法。
+
+char(10)          根据10，占10个.
+    列的长度固定为创建表时声明的长度： 0 ~ 255
+varchar(10)     根据实际字符串长度占空间，最多10个
+    列中的值为可变长字符串，长度： 0 ~ 65535
+
+案例:
+mysql> create table t8(c char(5),v varchar(12));
+Query OK, 0 rows affected (0.42 sec)
+
+mysql> insert into t8 values('abcde','abcdef');
+Query OK, 1 row affected (0.38 sec)
+
+mysql> insert into t8 values('abc','abcdef');  #char可以少于规定长度。
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into t8 values('abc777','abcdef7');  #char不能大于规定的长度。
+ERROR 1406 (22001): Data too long for column 'c' at row 1
+mysql> 
+=====================================================================
+总结：
+1.经常变化的字段用varchar
+2.知道固定长度的用char
+3.超过255字符的只能用varchar或者text
+4.能用varchar的地方不用text
+text：文本格式
+-----------------------------------------------------------------
+4.枚举类型 enum 
+mysql> create table t101(name enum('tom','jim'));
+只能从tom,jim两个里面2选其1
+（enumeration）  
+ 有限制的时候用枚举
+==================================================================
+5.日期类型
+===时间和日期类型测试：year、date、time、datetime、timestamp
+作用：用于存储用户的注册时间，文章的发布时间，文章的更新时间，员工的入职时间等
+注意事项:
+==插入年份时，尽量使用4位值
+==插入两位年份时，<=69，以20开头，比如65,  结果2065      
+                 >=70，以19开头，比如82，结果1982
+案例:
+mysql> create table test_time(d date,t time,dt datetime);
+Query OK, 0 rows affected (0.03 sec)
+mysql> desc test_time;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| d     | date     | YES  |     | NULL    |       |
+| t     | time     | YES  |     | NULL    |       |
+| dt    | datetime | YES  |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+3 rows in set (0.01 sec)
+mysql> insert into test_time values(now(),now(),now());
+Query OK, 1 row affected, 1 warning (0.02 sec)
+mysql> select * from test_time;
++------------+----------+---------------------+
+| d          | t        | dt                  |
++------------+----------+---------------------+
+| 2019-08-23 | 00:26:29 | 2019-08-23 00:26:29 |
++------------+----------+---------------------+
+1 row in set (0.00 sec)
+测试年：
+mysql> create table t3(born_year year);
+Query OK, 0 rows affected (0.40 sec)
+
+mysql> desc t3;
++-----------+---------+------+-----+---------+-------+
+| Field     | Type    | Null | Key | Default | Extra |
++-----------+---------+------+-----+---------+-------+
+| born_year | year(4) | YES  |     | NULL    |       |
++-----------+---------+------+-----+---------+-------+
+1 row in set (0.00 sec)
+mysql> insert into t3 values (12),(80);
+Query OK, 2 rows affected (0.06 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+mysql> select * from t3;
++-----------+
+| born_year |
++-----------+
+|      2012 |
+|      1980 |
++-----------+
+2 rows in set (0.00 sec)
+mysql> insert into t3 values (2019),(81);
+Query OK, 2 rows affected (0.00 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+mysql> select * from t3;
++-----------+
+| born_year |
++-----------+
+|      2012 |
+|      1980 |
+|      2019 |
+|      1981 |
++-----------+
+4 rows in set (0.00 sec)
+mysql>
+```
