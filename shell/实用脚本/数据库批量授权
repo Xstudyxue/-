@@ -1,0 +1,53 @@
+#!/bin/bash
+number=6000
+for link in $(cat /data/list.txt)
+do
+#截取名单的拼音
+user_name=$(echo ${link} | awk -F":" '{print $1}' )
+#截取名单中文名
+cn_name=$(echo ${link} | awk -F":" '{print $2}')
+#用户家目录
+home_dir=$(echo ${link} | awk -F":" '{print $3}')
+#生成用户15位随机强口令
+user_pass="$(openssl rand -base64 40|cut -c 1-15)."
+#生成公私钥
+[ -d /data/key/${cn_name} ] || mkdir -p /data/key/${cn_name}
+ssh-keygen  -t  rsa -P "" -f /data/key/${cn_name}/id_rsa
+#公钥路径
+key_pub=$(find /data/key/${cn_name}/ -name "id_rsa.pub")
+#私钥路径
+key_pri=$(find /data/key/${cn_name}/ -name "id_rsa")
+cat >>/data/mysql_user.log<<eof
+${number}:${user_name}:${user_pass}:${cn_name}:${home_dir}:${key_pub}:${key_pri}
+eof
+#变量递增
+number=$((number+1))
+#数据库名字
+db_name='shuihu'
+#数据表名字
+t_name='userinfo'
+cat >/data/shuihu.log<<eof
+uid="$(grep "${user_name}" /data/mysql_user.log | awk -F":" '{print $1}')"
+username="$(grep "${user_name}" /data/mysql_user.log | awk -F":" '{print $2}')"
+cn_name="$(grep "${user_name}" /data/mysql_user.log | awk -F":" '{print $4}')"
+password="$(grep "${user_name}" /data/mysql_user.log | awk -F":" '{print $3}')"
+homedir="$(grep "${user_name}" /data/mysql_user.log | awk -F":" '{print $5}')"
+key_pub="$(cat ${key_pub})"
+key_pri="$(cat ${key_pri})"
+key_ssh_user="${user_name}"
+eof
+source /data/shuihu.log
+INSERT_KEY=$(echo \'${uid}\',\'${username}\',\'${cn_name}\',\'${password}\',\'${homedir}\',\'${key_pub}\',\'${key_pri}\',\'${key_ssh_user}\')
+mysql -e "INSERT INTO ${db_name}.${t_name} VALUES ($(echo ${INSERT_KEY}))"
+#只给songjiang用户授权，其余只给select权限
+if [ ${user_name}  == "songjiang" ]
+then
+mysql -e """grant all privileges on ${db_name}.* to '${user_name}'@'%' identified by '${password}';"""
+mysql -e """grant all privileges on ${db_name}.* to '${user_name}'@'localhost' identified by '${password}';"""
+else
+mysql -e """grant select on ${db_name}.* to '${user_name}'@'%' identified by '${password}';"""
+mysql -e """grant select on ${db_name}.* to '${user_name}'@'localhost' identified by '${password}';"""
+fi
+[ -d /data/logs/ ] || mkdir -p /data/logs/
+mysql -u"${username}" -p"${password}" -e "select * from ${db_name}.${t_name} where username=${username};" > /data/logs/${username}.log
+done
