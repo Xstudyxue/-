@@ -1,0 +1,8 @@
+secrets file = /etc/rsyncd/rsyncd.passwd
+##认证用户名单文件
+motd file = /etc/rsyncd/rsyncd.motd
+#欢迎信息文件名称和存放位置
+
+[模块名称]
+auth users = rsync
+# 授权帐号。认证的用户名，如果没有这行，则表明是匿名，多个用户用,分隔 
