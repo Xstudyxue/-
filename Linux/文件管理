@@ -11,7 +11,7 @@ boot etc lib64 misc opt sbin sys var
 cgroup home lost+found mnt proc selinux tmp
 
 ##### **1.3 图示**
-![1](image/1.png)
+
 ##### **1.4 目录功能**
 bin 普通用户使用的命令 /bin/ls, /bin/date
 sbin 管理员使用的命令 /sbin/service 
