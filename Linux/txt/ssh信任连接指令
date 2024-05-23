@@ -1,0 +1,14 @@
+1.无交互生成公私钥
+ssh-keygen   -t  rsa  -P  ""  -f  /root/.ssh/id_rsa
+
+2.将公钥id_rsa.pub的内容传输到对方的/root/.ssh/authorized_keys文件末尾
+权限600, root属主
+mkdir -p /root/.ssh && chmod 700 /root/.ssh && chown root:root /root/.ssh/
+
+chmod 600  /root/.ssh/authorized_keys
+chown root:root /root/.ssh/authorized_keys
+
+3.首次连接时不进行指纹验证
+ssh  -o  "stricthostkeychecking=no"  root@192.168.241.13
+
+4.ssh连接后远程执行相关操作。
