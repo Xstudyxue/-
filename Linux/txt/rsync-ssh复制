@@ -1,1 +1,13 @@
+rsync远程使用ssh同步复制
 
+先建立ssh信任
+				本地源      远程目标主机:远程主机路径
+rsync  -avz   data.tar.gz   root@10.36.102.254:/root/
+
+rsync本同步复制
+              本地源   本地目标 
+rsync  -avz  backup    /opt/
+
+
+取消首次连接时提示指纹验证，使用-e选项
+-e "ssh -o stricthostkeychecking=no"
