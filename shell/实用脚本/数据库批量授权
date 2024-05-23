@@ -40,5 +40,5 @@ mysql -e """grant select on ${db_name}.* to '${user_name}'@'%' identified by '${
 mysql -e """grant select on ${db_name}.* to '${user_name}'@'localhost' identified by '${user_pass}';"""
 fi
 [ -d /data/logs/ ] || mkdir -p /data/logs/
-mysql -u"${user_name}" -p"${user_pass}" -e "select * from ${db_name}.${t_name} where username=${user_name};" > /data/logs/${username}.log
+mysql -u"${user_name}" -p"${user_pass}" -e """"select * from ${db_name}.${t_name} where username='${user_name}';""" > /data/logs/${username}.log
 done
