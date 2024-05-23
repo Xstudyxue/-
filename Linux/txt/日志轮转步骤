@@ -1,0 +1,29 @@
+日志轮转
+mkdir  -p /data/logsfile/log/
+touch /data/logsfile/log/{a..z}.log
+#产生日志文件内容
+for a in {1..10};do
+for i in {a..z}; 
+do cat /var/log/vmware-vmsvc-root.log >>/data/logsfile/log/$i.log;
+done;
+done
+
+
+编辑日志轮转文件
+vim /etc/logrotate.d/data_log
+
+/data/logsfile/log/*.log
+{
+ missingok
+ daily
+ dateext
+ compress
+ rotate 3
+ create 0644 root root
+}
+
+测试
+/usr/sbin/logrotate -f /etc/logrotate.d/data_log
+
+查看轮转生成
+/data/logsfile/log/
