@@ -1,0 +1,26 @@
+计划任务存储位置
+/var/spool/cron/
+以用户名称为作为文件名，记录该用户的指令操作
+
+编辑查看任务列表
+crontab   -l 
+crontab   -e
+
+快速定义计划任务
+cat >>/var/spool/cron/root<<eof
+*/5 * * * *    /usr/sbin/ntpdate   ntp1.aliyun.com   &>/dev/null
+eof
+
+
+语法格式 :
+Minutes   Hours    Day-of-Month    Month    Day-of-Week    Command 
+ 分钟	   小时	      日		  月		   周		   执行的命令，最好是命令的绝对路径
+ 0-59	  0-23  	  1-31         1-12	      0-7
+
+时间：
+*：每
+*/5 每隔分钟
+，：不同的时间段
+- ： 表示范围
+
+计划任务日志/var/log/cron
