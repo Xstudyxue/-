@@ -1,0 +1,15 @@
+当使用scp或rsync远程复制没有建立ssh免密连接，直接输入密码时，使用sshpass组件进行不输入口令交互
+
+安装
+yum install sshpass -y
+
+sshpass+ssh连接
+sshpass  -p '123456'  ssh root@192.168.241.11
+
+
+sshpass+scp
+sshpass  -p '123456' scp -r     /data/logsfile/log/   root@192.168.241.10:/opt/
+
+sshpass+rsync
+
+sshpass  -p '123456'  rsync  -avz /root/anaconda-ks.cfg   root@192.168.241.11:/root/
