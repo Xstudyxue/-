@@ -3,13 +3,13 @@
 ##LOCAL_PATH='/opt',同步目录自身及下一级
 WORKDIR='/wx'
 LOCAL_PATH='/data/rsync/'
-LOCAL_SERVER='10.36.108.25'
+LOCAL_SERVER=''
 ##远程服务器
-REMOTE_SERVER='10.36.108.90'
+REMOTE_SERVER=''
 ##远程目标地址
 REMOTE_PATH='/'
 ##机器人地址
-ROBOT='https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=fe0e067c-451b-4e49-9c6a-9728a8e02db4'
+ROBOT=''
 TYPE='Content-Type: application/json'
 ##同步
 rsync  -avz -e "ssh -o stricthostkeychecking=no"  ${LOCAL_PATH}  root@${REMOTE_SERVER}:${REMOTE_PATH} >${WORKDIR}/rsync_info.log 2>${WORKDIR}/rsync_error.log
