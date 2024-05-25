@@ -1,8 +1,13 @@
 #!/bin/bash
+#工作目录
 WORKDIR='/data/soft'
+#网站目录
 html_dir='/data/soft/nginx/html'
+#远程用户名
 ssh_user='root'
+#网段
 ADDRESS='10.36.108.0'
+#指定ip文件
 cat >>ip.txt<<eof
 10.36.108.80
 10.36.108.81
