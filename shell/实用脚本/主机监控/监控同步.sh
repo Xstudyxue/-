@@ -1,10 +1,12 @@
 #!/bin/bash
+#安装工具包
 #yum install epel-release -y
 #yum install  inotify-tools  -y
-
+#工作目录
 DIRNAME='/data/app'
 inotifywait -mrq  -e 'create,close_write' --timefmt "%Y-%m-%d_%H:%M:%S.%s" --format "%T %w%f %e"  "${DIRNAME}" | while read line
 do
+#导入指定文件变量
 source ${PWD}/intoify_config.conf
 ##获取写入时间
 CREATE_TIME=$(echo ${line} | awk '{print $1}')
