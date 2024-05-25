@@ -1,5 +1,5 @@
 curl直接以text格式推送至机器人
-ROBOT='https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=d3fc20e6-71ab-42f8-80fc-d63c7deb9e6e'
+ROBOT='https:'
 TYPE='Content-Type: application/json'
 curl ${ROBOT} -H "${TYPE}" -d \
 '{
@@ -21,7 +21,7 @@ cat >/root/test<<EOF
 "text": {
 "content": "测试"}}
 EOF
-ROBOT='https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=47b6abb6-6894-40d5-bfcc-cb63f38cdce'
+ROBOT=''
 TYPE='Content-Type: application/json'
 curl ${ROBOT} -H "${TYPE}" -d "$(cat /root/test)"
 
@@ -37,6 +37,6 @@ cat >/tmp/msg.log<<EOF
 "text": {
 "content": "$(cat /tmp/info.log)"}}
 EOF
-ROBOT='https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=fe0e067c-451b-4e49-9c6a-9728a8e02db4'
+ROBOT=''
 TYPE='Content-Type: application/json'
 curl ${ROBOT} -H "${TYPE}" -d "$(cat /tmp/msg.log)"
