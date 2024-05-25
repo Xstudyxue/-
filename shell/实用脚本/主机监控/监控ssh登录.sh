@@ -1,7 +1,9 @@
 #!/bin/bash
 ##监控路径
 WORK_DIR='/var/log/'
+##监控服务名
 SERVICES='sshd'
+#监控错误关键字
 LOG_ERROR_KEY='Failed|error'
 ##监控排除
 EXCLUDE_LIST=$(ls ${WORK_DIR} | xargs echo | sed 's/ /|/g' | sed 's/secure|//')
@@ -14,8 +16,6 @@ GET_log=$(echo ${line} | awk '{print $4}' | uniq)
 ##根据时间戳，截取错误日志详情内容
 GET_MSG_LOG=$(grep "${GET_TIME}" ${GET_log} | grep "${SERVICES}") | grep -E "${LOG_ERROR_KEY}"
 if [ -n "${GET_MSG_TXT}" ];then
-echo ${GET_MSG_LOG}
-
 MSG_TEXT_FILE='/tmp/inotifywait.log'
 cat >${MSG_TEXT_FILE}<<eof
 标题:ssh监控错误日志
