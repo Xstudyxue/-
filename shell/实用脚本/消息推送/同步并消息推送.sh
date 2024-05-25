@@ -1,42 +1,40 @@
-curl直接以text格式推送至机器人
-ROBOT='https:'
-TYPE='Content-Type: application/json'
-curl ${ROBOT} -H "${TYPE}" -d \
-'{
-"msgtype": "text",
-"text": {
-"content": "
-hello1
-hello2
-hello3
-"}}'
-
-
-
-curl读取消息体内容推送消息至机器人
-定义json消息体文件,text格式
-cat >/root/test<<EOF
-{
-"msgtype": "text",
-"text": {
-"content": "测试"}}
-EOF
+#!/bin/bash
+##来源目录
+##LOCAL_PATH='/opt',同步目录自身及下一级
+WORKDIR=''
+LOCAL_PATH=''
+LOCAL_SERVER=''
+##远程服务器
+REMOTE_SERVER=''
+##远程目标地址
+REMOTE_PATH=''
+##机器人地址
 ROBOT=''
 TYPE='Content-Type: application/json'
-curl ${ROBOT} -H "${TYPE}" -d "$(cat /root/test)"
-
-
-cat >/tmp/info.log<<eof
-要发送的消息文字放在文件中
+##同步
+rsync  -avz -e "ssh -o stricthostkeychecking=no"  ${LOCAL_PATH}  root@${REMOTE_SERVER}:${REMOTE_PATH} >${WORKDIR}/rsync_info.log 2>${WORKDIR}/rsync_error.log
+##消息正文内容文件路径
+MSG_TEXT_FILE='/tmp/msg.log'
+##消息正文内容文件内容
+cat >${MSG_TEXT_FILE}<<eof
+# 备份消息推送通知
+>服务器备份时间：$(date +%F_%T)
+>服务器地址：${LOCAL_SERVER}
+>备份目录: ${LOCAL_PATH}
+>远程服务器：${REMOTE_SERVER}
+>远程备份路径：${REMOTE_PATH}
+>同步消息详情
+---------------------
+$(tail -2 ${WORKDIR}/rsync_info.log)
 eof
-
-定义json消息体文件,text格式
-cat >/tmp/msg.log<<EOF
+##json消息体文件路径
+MSG_JSON_FILE='/tmp/info.json'
+##生成json消息体文件
+cat >${MSG_JSON_FILE}<<EOF
 {
-"msgtype": "text",
-"text": {
-"content": "$(cat /tmp/info.log)"}}
+"msgtype": "markdown",
+"markdown": {
+"content": "$(cat ${MSG_TEXT_FILE})"}}
 EOF
-ROBOT=''
-TYPE='Content-Type: application/json'
-curl ${ROBOT} -H "${TYPE}" -d "$(cat /tmp/msg.log)"
+##消息推送,正确的丢弃,错误的输出到文件pushinfoerr.log中
+curl -s  ${ROBOT} -H "${TYPE}" -d "$(cat ${MSG_JSON_FILE})" >/dev/null  2>${WORKDIR}/pushinfoerr.log
