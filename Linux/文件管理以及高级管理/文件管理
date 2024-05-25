@@ -5,7 +5,7 @@ Windows: 以多根的方式组织文件 C:\ D:\ E:\
 Linux: 以单根的方式组织文件 /
 ##### **1.2 简介**
 /目录结构： FSH (Filesystem Hierarchy Standard)
-[root@tianyun ~]# ls /
+# ls /
 bin dev lib media net root srv usr
 boot etc lib64 misc opt sbin sys var
 cgroup home lost+found mnt proc selinux tmp
