@@ -69,4 +69,4 @@ done
 #arping-Ua-s192.168.5.5-leth0192.168.5.1&
 
 '[0-9]{1,3}\.[0-9]{1,3\.[0-9]{1,3}\.[0-9]{1,3}'
-
+C:\Windows\System32\drivers\etc\hosts
