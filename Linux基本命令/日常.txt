@@ -69,4 +69,7 @@ done
 #arping-Ua-s192.168.5.5-leth0192.168.5.1&
 
 '[0-9]{1,3}\.[0-9]{1,3\.[0-9]{1,3}\.[0-9]{1,3}'
+#本地主机window域名解析地址
 C:\Windows\System32\drivers\etc\hosts
+#查看以内存排行的进程
+ps aux | sort -rnk 4
