@@ -1,0 +1,21 @@
+#!/bin/bash
+calculate_sum() {
+    while true; do
+        read -p "请输入一个正整数（输入'nvm'退出程序）：" number
+        if [[ "$number" == "nvm" ]]; then
+            echo "程序退出。"
+            break
+        fi
+        if ! [[ "$number" =~ ^[0-9]+$ ]]; then
+            echo "输入的不是正整数，请重新输入。"
+            continue
+        fi
+        if [ "$number" -le 0 ]; then
+            echo "输入的必须是正整数，请重新输入。"
+            continue
+        fi
+        total_sum=$(echo "scale=0; $number * ($number + 1) / 2" | bc)
+        echo "从1到$number的和是：$total_sum"
+    done
+}
+calculate_sum
