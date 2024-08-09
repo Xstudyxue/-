@@ -64,3 +64,9 @@ done
 C:\Windows\System32\drivers\etc\hosts
 #查看以内存排行的进程
 ps aux | sort -rnk 4
+
+vmware esxi vmdk格式
+vmdk磁盘由多个文件组成，先合并磁盘文件
+qemu-img convert
+vmdk磁盘格式转换为qcow2格式
+kvm虚拟机:添加虚拟机,导入转换的qcow2磁盘
